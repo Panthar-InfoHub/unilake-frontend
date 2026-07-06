@@ -1,0 +1,172 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+
+interface FilterOption {
+  label: string;
+  value: string;
+}
+
+interface Filter {
+  id: string;
+  label: string;
+  color: string;
+  borderColor: string;
+  bgColor: string;
+  options: FilterOption[];
+}
+
+const filters: Filter[] = [
+  {
+    id: "age",
+    label: "Age",
+    color: "text-orange-500",
+    borderColor: "border-orange-300",
+    bgColor: "bg-orange-50",
+    options: [
+      { label: "Age 2-4", value: "2-4" },
+      { label: "Age 4-7", value: "4-7" },
+      { label: "Age 7-10", value: "7-10" },
+      { label: "Age 10+", value: "10+" },
+    ],
+  },
+  {
+    id: "gender",
+    label: "Gender",
+    color: "text-purple-500",
+    borderColor: "border-purple-300",
+    bgColor: "bg-purple-50",
+    options: [
+      { label: "Boy", value: "boy" },
+      { label: "Girl", value: "girl" },
+      { label: "Neutral", value: "neutral" },
+    ],
+  },
+  {
+    id: "theme",
+    label: "Theme",
+    color: "text-teal-500",
+    borderColor: "border-teal-300",
+    bgColor: "bg-teal-50",
+    options: [
+      { label: "Adventure", value: "adventure" },
+      { label: "Fantasy", value: "fantasy" },
+      { label: "Morals", value: "morals" },
+      { label: "Science", value: "science" },
+      { label: "Friendship", value: "friendship" },
+    ],
+  },
+];
+
+interface StoryFiltersProps {
+  selected: Record<string, string>;
+  onSelect: (filterId: string, value: string) => void;
+}
+
+export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) {
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpenFilter(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleFilter = (id: string) => {
+    setOpenFilter((prev) => (prev === id ? null : id));
+  };
+
+  const selectOption = (filterId: string, value: string) => {
+    onSelect(filterId, value);
+    setOpenFilter(null);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="flex items-center justify-center gap-4 sm:gap-6 py-8"
+    >
+      {filters.map((filter) => (
+        <div key={filter.id} className="relative">
+          {/* Pill Button */}
+          <button
+            onClick={() => toggleFilter(filter.id)}
+            className={`
+              flex items-center gap-2
+              px-5 py-2.5
+              rounded-full
+              bg-white
+              border
+              ${filter.borderColor}
+              ${filter.color}
+              font-semibold
+              text-sm sm:text-base
+              shadow-sm
+              hover:shadow-md
+              transition-all duration-200
+              cursor-pointer
+            `}
+          >
+            {selected[filter.id]
+              ? filter.options.find((o) => o.value === selected[filter.id])
+                  ?.label
+              : filter.label}
+            <ChevronDown
+              size={16}
+              className={`transition-transform duration-200 ${
+                openFilter === filter.id ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {/* Dropdown */}
+          {openFilter === filter.id && (
+            <div
+              className={`
+              absolute top-full mt-2 left-1/2 -translate-x-1/2
+              min-w-[160px]
+              bg-white
+              border ${filter.borderColor}
+              rounded-xl
+              shadow-lg
+              py-2
+              z-50
+              animate-in fade-in slide-in-from-top-2
+            `}
+            >
+              {filter.options.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => selectOption(filter.id, option.value)}
+                  className={`
+                    w-full text-left px-4 py-2.5
+                    text-sm font-medium
+                    transition-colors duration-150
+                    cursor-pointer
+                    ${
+                      selected[filter.id] === option.value
+                        ? `${filter.bgColor} ${filter.color} font-bold`
+                        : "text-gray-600 hover:bg-gray-50"
+                    }
+                  `}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

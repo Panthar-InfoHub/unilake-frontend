@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/app/contexts/AuthContext";
 
 import {
   geistSans,
@@ -31,7 +32,7 @@ export default function RootLayout({
       `}
     >
       <body className={`${poppins.className} min-h-screen`}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

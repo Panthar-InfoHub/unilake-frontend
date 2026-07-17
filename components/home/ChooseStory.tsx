@@ -82,32 +82,33 @@ export default function ChooseStory() {
     <>
       {/* ===== Purple Wave Banner ===== */}
       <div className="relative w-full overflow-visible mt-20 lg:mt-32">
-        {/* Top Wave */}
-        <div className="w-full overflow-hidden leading-[0]">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[30px] sm:h-[50px] md:h-[70px] lg:h-[90px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 0 L 0 80 L 1440 80 L 1440 0 Q 720 80 0 0 Z"
-            />
-          </svg>
-        </div>
+        {/*
+          Single SVG — flared/curves at both ends to match the reference image.
+          Path uses cubic beziers for smooth organic S-curve transitions.
+        */}
+        <svg
+          viewBox="0 0 1728 311"
+          className="w-full block h-[80px] sm:h-[120px] md:h-[160px] lg:h-[200px]"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="#914A8C"
+            d="M66.9068 29.469L-1 0V297L60.6428 263.852C89.7598 248.195 122.304 240 155.364 240H278.89H416.829H535.5H698.224H836.5H1016.5H1151H1331.5H1500.38C1574.97 240 1648.08 260.856 1711.44 300.213L1728 310.5V0L1650.63 31.3555C1626.77 41.0275 1601.26 46 1575.51 46H1331.5H1151H1016.5H836.5H698.224H535.5H416.829H278.89H146.525C119.134 46 92.0343 40.3734 66.9068 29.469Z"
+          />
+        </svg>
 
-        {/* Middle Purple Band */}
-        <div className="bg-[#8E4A92] w-full h-[60px] sm:h-[80px] md:h-[100px] lg:h-[120px] flex items-center relative z-10">
+        {/* Text overlay — centered vertically over the SVG */}
+        <div className="absolute inset-0 flex items-center pointer-events-none">
           <div className="max-w-7xl mx-auto w-full px-8 md:px-14 lg:px-20">
             <h2
               className={`
                 ${chauPhilomeneOne.className}
                 text-white
                 uppercase
-                text-3xl
-                sm:text-4xl
-                md:text-5xl
-                lg:text-6xl
+                text-2xl
+                sm:text-3xl
+                md:text-4xl
+                lg:text-5xl
                 z-30
                 relative
               `}
@@ -115,20 +116,6 @@ export default function ChooseStory() {
               Choose Your Story
             </h2>
           </div>
-        </div>
-
-        {/* Bottom Wave */}
-        <div className="w-full overflow-hidden leading-[0]">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[30px] sm:h-[50px] md:h-[70px] lg:h-[90px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 80 L 0 0 L 1440 0 L 1440 80 Q 720 0 0 80 Z"
-            />
-          </svg>
         </div>
 
         {/* Dragon */}
@@ -142,18 +129,18 @@ export default function ChooseStory() {
             absolute
             right-0
             lg:right-4
-            
+
             bottom-[-10px]
             sm:bottom-[-15px]
             md:bottom-[-20px]
             lg:bottom-[-25px]
             xl:bottom-[-30px]
 
-            w-[240px]
-            sm:w-[360px]
-            md:w-[480px]
-            lg:w-[580px]
-            xl:w-[680px]
+            w-[180px]
+            sm:w-[260px]
+            md:w-[340px]
+            lg:w-[420px]
+            xl:w-[480px]
 
             h-auto
             object-contain
@@ -184,32 +171,32 @@ export default function ChooseStory() {
 
       {/* ===== "How It Works" Section ===== */}
       <div className="relative w-full overflow-visible mt-20 lg:mt-32">
-        {/* Top Wave: Dips down in the middle */}
-        <div className="w-full overflow-hidden leading-[0]">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[30px] sm:h-[50px] md:h-[70px] lg:h-[90px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 0 L 0 80 L 1440 80 L 1440 0 Q 720 80 0 0 Z"
-            />
-          </svg>
-        </div>
+        {/*
+          Same flared curve SVG to match the Choose Your Story banner.
+        */}
+        <svg
+          viewBox="0 0 1728 311"
+          className="w-full block h-[80px] sm:h-[120px] md:h-[160px] lg:h-[200px]"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="#914A8C"
+            d="M66.9068 29.469L-1 0V297L60.6428 263.852C89.7598 248.195 122.304 240 155.364 240H278.89H416.829H535.5H698.224H836.5H1016.5H1151H1331.5H1500.38C1574.97 240 1648.08 260.856 1711.44 300.213L1728 310.5V0L1650.63 31.3555C1626.77 41.0275 1601.26 46 1575.51 46H1331.5H1151H1016.5H836.5H698.224H535.5H416.829H278.89H146.525C119.134 46 92.0343 40.3734 66.9068 29.469Z"
+          />
+        </svg>
 
-        {/* Middle Purple Band */}
-        <div className="bg-[#8E4A92] w-full h-[60px] sm:h-[80px] md:h-[100px] lg:h-[120px] flex items-center relative z-10">
+        {/* Text overlay — centered vertically over the SVG */}
+        <div className="absolute inset-0 flex items-center pointer-events-none">
           <div className="max-w-7xl mx-auto w-full px-8 md:px-14 lg:px-20 relative">
             <h2
               className={`
                 ${chauPhilomeneOne.className}
                 text-white
                 uppercase
-                text-3xl
-                sm:text-4xl
-                md:text-5xl
-                lg:text-6xl
+                text-2xl
+                sm:text-3xl
+                md:text-4xl
+                lg:text-5xl
                 z-30
                 relative
               `}
@@ -219,39 +206,21 @@ export default function ChooseStory() {
           </div>
         </div>
 
-        {/* Bottom Wave: Arches up in the middle */}
-        <div className="w-full overflow-hidden leading-[0] relative z-10">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[30px] sm:h-[50px] md:h-[70px] lg:h-[90px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 80 L 0 0 L 1440 0 L 1440 80 Q 720 0 0 80 Z"
-            />
-          </svg>
-        </div>
-
-        {/* Kid with Robot Image - Overlaps purple band and waves */}
-        {/* Kid with Robot Image - Overlaps purple band and waves */}
         {/* Kid + Robot */}
         <div
           className="
-    absolute
-    right-0
-    sm:right-4
-    md:right-8
-    lg:right-14
-    xl:right-20
-
-    top-1/2
-    -translate-y-1/2
-
-    z-30
-    pointer-events-none
-    select-none
-  "
+            absolute
+            right-0
+            sm:right-4
+            md:right-8
+            lg:right-14
+            xl:right-20
+            top-1/2
+            -translate-y-1/2
+            z-30
+            pointer-events-none
+            select-none
+          "
         >
           <Image
             src="/assets/home_page/kidWithRobo.png"
@@ -260,14 +229,14 @@ export default function ChooseStory() {
             height={520}
             priority
             className="
-      w-[180px]
-      sm:w-[240px]
-      md:w-[320px]
-      lg:w-[420px]
-      xl:w-[500px]
-      h-auto
-      object-contain
-    "
+              w-[140px]
+              sm:w-[180px]
+              md:w-[240px]
+              lg:w-[300px]
+              xl:w-[360px]
+              h-auto
+              object-contain
+            "
           />
         </div>
       </div>
@@ -309,13 +278,13 @@ export default function ChooseStory() {
               {personalisationSteps.map((step) => (
                 <div key={step.number} className="flex items-start gap-5 group">
                   {/* Circular Step Badge */}
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#8E4A92] flex items-center justify-center text-white font-bold text-xl shadow-md transition-all duration-300 group-hover:scale-110">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#914B8C] flex items-center justify-center text-white font-bold text-xl shadow-md transition-all duration-300 group-hover:scale-110">
                     {step.number}
                   </div>
 
                   {/* Text Content */}
                   <div className={`${hankenGrotesk.className} flex flex-col gap-1.5`}>
-                    <h4 className="text-[#1A1A1A] font-extrabold text-xl md:text-2xl transition-colors duration-300 group-hover:text-[#8E4A92]">
+                    <h4 className="text-[#1A1A1A] font-extrabold text-xl md:text-2xl transition-colors duration-300 group-hover:text-[#914B8C]">
                       {step.title}
                     </h4>
                     <p className="text-[#555555] font-medium text-sm md:text-base leading-relaxed max-w-lg">

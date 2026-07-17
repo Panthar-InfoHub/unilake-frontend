@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import type { Story } from "@/data/storyData";
@@ -10,36 +10,14 @@ interface StoryCardProps {
 }
 
 export default function StoryCard({ story }: StoryCardProps) {
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const defaultImage = story.images[0];
+  const hoverImage = story.images[1] ?? story.images[0];
 
-  const currentImage = story.images[activeImageIndex];
-
-
-  {/* Images changes when hover into it */ }
-
-  useEffect(() => {
-    if (!isHovered) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      setActiveImageIndex(0);
-      return;
-    }
-
-    intervalRef.current = setInterval(() => {
-      setActiveImageIndex((prev) => (prev + 1) % story.images.length);
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isHovered, story.images.length]);
+  const defaultAvatar = story.avatarSrc ?? "/assets/home_page/boyHeroImg.png";
+  const hoverAvatar =
+    story.avatarHoverSrc ?? "/assets/home_page/DragonImg.png";
 
   // Safely extract age value to display in format "AGE: X-Y"
   const ageLabel = story.ageRange.toUpperCase().startsWith("AGE")
@@ -50,247 +28,233 @@ export default function StoryCard({ story }: StoryCardProps) {
     <div
       className="
         relative
-        flex flex-col
-        max-w-[320px]
-        mx-auto
         w-full
+        max-w-[330px] sm:max-w-[355px] md:max-w-[380px]
+        mx-auto
+        aspect-[427/623]
         overflow-visible
-        transition-transform duration-300 hover:-translate-y-1.5
-        pb-8
+        transition-all duration-300 hover:-translate-y-2
+        group
       "
     >
-      {/* Chalkboard / Wooden Frame Section */}
-      <div className="relative p-2.5 z-0">
-        {/* Chalkboard frame wrapper */}
-        <div
+      {/* Background SVG Frame (card.svg includes shadow & body) */}
+      <Image
+        src="/assets/card.svg"
+        alt="Story Card Background"
+        fill
+        className="pointer-events-none select-none z-0"
+        priority
+      />
+
+      {/* Book Cover Image — crossfade on group hover */}
+      <div
+        className="absolute z-10 overflow-hidden shadow-[inset_0_4px_8px_rgba(0,0,0,0.35)] bg-slate-900/50"
+        style={{
+          left: "14.5%",
+          top: "7.2%",
+          width: "71%",
+          height: "38.5%",
+          borderRadius: "4px",
+        }}
+      >
+        {/* Default image — visible, fades out + scales up on hover */}
+        <Image
+          src={defaultImage.src}
+          alt={defaultImage.alt}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="
-    relative
-    rounded-2xl
-    border-[10px] border-[#9E6E43]
-    bg-[#1E2325]
-    shadow-[inset_0_4px_10px_rgba(0,0,0,0.5),0_6px_12px_rgba(0,0,0,0.15)]
-    aspect-[4/3]
-    w-full
-    flex items-center justify-center
-    p-3
-    overflow-hidden
-  "
-          onMouseEnter={() => {
-            setIsHovered(true);
-            if (story.images.length > 1) {
-              setActiveImageIndex(1);
-            }
-          }}
-          onMouseLeave={() => {
-            setIsHovered(false);
-          }}
-        >
-          {/* Grainy chalkboard overlay */}
-          <div className="absolute inset-0 bg-black/15 mix-blend-overlay pointer-events-none" />
-
-          {/* Book Cover Image inside board */}
-          <div className="relative w-full h-[90%] rounded-md overflow-hidden shadow-md">
-            <Image
-              src={currentImage.src}
-              alt={currentImage.alt}
-              fill
-              sizes="(max-width:640px)100vw,(max-width:1024px)50vw,33vw"
-              className="object-cover transition-all duration-300 ease-in-out"
-            />
-            {/* Subtle book gloss */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10 pointer-events-none" />
-          </div>
-
-          {/* Heart Icon (Top-Right) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsLiked(!isLiked);
-            }}
-            className="
-              absolute
-              top-3.5
-              right-3.5
-              w-8
-              h-8
-              flex
-              items-center
-              justify-center
-              bg-white/95
-              border border-gray-100
-              rounded-full
-              shadow-md
-              hover:scale-110
-              transition-transform
-              duration-200
-              cursor-pointer
-              z-20
-            "
-          >
-            <Heart
-              size={14}
-              className={
-                isLiked
-                  ? "fill-red-500 text-red-500"
-                  : "text-[#3F3C95]"
-              }
-            />
-          </button>
-
-          {/* Image dots (Bottom-Right of chalkboard area) */}
-          <div className="absolute bottom-4 right-4 flex gap-1 z-20">
-            {story.images.map((img, idx) => (
-              <button
-                key={img.id}
-                onMouseEnter={() => setActiveImageIndex(idx)}
-                className={`
-                  w-1.5
-                  h-1.5
-                  rounded-full
-                  transition-all
-                  duration-200
-                  cursor-pointer
-                  ${idx === activeImageIndex
-                    ? "bg-white scale-125 shadow-md"
-                    : "bg-white/50"
-                  }
-                `}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Chalk Tray & Duster (Bottom-Right Border) */}
-        <div className="absolute bottom-[2px] right-8 translate-y-1/2 z-20 flex items-end">
-          {/* Wood Tray */}
-          <div className="relative bg-[#7A4B24] border-t border-[#9E6E43] h-2.5 px-3 rounded-sm flex items-center gap-1 shadow-md">
-            {/* Chalk pieces */}
-            <div className="w-3 h-1 bg-white rounded-sm -rotate-12"></div>
-            <div className="w-3 h-1 bg-pink-300 rounded-sm rotate-6"></div>
-            <div className="w-3 h-1 bg-blue-300 rounded-sm -rotate-6"></div>
-            {/* Duster */}
-            <div className="w-4 h-1.5 bg-[#4A3B32] rounded-sm flex flex-col border-b border-[#5C341A]">
-              <div className="h-0.5 w-full bg-gray-400 rounded-t-sm"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Circular Kid Avatar (Bottom-Left Overlapping Frame) */}
-        <div
-          className="
-            absolute
-            bottom-[-2px]
-            left-6
-            w-14
-            h-14
-            rounded-full
-            border-[3px] border-white
-            shadow-md
-            overflow-hidden
-            bg-white
-            z-20
+            object-cover
+            absolute inset-0
+            transition-all duration-500 ease-out
+            opacity-100 scale-100
+            group-hover:opacity-0 group-hover:scale-105
           "
-        >
-          <Image
-            src="/assets/home_page/boyHeroImg.png"
-            alt="Child Avatar"
-            fill
-            sizes="56px"
-            className="object-cover object-top scale-125 translate-y-[2px]"
-          />
-        </div>
+          priority
+        />
+
+        {/* Hover image — hidden, fades in + scales to normal on hover */}
+        <Image
+          src={hoverImage.src}
+          alt={hoverImage.alt}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="
+            object-cover
+            absolute inset-0
+            transition-all duration-500 ease-out
+            opacity-0 scale-95
+            group-hover:opacity-100 group-hover:scale-100
+          "
+          loading="eager"
+        />
+
+        {/* Subtle book gloss */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/12 pointer-events-none z-10" />
       </div>
 
-      {/* Page-Curl Shadows (Behind White Body Curve) */}
-      
-      <div className="absolute bottom-6 left-6 w-14 h-8 bg-black/15 rounded-full blur-[6px] -rotate-12 z-0 pointer-events-none"></div>
-      <div className="absolute bottom-6 right-6 w-14 h-8 bg-black/15 rounded-full blur-[6px] rotate-12 z-0 pointer-events-none"></div>
-
-      {/* White Body Container with Curved Bottom */}
-      <div
+      {/* Heart Icon (Top-Right of chalkboard area) */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsLiked(!isLiked);
+        }}
         className="
-          relative
-          flex flex-col
-          flex-1
-          filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)]
-          z-10
-          -mt-1
+          absolute
+          top-[9.5%]
+          right-[17%]
+          w-7
+          h-7
+          flex
+          items-center
+          justify-center
+          bg-white/95
+          border border-gray-100
+          rounded-full
+          shadow-md
+          hover:scale-110
+          transition-transform
+          duration-200
+          cursor-pointer
+          z-20
         "
       >
-        {/* Main Content Div (flat top, curved bottom shape extends via SVG below) */}
-        <div className="bg-white px-5 pt-4 pb-2 flex flex-col gap-3 flex-1 relative">
-          {/* Tags */}
-          <div className="flex items-center gap-2 flex-wrap mt-1">
-            {/* Age Pill */}
-            <span className="text-[9px] font-bold text-[#5B3AB6] bg-[#E5D9FC] border border-[#D5C2FA] rounded-full px-2.5 py-0.5 uppercase tracking-wide">
-              {ageLabel}
-            </span>
+        <Heart
+          size={12}
+          className={
+            isLiked
+              ? "fill-red-500 text-red-500"
+              : "text-[#3F3C95]"
+          }
+        />
+      </button>
 
-            {/* Category Pill */}
-            <span className="text-[9px] font-bold text-[#1E7D56] bg-[#E2F7ED] border border-[#C5EFE0] rounded-full px-2.5 py-0.5 uppercase tracking-wide">
-              {story.category}
-            </span>
+      {/* Circular Kid Avatar — crossfade on group hover */}
+      <div
+        className="
+          absolute
+          w-[16%]
+          aspect-square
+          rounded-full
+          border-[3px] border-white
+          shadow-[0_4px_8px_rgba(0,0,0,0.15)]
+          overflow-hidden
+          bg-white
+          z-20
+          transition-transform duration-300 group-hover:scale-105
+        "
+        style={{
+          left: "12%",
+          top: "39%",
+        }}
+      >
+        {/* Default avatar — fades out on hover */}
+        <Image
+          src={defaultAvatar}
+          alt="Child Avatar"
+          fill
+          sizes="56px"
+          className="
+            object-cover object-top scale-125 translate-y-[2px]
+            absolute inset-0
+            transition-all duration-500 ease-out
+            opacity-100
+            group-hover:opacity-0
+          "
+          priority
+        />
 
-            {/* Pages Pill */}
-            <span className="text-[9px] font-bold text-[#A7440E] bg-[#FDE7D9] border border-[#FCD2B6] rounded-full px-2.5 py-0.5 uppercase tracking-wide">
-              {story.pages} PAGES
-            </span>
-          </div>
+        {/* Hover avatar — fades in on hover */}
+        <Image
+          src={hoverAvatar}
+          alt="Character Avatar"
+          fill
+          sizes="56px"
+          className="
+            object-cover object-top scale-125 translate-y-[2px]
+            absolute inset-0
+            transition-all duration-500 ease-out
+            opacity-0
+            group-hover:opacity-100
+          "
+          loading="eager"
+        />
+      </div>
 
-          {/* Title */}
-          <h3 className="text-sm font-extrabold text-gray-900 uppercase leading-tight tracking-wide">
-            {story.title}
-          </h3>
+      {/* White Body Container */}
+      <div
+        className="
+          absolute
+          left-[13.5%]
+          top-[48.5%]
+          w-[73%]
+          h-[48%]
+          z-10
+          flex flex-col
+          gap-0
+          pt-1
+        "
+      >
+        {/* Tags */}
+        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+          {/* Age Pill */}
+          <span className="text-[8px] font-extrabold text-[#5C53C6] bg-[#EBE7FF] border border-[#D6CFFF]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
+            {ageLabel}
+          </span>
 
-          {/* Description */}
-          <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-3">
-            {story.description}
-          </p>
+          {/* Category Pill */}
+          <span className="text-[8px] font-extrabold text-[#1F8A60] bg-[#E3F8EE] border border-[#CCEFE2]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
+            {story.category}
+          </span>
 
-          {/* Price Layout */}
-          <div className="flex flex-col gap-0.5 mt-auto">
-            <span className="text-lg font-extrabold text-gray-900">
-              ₹ {story.price.toLocaleString("en-IN")}
-            </span>
-            <span className="text-xs text-gray-400 line-through">
-              ₹ {story.originalPrice.toLocaleString("en-IN")}
-            </span>
-          </div>
-
-          {/* 3D Interactive Personalise Button */}
-          <div className="mt-2 w-full z-20">
-            <button
-              className="
-                w-full
-                bg-gradient-to-r from-[#3F3C95] to-[#2B2882]
-                text-white
-                text-xs font-bold
-                uppercase tracking-wider
-                py-2.5
-                rounded-full
-                border-b-[4px] border-[#C8942A]
-                shadow-md
-                hover:brightness-110
-                active:translate-y-[2px] active:border-b-[2px]
-                transition-all
-                cursor-pointer
-                text-center
-              "
-            >
-              Personalise
-            </button>
-          </div>
+          {/* Pages Pill */}
+          <span className="text-[8px] font-extrabold text-[#B04C1C] bg-[#FFF0E6] border border-[#FFE1D1]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
+            {story.pages} PAGES
+          </span>
         </div>
 
-        {/* SVG Curved Bottom Segment */}
-        <div className="relative w-full h-8 bg-transparent pointer-events-none -mt-[1px]">
-          <svg
-            viewBox="0 0 320 30"
-            className="absolute top-0 left-0 w-full h-full fill-white"
-            preserveAspectRatio="none"
+        {/* Title */}
+        <h3 className="text-sm font-extrabold text-[#1A1A1A] uppercase leading-snug tracking-normal line-clamp-1 mb-2">
+          {story.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-[10px] text-gray-500 leading-relaxed line-clamp-2 mb-3">
+          {story.description}
+        </p>
+
+        {/* Price Layout */}
+        <div className="flex flex-col gap-0.5 mb-3">
+          <span className="text-base font-extrabold text-gray-900 leading-none">
+            ₹ {story.price.toLocaleString("en-IN")}
+          </span>
+          <span className="text-[10px] text-gray-400 line-through mt-0.5">
+            ₹ {story.originalPrice.toLocaleString("en-IN")}
+          </span>
+        </div>
+
+        {/* Personalise Button */}
+        <div className="flex justify-center w-full">
+          <button
+            className="
+              w-[80%]
+              bg-gradient-to-b from-[#3F3C95] to-[#2B2882]
+              text-white
+              text-[10px] font-extrabold
+              uppercase tracking-wider
+              py-2
+              rounded-full
+              border-b-[4px] border-[#C8942A]
+              shadow-[0_4px_10px_rgba(63,60,149,0.3)]
+              hover:brightness-110
+              active:translate-y-[2px] active:border-b-[2px]
+              transition-all
+              cursor-pointer
+              text-center
+            "
           >
-            <path d="M 0 0 L 0 8 Q 160 25, 320 8 L 320 0 Z" />
-          </svg>
+            Personalise
+          </button>
         </div>
       </div>
     </div>

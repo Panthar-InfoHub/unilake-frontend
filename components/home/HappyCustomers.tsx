@@ -6,82 +6,102 @@ import { chauPhilomeneOne } from "@/app/fonts";
 
 /* ── Dummy testimonial video data ── */
 const testimonials = [
-  { id: 1, title: "Happy Customer 1", thumbnail: "/assets/home_page/videoImg.png" },
-  { id: 2, title: "Happy Customer 2", thumbnail: "/assets/home_page/videoImg.png" },
-  { id: 3, title: "Happy Customer 3", thumbnail: "/assets/home_page/videoImg.png" },
-  { id: 4, title: "Happy Customer 4", thumbnail: "/assets/home_page/videoImg.png" },
-  { id: 5, title: "Happy Customer 5", thumbnail: "/assets/home_page/videoImg.png" },
-  { id: 6, title: "Happy Customer 6", thumbnail: "/assets/home_page/videoImg.png" },
+  {
+    id: 1,
+    title: "Happy Customer 1",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    thumbnail: "/assets/home_page/videoImg.png",
+  },
+  {
+    id: 2,
+    title: "Happy Customer 2",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    thumbnail: "/assets/home_page/videoImg.png",
+  },
+  {
+    id: 3,
+    title: "Happy Customer 3",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    thumbnail: "/assets/home_page/videoImg.png",
+  },
+  {
+    id: 4,
+    title: "Happy Customer 4",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    thumbnail: "/assets/home_page/videoImg.png",
+  },
+  {
+    id: 5,
+    title: "Happy Customer 5",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+    thumbnail: "/assets/home_page/videoImg.png",
+  },
+  {
+    id: 6,
+    title: "Happy Customer 6",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+    thumbnail: "/assets/home_page/videoImg.png",
+  },
 ];
 
 const ITEMS_PER_PAGE = 3;
 
 export default function HappyCustomers() {
   const [currentPage, setCurrentPage] = useState(0);
+  const [playingVideoId, setPlayingVideoId] = useState<number | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   const totalPages = Math.ceil(testimonials.length / ITEMS_PER_PAGE);
   const startIdx = currentPage * ITEMS_PER_PAGE;
   const visibleVideos = testimonials.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const goToPrev = () => {
+    setPlayingVideoId(null);
     setCurrentPage((prev) => (prev === 0 ? totalPages - 1 : prev - 1));
   };
 
   const goToNext = () => {
+    setPlayingVideoId(null);
     setCurrentPage((prev) => (prev === totalPages - 1 ? 0 : prev + 1));
   };
 
   return (
     <>
-      {/* ===== Purple Hourglass Banner ===== */}
+      {/* ===== Symmetrical Flared Purple Banner ===== */}
       <div className="relative w-full overflow-visible mt-20 lg:mt-32">
-        {/* Top Wave: Dips down in the middle */}
-        <div className="w-full overflow-hidden leading-[0]">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[15px] sm:h-[25px] md:h-[35px] lg:h-[45px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 0 L 0 80 L 1440 80 L 1440 0 Q 720 80 0 0 Z"
-            />
-          </svg>
-        </div>
+        {/* Flared wave SVG */}
+        <svg
+          viewBox="0 0 1728 311"
+          className="w-full block h-[80px] sm:h-[120px] md:h-[160px] lg:h-[200px]"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="#914A8C"
+            d="M66.9068 29.469L-1 0V297L60.6428 263.852C89.7598 248.195 122.304 240 155.364 240H278.89H416.829H535.5H698.224H836.5H1016.5H1151H1331.5H1500.38C1574.97 240 1648.08 260.856 1711.44 300.213L1728 310.5V0L1650.63 31.3555C1626.77 41.0275 1601.26 46 1575.51 46H1331.5H1151H1016.5H836.5H698.224H535.5H416.829H278.89H146.525C119.134 46 92.0343 40.3734 66.9068 29.469Z"
+          />
+        </svg>
 
-        {/* Middle Purple Band */}
-        <div className="bg-[#8E4A92] w-full h-[40px] sm:h-[50px] md:h-[60px] lg:h-[70px] flex items-center justify-center relative z-10">
-          <h2
-            className={`
-              ${chauPhilomeneOne.className}
-              text-white
-              uppercase
-              text-xl
-              sm:text-2xl
-              md:text-3xl
-              lg:text-4xl
-              xl:text-5xl
-              text-center
-              z-30
-              relative
-            `}
-          >
-            UniLake&rsquo;s Happy Customers
-          </h2>
-        </div>
-
-        {/* Bottom Wave: Arches up in the middle */}
-        <div className="w-full overflow-hidden leading-[0] relative z-10">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[15px] sm:h-[25px] md:h-[35px] lg:h-[45px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 80 L 0 0 L 1440 0 L 1440 80 Q 720 0 0 80 Z"
-            />
-          </svg>
+        {/* Text overlay — centered vertically over the SVG */}
+        <div className="absolute inset-0 flex items-center pointer-events-none">
+          <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-center">
+            <h2
+              className={`
+                ${chauPhilomeneOne.className}
+                text-white
+                uppercase
+                text-xl
+                sm:text-2xl
+                md:text-3xl
+                lg:text-4xl
+                xl:text-5xl
+                text-center
+                z-30
+                relative
+              `}
+            >
+              UniLake&rsquo;s Happy Customers
+            </h2>
+          </div>
         </div>
 
         {/* Dino Image — Top-Left, sitting above the bar */}
@@ -131,63 +151,96 @@ export default function HappyCustomers() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
             {visibleVideos.map((video) => (
               <div key={video.id} className="flex justify-center">
-                {/* Scrapbook-style frame */}
+                {/* Scrapbook SVG Frame Container */}
                 <div
                   className="
                     relative
                     w-full
-                    max-w-[280px]
-                    bg-white
-                    rounded-xl
-                    p-3
-                    shadow-[0_4px_20px_rgba(0,0,0,0.08)]
+                    max-w-[290px]
+                    aspect-[414/724]
                     transition-transform
                     duration-300
                     hover:scale-[1.03]
                   "
                 >
-                  {/* Grid pattern background */}
-                  <div className="absolute inset-0 rounded-xl opacity-[0.08] pointer-events-none"
-                    style={{
-                      backgroundImage: `
-                        linear-gradient(to right, #999 1px, transparent 1px),
-                        linear-gradient(to bottom, #999 1px, transparent 1px)
-                      `,
-                      backgroundSize: "20px 20px",
-                    }}
+                  {/* Background SVG frame */}
+                  <Image
+                    src="/assets/image_video_player.svg"
+                    alt="Video frame background"
+                    fill
+                    sizes="290px"
+                    className="pointer-events-none select-none z-0"
+                    priority
                   />
 
-                  {/* Neon-green decorative accents */}
-                  <div className="absolute top-4 right-4 w-10 h-14 bg-[#CBFF3C] rounded-sm rotate-[-8deg] opacity-80 z-0" />
-                  <div className="absolute bottom-4 left-4 w-12 h-10 bg-[#CBFF3C] rounded-sm rotate-[6deg] opacity-80 z-0" />
-                  <div className="absolute top-6 left-6 w-6 h-8 bg-[#CBFF3C]/60 rounded-sm rotate-[12deg] z-0" />
-                  <div className="absolute bottom-6 right-6 w-8 h-6 bg-[#CBFF3C]/60 rounded-sm rotate-[-5deg] z-0" />
+                  {/* Video Content Container */}
+                  <div
+                    className="absolute overflow-hidden cursor-pointer z-10"
+                    style={{
+                      left: "9.9%",
+                      top: "10.8%",
+                      width: "79.9%",
+                      height: "78.3%",
+                      borderRadius: "12%",
+                    }}
+                    onClick={() => {
+                      if (playingVideoId === video.id) {
+                        setPlayingVideoId(null);
+                      } else {
+                        setPlayingVideoId(video.id);
+                      }
+                    }}
+                  >
+                    {playingVideoId === video.id ? (
+                      <video
+                        src={video.videoUrl}
+                        autoPlay
+                        loop
+                        muted={isMuted}
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={video.thumbnail}
+                        alt={video.title}
+                        fill
+                        sizes="240px"
+                        className="object-cover"
+                      />
+                    )}
 
-                  {/* Video Thumbnail */}
-                  <div className="relative aspect-[9/16] rounded-lg overflow-hidden z-10">
-                    <Image
-                      src={video.thumbnail}
-                      alt={video.title}
-                      fill
-                      sizes="280px"
-                      className="object-cover"
-                    />
+                    {/* Interactive Mute Overlay (only active when playing) */}
+                    {playingVideoId === video.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMuted(!isMuted);
+                        }}
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm z-20 hover:bg-black/60 transition-colors cursor-pointer"
+                      >
+                        {isMuted ? (
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 text-white fill-current">
+                            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" className="w-4 h-4 text-white fill-current">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                          </svg>
+                        )}
+                      </button>
+                    )}
 
-                    {/* Mute icon — top right */}
-                    <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm z-20">
-                      <svg viewBox="0 0 24 24" className="w-4 h-4 text-white fill-current">
-                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-                      </svg>
-                    </div>
-
-                    {/* Play button overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center group/play cursor-pointer z-20">
-                      <div className="w-14 h-14 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center shadow-lg transition-all duration-300 transform group-hover/play:scale-110 group-hover/play:bg-white/45">
-                        <svg viewBox="0 0 24 24" className="w-7 h-7 text-white fill-current ml-0.5">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
+                    {/* Custom Play Button Overlay (hidden when video is playing) */}
+                    {playingVideoId !== video.id && (
+                      <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                        <div className="w-14 h-14 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center shadow-lg transition-all duration-300 transform">
+                          <svg viewBox="0 0 24 24" className="w-7 h-7 text-white fill-current ml-0.5">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -202,13 +255,13 @@ export default function HappyCustomers() {
               className="
                 w-12 h-12
                 rounded-full
-                bg-[#8E4A92]
+                bg-[#914B8C]
                 flex items-center justify-center
                 text-white
                 shadow-md
                 transition-all duration-300
                 hover:scale-110
-                hover:bg-[#7A3E7E]
+                hover:bg-[#7d3f78]
                 active:scale-95
                 cursor-pointer
               "
@@ -220,7 +273,7 @@ export default function HappyCustomers() {
             </button>
 
             {/* Dash separator */}
-            <div className="w-8 h-1 bg-[#8E4A92] rounded-full" />
+            <div className="w-8 h-1 bg-[#914B8C] rounded-full" />
 
             {/* Next Button */}
             <button
@@ -228,13 +281,13 @@ export default function HappyCustomers() {
               className="
                 w-12 h-12
                 rounded-full
-                bg-[#8E4A92]
+                bg-[#914B8C]
                 flex items-center justify-center
                 text-white
                 shadow-md
                 transition-all duration-300
                 hover:scale-110
-                hover:bg-[#7A3E7E]
+                hover:bg-[#7d3f78]
                 active:scale-95
                 cursor-pointer
               "

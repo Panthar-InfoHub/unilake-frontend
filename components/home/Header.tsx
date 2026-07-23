@@ -24,11 +24,21 @@ export default function Header() {
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [hideBulb, setHideBulb] = useState(false);
+  const [showHeader, setShowHeader] = useState(true);
+  const lastScrollY = useRef(0);
 
-  {/* Hide bulb on scroll */ }
+  {/* Hide bulb and header on scroll */ }
   useEffect(() => {
     const handleScroll = () => {
-      setHideBulb(window.scrollY > 80);
+      const currentScrollY = window.scrollY;
+      setHideBulb(currentScrollY > 80);
+
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setShowHeader(false);
+      } else {
+        setShowHeader(true);
+      }
+      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -53,17 +63,18 @@ export default function Header() {
 
   return (
     <nav
-      className="
-    fixed
-    top-0
-    left-0
-    w-full
-    h-[86px]
-    bg-[#914A8C]
-    shadow-md
-    z-50
-    overflow-visible
-  "
+      className={`
+        fixed
+        top-0
+        left-0
+        w-full
+        h-[86px]
+        z-50
+        overflow-visible
+        transition-transform
+        duration-300
+        ${showHeader ? "translate-y-0" : "-translate-y-full"}
+      `}
     >
       <div className="max-w-[1440px] mx-auto h-full px-10 flex items-center justify-between">
         {/* Logo */}
@@ -156,14 +167,21 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Left Concave Corner Curve */}
-      <svg
-        className="absolute bottom-0 left-0 w-[120px] h-[60px] fill-[#F8E7D2] pointer-events-none z-30"
-        viewBox="0 0 120 60"
-        preserveAspectRatio="none"
-      >
-        <path d="M 0 0 Q 0 60, 120 60 L 0 60 Z" />
-      </svg>
+      {/* Background SVG shape with contour-hugging shadow */}
+      <div className="absolute inset-0 w-full h-[138px] pointer-events-none -z-10 drop-shadow-md">
+        <svg
+          className="w-full h-full"
+          viewBox="0 0 1728 205"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0 0H1728V205L1699.6 175.084C1670.8 144.755 1630.82 127.582 1589 127.582H1511.5H1436H1348.5H1280H1205H1128H1044.5H957H869H775.5H686.5H600H524H441H356.5H295.5H229H156.5C112.973 127.582 70.9127 143.315 38.0718 171.883L0 205V0Z"
+            fill="#914A8C"
+          />
+        </svg>
+      </div>
 
       {/* Hanging Bulb */}
       <Image
@@ -203,14 +221,7 @@ export default function Header() {
   `}
       />
 
-      {/* Right Concave Corner Curve */}
-      <svg
-        className="absolute bottom-0 right-0 w-[120px] h-[60px] fill-[#F8E7D2] pointer-events-none z-30"
-        viewBox="0 0 120 60"
-        preserveAspectRatio="none"
-      >
-        <path d="M 120 0 Q 120 60, 0 60 L 120 60 Z" />
-      </svg>
+
     </nav>
   );
 }

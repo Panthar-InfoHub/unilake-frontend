@@ -57,99 +57,51 @@ export default function GoogleReviews() {
 
   return (
     <>
-      {/* ===== Symmetrical Hourglass Purple Banner ===== */}
+      {/* ===== Symmetrical Flared Purple Banner ===== */}
       <div className="relative w-full overflow-visible mt-20 lg:mt-32">
-        {/* Top Wave: Dips down in the middle */}
-        <div className="w-full overflow-hidden leading-[0]">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[15px] sm:h-[25px] md:h-[35px] lg:h-[45px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 0 L 0 80 L 1440 80 L 1440 0 Q 720 80 0 0 Z"
-            />
-          </svg>
-        </div>
+        {/* Flared wave SVG */}
+        <svg
+          viewBox="0 0 1728 311"
+          className="w-full block h-[80px] sm:h-[120px] md:h-[160px] lg:h-[200px]"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="#914A8C"
+            d="M66.9068 29.469L-1 0V297L60.6428 263.852C89.7598 248.195 122.304 240 155.364 240H278.89H416.829H535.5H698.224H836.5H1016.5H1151H1331.5H1500.38C1574.97 240 1648.08 260.856 1711.44 300.213L1728 310.5V0L1650.63 31.3555C1626.77 41.0275 1601.26 46 1575.51 46H1331.5H1151H1016.5H836.5H698.224H535.5H416.829H278.89H146.525C119.134 46 92.0343 40.3734 66.9068 29.469Z"
+          />
+        </svg>
 
-        {/* Middle Purple Band */}
-        <div className="bg-[#8E4A92] w-full h-[40px] sm:h-[50px] md:h-[60px] lg:h-[70px] flex items-center justify-center relative z-10">
-          <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-start">
+        {/* Combined UFO + Text Overlay — Centered & aligned side-by-side */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex items-center gap-0 sm:gap-2 max-w-7xl w-full px-8 justify-center">
+            {/* UFO */}
+            <div className="relative w-[140px] sm:w-[220px] md:w-[300px] lg:w-[380px] xl:w-[440px] aspect-[580/220] -mt-6 sm:-mt-10 lg:-mt-28 select-none pointer-events-none">
+              <Image
+                src="/assets/home_page/ufoImg.png"
+                alt="5 Star UFO"
+                fill
+                priority
+                className="object-contain"
+              />
+            </div>
+            {/* Text */}
             <h2
               className={`
                 ${chauPhilomeneOne.className}
                 text-white
                 uppercase
-                text-xl
+                text-lg
                 sm:text-2xl
                 md:text-3xl
                 lg:text-4xl
                 xl:text-5xl
                 z-30
                 relative
-                pl-[90px]
-                sm:pl-[140px]
-                md:pl-[190px]
-                lg:pl-[250px]
-                xl:pl-[270px]
               `}
             >
               Excellent On Google
             </h2>
           </div>
-        </div>
-
-        {/* Bottom Wave: Arches up in the middle */}
-        <div className="w-full overflow-hidden leading-[0] relative z-10">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[15px] sm:h-[25px] md:h-[35px] lg:h-[45px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 80 L 0 0 L 1440 0 L 1440 80 Q 720 0 0 80 Z"
-            />
-          </svg>
-        </div>
-
-        {/* UFO Image — Top-Left, sitting above the bar with space */}
-        <div
-          className="
-            absolute
-            left-2
-            sm:left-6
-            md:left-10
-            lg:left-16
-            xl:left-24
-
-            bottom-[10px]
-            sm:bottom-[15px]
-            md:bottom-[20px]
-            lg:bottom-[22px]
-
-            z-30
-            pointer-events-none
-            select-none
-          "
-        >
-          <Image
-            src="/assets/home_page/ufoImg.png"
-            alt="5 Star UFO"
-            width={580}
-            height={220}
-            priority
-            className="
-              w-[120px]
-              sm:w-[180px]
-              md:w-[260px]
-              lg:w-[340px]
-              xl:w-[400px]
-              h-auto
-              object-contain
-            "
-          />
         </div>
       </div>
 

@@ -14,6 +14,8 @@ export interface Story {
   price: number;
   originalPrice: number;
   images: StoryImage[];
+  avatarSrc?: string;
+  avatarHoverSrc?: string;
 }
 
 export const stories: Story[] = [
@@ -27,22 +29,12 @@ export const stories: Story[] = [
     pages: 30,
     price: 1199,
     originalPrice: 1499,
+    avatarSrc: "/assets/home_page/boyHeroImg.png",
+    avatarHoverSrc: "/assets/home_page/DragonImg.png",
     images: [
-      {
-        id: 1,
-        src: "/assets/home_page/stories/cover_1.png",
-        alt: "Sara flying above clouds at sunset",
-      },
-      {
-        id: 2,
-        src: "/assets/home_page/stories/cover_2.png",
-        alt: "Sara riding a friendly dragon",
-      },
-      {
-        id: 3,
-        src: "/assets/home_page/stories/cover_3.png",
-        alt: "Sara in an enchanted forest",
-      },
+      { id: 1, src: "/assets/home_page/stories/cover_1.png", alt: "Sara flying above clouds at sunset" },
+      { id: 2, src: "/assets/home_page/stories/cover_2.png", alt: "Sara riding a friendly dragon" },
+      { id: 3, src: "/assets/home_page/stories/cover_3.png", alt: "Sara in an enchanted forest" },
     ],
   },
   {
@@ -55,22 +47,12 @@ export const stories: Story[] = [
     pages: 30,
     price: 1199,
     originalPrice: 1499,
+    avatarSrc: "/assets/home_page/boyHeroImg.png",
+    avatarHoverSrc: "/assets/home_page/dinoImg.png",
     images: [
-      {
-        id: 1,
-        src: "/assets/home_page/stories/cover_2.png",
-        alt: "Sara riding a friendly dragon",
-      },
-      {
-        id: 2,
-        src: "/assets/home_page/stories/cover_3.png",
-        alt: "Sara in an enchanted forest",
-      },
-      {
-        id: 3,
-        src: "/assets/home_page/stories/cover_1.png",
-        alt: "Sara flying above clouds at sunset",
-      },
+      { id: 1, src: "/assets/home_page/stories/cover_2.png", alt: "Sara riding a friendly dragon" },
+      { id: 2, src: "/assets/home_page/stories/cover_3.png", alt: "Sara in an enchanted forest" },
+      { id: 3, src: "/assets/home_page/stories/cover_1.png", alt: "Sara flying above clouds at sunset" },
     ],
   },
   {
@@ -83,22 +65,12 @@ export const stories: Story[] = [
     pages: 30,
     price: 1199,
     originalPrice: 1499,
+    avatarSrc: "/assets/home_page/boyHeroImg.png",
+    avatarHoverSrc: "/assets/home_page/DragonImg.png",
     images: [
-      {
-        id: 1,
-        src: "/assets/home_page/stories/cover_3.png",
-        alt: "Sara in an enchanted forest",
-      },
-      {
-        id: 2,
-        src: "/assets/home_page/stories/cover_1.png",
-        alt: "Sara flying above clouds at sunset",
-      },
-      {
-        id: 3,
-        src: "/assets/home_page/stories/cover_2.png",
-        alt: "Sara riding a friendly dragon",
-      },
+      { id: 1, src: "/assets/home_page/stories/cover_3.png", alt: "Sara in an enchanted forest" },
+      { id: 2, src: "/assets/home_page/stories/cover_1.png", alt: "Sara flying above clouds at sunset" },
+      { id: 3, src: "/assets/home_page/stories/cover_2.png", alt: "Sara riding a friendly dragon" },
     ],
   },
   {
@@ -111,22 +83,12 @@ export const stories: Story[] = [
     pages: 30,
     price: 1199,
     originalPrice: 1499,
+    avatarSrc: "/assets/home_page/boyHeroImg.png",
+    avatarHoverSrc: "/assets/home_page/dinoImg.png",
     images: [
-      {
-        id: 1,
-        src: "/assets/home_page/stories/cover_1.png",
-        alt: "Sara flying above clouds at sunset",
-      },
-      {
-        id: 2,
-        src: "/assets/home_page/stories/cover_3.png",
-        alt: "Sara in an enchanted forest",
-      },
-      {
-        id: 3,
-        src: "/assets/home_page/stories/cover_2.png",
-        alt: "Sara riding a friendly dragon",
-      },
+      { id: 1, src: "/assets/home_page/stories/cover_1.png", alt: "Sara flying above clouds at sunset" },
+      { id: 2, src: "/assets/home_page/stories/cover_3.png", alt: "Sara in an enchanted forest" },
+      { id: 3, src: "/assets/home_page/stories/cover_2.png", alt: "Sara riding a friendly dragon" },
     ],
   },
   {
@@ -139,22 +101,12 @@ export const stories: Story[] = [
     pages: 30,
     price: 1199,
     originalPrice: 1499,
+    avatarSrc: "/assets/home_page/boyHeroImg.png",
+    avatarHoverSrc: "/assets/home_page/DragonImg.png",
     images: [
-      {
-        id: 1,
-        src: "/assets/home_page/stories/cover_2.png",
-        alt: "Sara riding a friendly dragon",
-      },
-      {
-        id: 2,
-        src: "/assets/home_page/stories/cover_1.png",
-        alt: "Sara flying above clouds at sunset",
-      },
-      {
-        id: 3,
-        src: "/assets/home_page/stories/cover_3.png",
-        alt: "Sara in an enchanted forest",
-      },
+      { id: 1, src: "/assets/home_page/stories/cover_2.png", alt: "Sara riding a friendly dragon" },
+      { id: 2, src: "/assets/home_page/stories/cover_1.png", alt: "Sara flying above clouds at sunset" },
+      { id: 3, src: "/assets/home_page/stories/cover_3.png", alt: "Sara in an enchanted forest" },
     ],
   },
   {
@@ -167,22 +119,12 @@ export const stories: Story[] = [
     pages: 30,
     price: 1199,
     originalPrice: 1499,
+    avatarSrc: "/assets/home_page/boyHeroImg.png",
+    avatarHoverSrc: "/assets/home_page/dinoImg.png",
     images: [
-      {
-        id: 1,
-        src: "/assets/home_page/stories/cover_3.png",
-        alt: "Sara in an enchanted forest",
-      },
-      {
-        id: 2,
-        src: "/assets/home_page/stories/cover_2.png",
-        alt: "Sara riding a friendly dragon",
-      },
-      {
-        id: 3,
-        src: "/assets/home_page/stories/cover_1.png",
-        alt: "Sara flying above clouds at sunset",
-      },
+      { id: 1, src: "/assets/home_page/stories/cover_3.png", alt: "Sara in an enchanted forest" },
+      { id: 2, src: "/assets/home_page/stories/cover_2.png", alt: "Sara riding a friendly dragon" },
+      { id: 3, src: "/assets/home_page/stories/cover_1.png", alt: "Sara flying above clouds at sunset" },
     ],
   },
 ];

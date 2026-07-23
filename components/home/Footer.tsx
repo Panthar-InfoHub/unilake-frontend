@@ -65,10 +65,10 @@ export default function Footer() {
       </div>
 
       {/* ===== Solid Purple Footer Body ===== */}
-      <div className="bg-[#8E4A92] text-white pt-10 pb-16 relative z-10">
+      <div className="bg-[#914B8C] text-white pt-10 pb-16 relative z-10">
         <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-16">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16">
-            
+
             {/* Left Column: Brand & Logo */}
             <div className="md:col-span-6 flex flex-col items-start">
               {/* UniLake Logo */}
@@ -100,7 +100,7 @@ export default function Footer() {
                     h-10
                     rounded-full
                     bg-white
-                    text-[#8E4A92]
+                    text-[#914B8C]
                     flex
                     items-center
                     justify-center
@@ -135,7 +135,7 @@ export default function Footer() {
                     h-10
                     rounded-full
                     bg-white
-                    text-[#8E4A92]
+                    text-[#914B8C]
                     flex
                     items-center
                     justify-center

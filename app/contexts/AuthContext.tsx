@@ -4,6 +4,7 @@ import {
     createContext,
     useCallback,
     useContext,
+    useEffect,
 } from "react";
 import { authClient } from "@/app/lib/auth-client";
 import { authService } from "@/app/lib/auth-service";
@@ -16,6 +17,17 @@ const AuthContext = createContext<AuthContextType | null>(null);
 // ── Provider ───────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, isPending, refetch } = authClient.useSession();
+
+    // Clean up Facebook OAuth hash artifact (#_=_)
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.location.hash === "#_=_") {
+            if (window.history.replaceState) {
+                window.history.replaceState(null, "", window.location.href.split("#")[0]);
+            } else {
+                window.location.hash = "";
+            }
+        }
+    }, []);
 
     // Safely cast to access the custom role field without using any
     const rawUser = data?.user as {

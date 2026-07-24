@@ -48,7 +48,7 @@ export const authService = {
         const res = await authClient.signIn.email({
             email,
             password,
-            callbackURL: callbackURL || `${origin}/admin/dashboard`,
+            callbackURL: callbackURL || `${origin}/`,
         }, {
             onError: (ctx) => {
                 throw new Error(friendlyErrorMessage(ctx.error.message, "Invalid credentials"));

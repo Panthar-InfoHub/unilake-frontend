@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/app/contexts/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import {
   geistSans,
@@ -9,6 +11,10 @@ import {
   chauPhilomeneOne,
   hankenGrotesk,
 } from "@/app/fonts";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "UniLake",
@@ -23,16 +29,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`
-        ${geistSans.variable}
-        ${geistMono.variable}
-        ${poppins.variable}
-        ${chauPhilomeneOne.variable}
-        ${hankenGrotesk.variable}
-      `}
+      className={cn(geistSans.variable, geistMono.variable, poppins.variable, chauPhilomeneOne.variable, hankenGrotesk.variable, "font-sans", geist.variable)}
     >
       <body className={`${poppins.className} min-h-screen`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+        </AuthProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
+import { UserRole } from "@/app/types/auth";
+import { toast } from "sonner";
 
 // ── LoadingScreen ──────────────────────────────────────────────────────────────
 function LoadingScreen() {
@@ -27,17 +29,20 @@ function LoadingScreen() {
 
 // ── Admin Traffic Router ────────────────────────────────────────────────────────
 export default function AdminPage() {
-    const { isAuthenticated, loading } = useAuth();
+    const { user, isAuthenticated, loading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
         if (loading) return;
-        if (isAuthenticated) {
-            router.replace("/admin/dashboard");
+        if (isAuthenticated && user?.role === UserRole.ADMIN) {
+            router.replace("/admin/overview");
+        } else if (isAuthenticated && user?.role !== UserRole.ADMIN) {
+            toast.error("You are not an admin");
+            router.replace("/");
         } else {
-            router.replace("/admin/login");
+            router.replace("/login");
         }
-    }, [loading, isAuthenticated, router]);
+    }, [loading, isAuthenticated, user, router]);
 
     return <LoadingScreen />;
 }

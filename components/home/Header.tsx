@@ -2,7 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Heart, Search, User, ShoppingBag, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Heart, Search, User, ShoppingBag, ChevronDown, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/app/hooks/useAuth";
+import { UserRole } from "@/app/types/auth";
 
 interface Country {
   code: string;
@@ -23,6 +27,10 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user, loading, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const [hideBulb, setHideBulb] = useState(false);
   const [showHeader, setShowHeader] = useState(true);
   const lastScrollY = useRef(0);
@@ -53,6 +61,9 @@ export default function Header() {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -110,6 +121,13 @@ export default function Header() {
 
         {/* Right Section: Icons + Language Dropdown */}
         <div className="flex items-center gap-6 text-white">
+          {/* Admin Settings - Only visible to admins */}
+          {!loading && user?.role === UserRole.ADMIN && (
+            <Link href="/admin" className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">
+              <Settings size={20} strokeWidth={2} />
+            </Link>
+          )}
+
           {/* Wishlist */}
           <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">
             <Heart size={20} strokeWidth={2} />
@@ -121,9 +139,50 @@ export default function Header() {
           </button>
 
           {/* Profile */}
-          <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">
-            <User size={20} strokeWidth={2} />
-          </button>
+          <div className="relative" ref={profileDropdownRef}>
+            <button
+              onClick={() => {
+                if (isAuthenticated) {
+                  setIsProfileOpen(!isProfileOpen);
+                } else {
+                  router.push("/login");
+                }
+              }}
+              className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1"
+            >
+              <User size={20} strokeWidth={2} />
+            </button>
+
+            {isProfileOpen && isAuthenticated && user && (
+              <div className="absolute right-0 mt-3.5 w-48 bg-[#914A8C] border border-white/20 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col">
+                <div className="px-4 py-3 border-b border-white/10 flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold truncate text-white">{user.name}</span>
+                  <span className="text-xs text-white/60 truncate">{user.email}</span>
+                </div>
+                
+                <button
+                  onClick={() => setIsProfileOpen(false)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-white/15 transition-colors text-white cursor-pointer"
+                >
+                  <Settings size={16} />
+                  <span className="font-medium flex-1">Settings</span>
+                </button>
+                
+                <div className="h-px bg-white/10 my-1 mx-2"></div>
+                
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-white/15 transition-colors text-white cursor-pointer"
+                >
+                  <LogOut size={16} />
+                  <span className="font-medium flex-1">Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Cart with Blue Dot Badge */}
           <button className="relative hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">

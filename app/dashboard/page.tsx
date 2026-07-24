@@ -51,10 +51,6 @@ export default function DashboardPage() {
         if (loading) return;
         if (!isAuthenticated) {
             router.replace("/login");
-            return;
-        }
-        if (user && user.email === "devranjeetq@gmail.com") {
-            router.replace("/admin/dashboard");
         }
     }, [loading, isAuthenticated, user, router]);
 

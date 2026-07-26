@@ -23,7 +23,11 @@ const countries: Country[] = [
 ];
 
 
-export default function Header() {
+interface HeaderProps {
+  topOffset?: number;
+}
+
+export default function Header({ topOffset = 0 }: HeaderProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -74,9 +78,12 @@ export default function Header() {
 
   return (
     <nav
+      style={{
+        top: topOffset,
+        transform: showHeader ? "translateY(0)" : `translateY(calc(-100% - ${topOffset}px))`,
+      }}
       className={`
         fixed
-        top-0
         left-0
         w-full
         h-[86px]
@@ -84,7 +91,6 @@ export default function Header() {
         overflow-visible
         transition-transform
         duration-300
-        ${showHeader ? "translate-y-0" : "-translate-y-full"}
       `}
     >
       <div className="max-w-[1440px] mx-auto h-full px-10 flex items-center justify-between">
@@ -165,7 +171,7 @@ export default function Header() {
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-white/15 transition-colors text-white cursor-pointer"
                 >
                   <Settings size={16} />
-                  <span className="font-medium flex-1">Settings</span>
+                  <span className="font-medium flex-1">Dashboard</span>
                 </button>
                 
                 <div className="h-px bg-white/10 my-1 mx-2"></div>

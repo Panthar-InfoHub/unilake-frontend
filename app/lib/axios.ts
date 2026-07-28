@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import type { ApiResponse } from "@/app/types/announcement";
+import type { ApiResponse } from "@/app/types/api";
 
 const baseURL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:8080";
 

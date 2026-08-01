@@ -13,6 +13,8 @@ import {
   MessageSquare,
   Image as ImageIcon,
   LogOut,
+  Globe,
+  Palette,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 
@@ -32,6 +34,8 @@ const NAV_ITEMS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin/overview" },
   { label: "Orders", icon: ShoppingCart, href: "/admin/orders" },
   { label: "Comics", icon: BookOpen, href: "/admin/comics" },
+  { label: "Countries", icon: Globe, href: "/admin/countries" },
+  { label: "Themes", icon: Palette, href: "/admin/themes" },
   { label: "Users", icon: Users, href: "/admin/users" },
   { label: "Announcement Bar", icon: Megaphone, href: "/admin/announcement-bar" },
   { label: "Customer Reviews", icon: Star, href: "/admin/customer-reviews" },

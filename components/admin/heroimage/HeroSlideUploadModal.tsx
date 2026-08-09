@@ -152,9 +152,11 @@ export function HeroSlideUploadModal({
               <p className="text-sm font-extrabold text-neutral-800">
                 Click to browse or drop image file here
               </p>
-              <p className="text-[12px] font-semibold text-[#914A8C]/80">
-                Supported formats: PNG, JPEG, WEBP (Max recommended ~2000px width)
-              </p>
+              <div className="text-[12px] font-semibold text-[#914A8C]/80 flex flex-col items-center gap-0.5 mt-1 text-center">
+                <p>Supported formats: PNG, JPEG, WEBP</p>
+                <p>Recommended dimensions: 500 × 550 px (portrait, ~10:11 ratio)</p>
+                <p className="opacity-80">Images outside this ratio will appear stretched or squished.</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">

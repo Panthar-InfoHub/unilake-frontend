@@ -1,7 +1,11 @@
 import Image from "next/image";
 import { chauPhilomeneOne } from "@/app/fonts";
+import { getPublicHeroImages } from "@/app/actions/heroimage";
+import { HeroImageSlideshow } from "./HeroImageSlideshow";
 
-export default function Hero() {
+export default async function Hero() {
+  const heroImages = await getPublicHeroImages();
+
   return (
     <section className="relative pt-44 lg:pt-40">
 
@@ -79,15 +83,15 @@ export default function Hero() {
 
           <div className="relative flex justify-center">
 
-            <Image
-              src="/assets/home_page/boyHeroImg.png"
-              alt=""
+            <HeroImageSlideshow 
+              images={heroImages}
+              fallbackSrc="/assets/home_page/boyHeroImg.png"
               width={500}
               height={550}
               className="drop-shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
             />
 
-          
+
 
           </div>
 

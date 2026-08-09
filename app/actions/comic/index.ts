@@ -6,7 +6,9 @@ import type {
   CreateComicPayload,
   ThumbnailUploadResponse,
   PricingRuleWithCountry,
-  ComicStatus
+  ComicStatus,
+  PublicComicListItem,
+  PublicComicDetail
 } from "@/app/types/comic";
 
 export async function fetchComics(filters?: { gender?: string, ageGroup?: string, themeId?: string, search?: string }): Promise<ComicListItem[]> {
@@ -69,3 +71,29 @@ export async function updatePricing(id: string, pricing: { countryId: string; co
   const { data } = await api.put<Comic>(`/api/admin/comics/${id}/pricing`, { pricing });
   return data;
 }
+
+export async function fetchPublicComics(filters?: {
+  gender?: string;
+  ageGroup?: string;
+  themeId?: string;
+  search?: string;
+}): Promise<PublicComicListItem[]> {
+  const params = new URLSearchParams();
+
+  if (filters?.gender) params.append("gender", filters.gender);
+  if (filters?.ageGroup) params.append("ageGroup", filters.ageGroup);
+  if (filters?.themeId) params.append("themeId", filters.themeId);
+  if (filters?.search) params.append("search", filters.search);
+
+  const query = params.toString();
+  const { data } = await api.get<PublicComicListItem[]>(
+    `/api/public/comics${query ? `?${query}` : ""}`
+  );
+  return data;
+}
+
+export async function fetchPublicComic(comicId: string): Promise<PublicComicDetail> {
+  const { data } = await api.get<PublicComicDetail>(`/api/public/comics/${comicId}`);
+  return data;
+}
+

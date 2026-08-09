@@ -5,7 +5,8 @@ import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import StoryFilters from "@/components/home/StoryFilters";
 import StoryCard from "@/components/home/StoryCard";
-import { stories } from "@/data/storyData";
+import { usePublicComics } from "@/hooks/usePublicComics";
+import { Loader2 } from "lucide-react";
 
 const personalisationSteps = [
   {
@@ -50,32 +51,10 @@ export default function ChooseStory() {
     }));
   };
 
-  const parseRange = (str: string): [number, number] => {
-    const cleaned = str.replace(/AGE/i, "").trim();
-    if (cleaned.endsWith("+")) {
-      return [parseInt(cleaned), 99];
-    }
-    const parts = cleaned.split("-").map((p) => parseInt(p.trim()));
-    if (parts.length === 2) return [parts[0], parts[1]];
-    return [0, 99];
-  };
-
-  const filteredStories = stories.filter((story) => {
-    // Filter by Age
-    if (selectedFilters.age) {
-      const [sMin, sMax] = parseRange(story.ageRange);
-      const [fMin, fMax] = parseRange(selectedFilters.age);
-      if (fMax < sMin || fMin > sMax) return false;
-    }
-
-    // Filter by Theme (Category)
-    if (selectedFilters.theme) {
-      if (story.category.toLowerCase() !== selectedFilters.theme.toLowerCase()) {
-        return false;
-      }
-    }
-
-    return true;
+  const { data: comics, isLoading, error } = usePublicComics({
+    ageGroup: selectedFilters.ageGroup,
+    gender: selectedFilters.gender,
+    themeId: selectedFilters.themeId,
   });
 
   return (
@@ -161,11 +140,32 @@ export default function ChooseStory() {
           />
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 pb-16">
-            {filteredStories.map((story) => (
-              <StoryCard key={story.id} story={story} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-12 h-12 text-[#914B8C] animate-spin mb-4" />
+              <p className="text-[#555555] font-medium">Loading stories...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-red-500 font-medium">Failed to load stories. Please try again.</p>
+            </div>
+          ) : comics && comics.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 pb-16">
+              {comics.map((comic) => (
+                <StoryCard key={comic.id} comic={comic} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-[#555555] font-medium text-lg">No stories found matching your criteria.</p>
+              <button 
+                onClick={() => setSelectedFilters({})}
+                className="mt-4 px-6 py-2 bg-white border border-[#914B8C] text-[#914B8C] rounded-full hover:bg-[#FDF9F3] transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

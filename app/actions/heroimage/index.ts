@@ -45,3 +45,27 @@ export async function toggleHeroImageStatus(id: string): Promise<HeroImage> {
 export async function deleteHeroImage(id: string): Promise<void> {
   await api.delete(`/api/admin/hero-images/${id}`);
 }
+
+/**
+ * Fetches only active hero slide images for the public homepage.
+ * Uses a bare fetch because it does not require admin authentication.
+ */
+export async function getPublicHeroImages(): Promise<HeroImage[]> {
+  const baseURL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:8080";
+  try {
+    const res = await fetch(`${baseURL}/api/public/hero-images`, {
+      cache: "no-store", // Always fetch the latest active images
+    });
+    if (!res.ok) {
+      return [];
+    }
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data)) {
+      return json.data;
+    }
+    return [];
+  } catch (err) {
+    console.error("Error fetching public hero images:", err);
+    return [];
+  }
+}

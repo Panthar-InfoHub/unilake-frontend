@@ -1,8 +1,13 @@
 import api from "@/app/lib/axios";
-import type { Country, CountryUploadUrlResponse } from "@/app/types/country";
+import type { Country, CountryUploadUrlResponse, PublicCountry } from "@/app/types/country";
 
 export async function fetchCountries(): Promise<Country[]> {
   const { data } = await api.get<Country[]>("/api/admin/countries");
+  return data;
+}
+
+export async function fetchPublicCountries(): Promise<PublicCountry[]> {
+  const { data } = await api.get<PublicCountry[]>("/api/public/countries");
   return data;
 }
 

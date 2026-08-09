@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/app/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PublicQueryProvider } from "@/components/providers/PublicQueryProvider";
 
 import {
   geistSans,
@@ -32,11 +33,13 @@ export default function RootLayout({
       className={cn(geistSans.variable, geistMono.variable, poppins.variable, chauPhilomeneOne.variable, hankenGrotesk.variable, "font-sans", geist.variable)}
     >
       <body className={`${poppins.className} min-h-screen`}>
-        <AuthProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-        </AuthProvider>
+        <PublicQueryProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+          </AuthProvider>
+        </PublicQueryProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

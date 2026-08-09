@@ -193,3 +193,50 @@ export interface CreateComicPayload {
   ageGroup?: AgeGroup;
   isBestseller?: boolean;
 }
+
+export interface PublicPricingRule {
+  price: string;
+  coverType: CoverType;
+  country: {
+    code: string;
+    name: string;
+    flagUrl: string;
+    currencyCode: string;
+  };
+}
+
+export interface PublicComicListItem {
+  id: string;
+  title: string;
+  description: string | null;
+  genderTag: GenderTag;
+  ageGroup: AgeGroup | null;
+  isBestseller: boolean;
+  pageCount: number;
+  coverThumbnailUrls: string[];
+  theme: { id: string; name: string } | null;
+  pricingRules: PublicPricingRule[];
+}
+
+export interface PublicComicDetailPage {
+  id: string;
+  pageNumber: number;
+  artworkUrl: string;
+  artworkWidth: number;
+  artworkHeight: number;
+}
+
+export interface PublicComicDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  genderTag: GenderTag;
+  ageGroup: AgeGroup | null;
+  isBestseller: boolean;
+  pageCount: number;
+  freePreviewPages: number;
+  coverThumbnailUrls: string[];
+  theme: { id: string; name: string } | null;
+  pricingRules: PublicPricingRule[];
+  pages: PublicComicDetailPage[];
+}

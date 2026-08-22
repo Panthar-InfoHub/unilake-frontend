@@ -4,7 +4,7 @@ import { UserRole } from "@/app/types/auth";
 
 // ── Route config ───────────────────────────────────────────────────────────────
 const PROTECTED_USER_ROUTES = ["/dashboard"];
-const PROTECTED_ADMIN_ROUTES = ["/admin"];
+const PROTECTED_ADMIN_ROUTES: string[] = [];
 const PUBLIC_ROUTES = ["/login", "/", "/terms", "/privacy"];
 
 // ── Session cookie name — must match what Better Auth sets on the backend ──────
@@ -43,12 +43,12 @@ export function proxy(request: NextRequest): NextResponse {
 
     // ── Authenticated user trying to access /admin without ADMIN role ──────────
     if (isAdminRoute && hasSession && role !== UserRole.ADMIN) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // ── Authenticated user trying to visit /login → redirect to dashboard ──────
+    // ── Authenticated user trying to visit /login → redirect to homepage ──────
     if (isPublicRoute && pathname === "/login" && hasSession) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     return NextResponse.next();

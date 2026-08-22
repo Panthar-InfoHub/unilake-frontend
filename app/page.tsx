@@ -1,4 +1,4 @@
-import Header from "@/components/home/Header";
+import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Hero from "@/components/home/Hero";
 import ChooseStory from "@/components/home/ChooseStory";
 import HappyCustomers from "@/components/home/HappyCustomers";
@@ -12,7 +12,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#F8E7D2] overflow-x-hidden">
       {/* ================= NAVBAR ================= */}
 
-      <Header />
+      <HomeHeaderSection />
 
 
       {/*Home Page */}

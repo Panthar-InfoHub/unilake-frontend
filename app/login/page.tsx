@@ -125,11 +125,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (!loading && isAuthenticated && user) {
-            if (user.email === "devranjeetq@gmail.com") {
-                router.replace("/admin/dashboard");
-            } else {
-                router.replace("/");
-            }
+            router.replace("/");
         }
     }, [loading, isAuthenticated, user, router]);
 

@@ -31,24 +31,22 @@ const teamMembers = [
 export default function OurTeam() {
   return (
     <>
-      {/* ===== Symmetrical Hourglass Purple Banner ===== */}
+      {/* ===== Symmetrical Flared Purple Banner ===== */}
       <div className="relative w-full overflow-visible mt-20 lg:mt-32">
-        {/* Top Wave: Dips down in the middle */}
-        <div className="w-full overflow-hidden leading-[0]">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[15px] sm:h-[25px] md:h-[35px] lg:h-[45px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 0 L 0 80 L 1440 80 L 1440 0 Q 720 80 0 0 Z"
-            />
-          </svg>
-        </div>
+        {/* Flared wave SVG */}
+        <svg
+          viewBox="0 0 1728 311"
+          className="w-full block h-[80px] sm:h-[120px] md:h-[160px] lg:h-[200px]"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="#914A8C"
+            d="M66.9068 29.469L-1 0V297L60.6428 263.852C89.7598 248.195 122.304 240 155.364 240H278.89H416.829H535.5H698.224H836.5H1016.5H1151H1331.5H1500.38C1574.97 240 1648.08 260.856 1711.44 300.213L1728 310.5V0L1650.63 31.3555C1626.77 41.0275 1601.26 46 1575.51 46H1331.5H1151H1016.5H836.5H698.224H535.5H416.829H278.89H146.525C119.134 46 92.0343 40.3734 66.9068 29.469Z"
+          />
+        </svg>
 
-        {/* Middle Purple Band */}
-        <div className="bg-[#8E4A92] w-full h-[40px] sm:h-[50px] md:h-[60px] lg:h-[70px] flex items-center justify-center relative z-10">
+        {/* Text overlay — centered vertically over the SVG */}
+        <div className="absolute inset-0 flex items-center pointer-events-none">
           <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-center">
             <div className="flex items-center justify-between w-full max-w-[340px] sm:max-w-[460px] md:max-w-[620px] lg:max-w-[780px] xl:max-w-[840px]">
               {/* Left Title Word */}
@@ -88,20 +86,6 @@ export default function OurTeam() {
               </h2>
             </div>
           </div>
-        </div>
-
-        {/* Bottom Wave: Arches up in the middle */}
-        <div className="w-full overflow-hidden leading-[0] relative z-10">
-          <svg
-            viewBox="0 0 1440 80"
-            className="w-full h-[15px] sm:h-[25px] md:h-[35px] lg:h-[45px] block"
-            preserveAspectRatio="none"
-          >
-            <path
-              fill="#8E4A92"
-              d="M 0 80 L 0 0 L 1440 0 L 1440 80 Q 720 0 0 80 Z"
-            />
-          </svg>
         </div>
 
         {/* Center Team main overlay image */}
@@ -173,7 +157,7 @@ export default function OurTeam() {
                   </div>
 
                   {/* Name */}
-                  <h4 className={`${hankenGrotesk.className} text-[#8E4A92] font-extrabold text-xl sm:text-2xl mb-1`}>
+                  <h4 className={`${hankenGrotesk.className} text-[#914B8C] font-extrabold text-xl sm:text-2xl mb-1`}>
                     {member.name}
                   </h4>
 
@@ -185,7 +169,7 @@ export default function OurTeam() {
                   {/* Description */}
                   <p className={`${hankenGrotesk.className} text-[#555555] text-sm sm:text-base font-medium leading-relaxed`}>
                     {member.description}
-                    <span className="text-[#8E4A92] ml-1 font-bold cursor-pointer hover:underline">
+                    <span className="text-[#914B8C] ml-1 font-bold cursor-pointer hover:underline">
                       (More)
                     </span>
                   </p>

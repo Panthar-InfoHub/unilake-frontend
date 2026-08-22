@@ -17,6 +17,9 @@ interface PreviewViewerProps {
    *  preview-page count once that in-memory value is lost to a refresh. */
   totalPreviewPages: number;
   onRegenerate: (pageNumber: number) => Promise<RegenerateResponse | undefined>;
+  isPaid?: boolean;
+  paidPagesReady?: number;
+  totalPaidPages?: number;
 }
 
 export default function PreviewViewer({
@@ -25,10 +28,14 @@ export default function PreviewViewer({
   pagesReady,
   totalPreviewPages,
   onRegenerate,
+  isPaid,
+  paidPagesReady = 0,
+  totalPaidPages = 0,
 }: PreviewViewerProps) {
   const { data: comicDetail } = usePublicComic(snapshot.comicId);
 
   const isGeneratingSession = status === "GENERATING_PREVIEW";
+  const isGeneratingPaid = status === "GENERATING_PAID";
 
   const coverUrl = snapshot.comic.coverThumbnailUrls?.[0];
 
@@ -38,12 +45,16 @@ export default function PreviewViewer({
       {isGeneratingSession && (
         <PreviewProgress pagesReady={pagesReady} totalPages={totalPreviewPages} />
       )}
+      
+      {isGeneratingPaid && (
+        <PreviewProgress pagesReady={paidPagesReady} totalPages={totalPaidPages} />
+      )}
 
       <div className="w-full max-w-4xl px-4 flex flex-col items-center gap-16">
         
         <div className="text-center mb-8 w-full mt-2 relative z-10 translate-y-20">
           <h2 className={`${chauPhilomeneOne.className} text-2xl md:text-4xl text-[#3F3C95]`}>
-            Preview for {snapshot.childName || "Your Child"}
+            {isPaid ? "Your Complete Storybook" : `Preview for ${snapshot.childName || "Your Child"}`}
           </h2>
           <div className="mt-4 flex flex-col items-center gap-2 text-gray-500 text-sm md:text-base font-medium">
             <span className="flex items-center gap-2">
@@ -84,7 +95,8 @@ export default function PreviewViewer({
                 page={page}
                 comicPageMetadata={comicPageMetadata}
                 onRegenerate={onRegenerate}
-                isGeneratingSession={isGeneratingSession}
+                isGeneratingSession={isGeneratingSession || isGeneratingPaid}
+                isPaid={isPaid}
               />
               <ChevronDown size={32} className="text-gray-300 mt-4" />
             </div>
@@ -92,7 +104,20 @@ export default function PreviewViewer({
         })}
       </div>
 
-      <PricingSection comicId={snapshot.comicId} />
+      {!isPaid ? (
+        <PricingSection comicId={snapshot.comicId} sessionId={snapshot.id} snapshot={snapshot} />
+      ) : status === "PAID_PAGES_READY" ? (
+        <div className="w-full max-w-4xl mx-auto py-16 px-4 flex flex-col items-center border-t border-gray-200 mt-12">
+          <button
+            onClick={() => {
+              import("sonner").then((mod) => mod.toast.info("Coming soon!"));
+            }}
+            className="px-12 py-4 bg-[#FFD54A] hover:bg-[#ffcd2b] text-[#3F3C95] rounded-full font-bold text-xl md:text-2xl uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 transition-all w-full max-w-md border-[3px] border-[#3F3C95]"
+          >
+            Send to Print
+          </button>
+        </div>
+      ) : null}
       
     </div>
   );

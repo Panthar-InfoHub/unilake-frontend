@@ -6,14 +6,28 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { chauPhilomeneOne } from "@/app/fonts";
 
+import { SessionSnapshot } from "@/app/types/session";
+import { updateSession, attachUser } from "@/app/actions/session";
+import { useRouter } from "next/navigation";
+import LoginModal from "../checkout/LoginModal";
+import { useAuth } from "@/app/hooks/useAuth";
+import { Loader2 } from "lucide-react";
+
 interface PricingSectionProps {
   comicId: string;
+  sessionId: string;
+  snapshot: SessionSnapshot;
 }
 
-export default function PricingSection({ comicId }: PricingSectionProps) {
+export default function PricingSection({ comicId, sessionId, snapshot }: PricingSectionProps) {
   const { data: comicDetail } = usePublicComic(comicId);
   const { selectedCountry, getCurrencySymbol } = useCountryStore();
   const [selectedFormat, setSelectedFormat] = useState<"SOFTCOVER" | "HARDCOVER" | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   if (!comicDetail) return null;
 
@@ -27,12 +41,39 @@ export default function PricingSection({ comicId }: PricingSectionProps) {
   
   const currencySymbol = getCurrencySymbol();
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!selectedFormat) {
       toast.error("Please select a cover format");
       return;
     }
-    toast.info("Checkout flow coming soon!");
+    
+    if (authLoading) return;
+    
+    setIsUpdating(true);
+    try {
+      // 1. PATCH coverType
+      await updateSession(sessionId, { coverType: selectedFormat });
+      
+      // 2. Check auth
+      if (!isAuthenticated) {
+        setShowLoginModal(true);
+        setIsUpdating(false);
+        return;
+      }
+      
+      // 3. Attach user if missing
+      if (!snapshot.userId) {
+        await attachUser(sessionId);
+      }
+      
+      // 4. Navigate to checkout
+      router.push(`/personalize/${sessionId}/checkout`);
+      
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update order details. Please try again.");
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -81,10 +122,23 @@ export default function PricingSection({ comicId }: PricingSectionProps) {
 
       <button
         onClick={handleCheckout}
-        className="px-12 py-4 bg-[#FFD54A] hover:bg-[#ffcd2b] text-[#3F3C95] rounded-full font-bold text-xl md:text-2xl uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 transition-all w-full max-w-md border-[3px] border-[#3F3C95]"
+        disabled={isUpdating || authLoading}
+        className="px-12 py-4 bg-[#FFD54A] hover:bg-[#ffcd2b] text-[#3F3C95] rounded-full font-bold text-xl md:text-2xl uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 transition-all w-full max-w-md border-[3px] border-[#3F3C95] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        Continue to Checkout
+        {isUpdating ? (
+          <>
+            <Loader2 className="animate-spin" size={24} />
+            Updating...
+          </>
+        ) : (
+          "Continue to Checkout"
+        )}
       </button>
+
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onOpenChange={setShowLoginModal} 
+      />
     </div>
   );
 }

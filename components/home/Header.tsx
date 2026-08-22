@@ -186,7 +186,10 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
                   </div>
                   
                   <button
-                    onClick={() => setIsProfileOpen(false)}
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      router.push("/dashboard");
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-white/15 transition-colors text-white cursor-pointer"
                   >
                     <Settings size={16} />

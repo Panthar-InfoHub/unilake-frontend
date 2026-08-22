@@ -53,6 +53,9 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
     totalPreviewPages,
     hasNoPreviewPages,
     isExpired,
+    isPaid,
+    paidPagesReady,
+    totalPaidPages,
     triggerGeneration,
     regeneratePage,
   } = useSessionPreview(sessionId);
@@ -145,6 +148,49 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
         />
       );
     }
+    
+    // Payment specific routing
+    if (status === "AWAITING_PAYMENT") {
+      return (
+        <PreviewErrorState
+          title="Payment Required"
+          message="Please complete your payment to continue generating the full comic."
+          actionLabel="Complete Payment"
+          onAction={() => router.push(`/personalize/${sessionId}/checkout`)}
+        />
+      );
+    }
+    
+    if (status === "CONFIRMED") {
+      return (
+        <div className="flex flex-col items-center justify-center p-12 text-center max-w-md mx-auto">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#3F3C95] mb-4">Your order is confirmed!</h2>
+          <p className="text-gray-600 mb-8">We've received your order and are preparing it for print. You'll receive an email with shipping updates soon.</p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-8 py-3 bg-[#3F3C95] text-white rounded-full font-medium hover:bg-[#3F3C95]/90 transition-colors"
+          >
+            Return Home
+          </button>
+        </div>
+      );
+    }
+    
+    if (status === "FAILED" && !isExpired) {
+      return (
+        <PreviewErrorState
+          title="Something went wrong"
+          message="There was an issue with your payment. Please contact support."
+          actionLabel="Contact Support"
+          onAction={() => window.location.href = "mailto:support@unilake.com"}
+        />
+      );
+    }
 
     return (
       <>
@@ -164,6 +210,9 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
           pagesReady={pagesReady}
           totalPreviewPages={totalPreviewPages}
           onRegenerate={regeneratePage}
+          isPaid={isPaid}
+          paidPagesReady={paidPagesReady}
+          totalPaidPages={totalPaidPages}
         />
       </>
     );

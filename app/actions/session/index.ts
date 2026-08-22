@@ -6,6 +6,7 @@ import {
   PhotoUploadUrlResponse,
   RegenerateResponse,
   SessionSnapshot,
+  CheckoutResponse,
 } from "@/app/types/session";
 
 export async function createSession(comicId: string): Promise<CreateSessionResponse> {
@@ -20,6 +21,15 @@ export async function updateSession(
     age?: number;
     pronounKey?: string;
     notificationEmail?: string;
+    coverType?: "HARDCOVER" | "SOFTCOVER";
+    shippingName?: string;
+    shippingLine1?: string;
+    shippingLine2?: string;
+    shippingCity?: string;
+    shippingState?: string;
+    shippingZip?: string;
+    shippingCountry?: string;
+    shippingPhone?: string;
   }
 ): Promise<SessionSnapshot> {
   const { data } = await api.patch<SessionSnapshot>(`/api/public/sessions/${sessionId}`, payload);
@@ -50,5 +60,14 @@ export async function triggerGeneration(sessionId: string): Promise<GenerateResp
 
 export async function regeneratePage(sessionId: string, pageNumber: number): Promise<RegenerateResponse> {
   const { data } = await api.post<RegenerateResponse>(`/api/public/sessions/${sessionId}/pages/${pageNumber}/regenerate`);
+  return data;
+}
+
+export async function attachUser(sessionId: string): Promise<void> {
+  await api.patch(`/api/public/sessions/${sessionId}/attach-user`);
+}
+
+export async function initiateCheckout(sessionId: string): Promise<CheckoutResponse> {
+  const { data } = await api.post<CheckoutResponse>(`/api/public/sessions/${sessionId}/checkout`);
   return data;
 }

@@ -10,6 +10,7 @@ interface RegenerateControlsProps {
   onSelectVariant: (index: number) => void;
   onRegenerate: () => Promise<void>;
   isGenerating: boolean;
+  maxRegenerations?: number;
 }
 
 export default function RegenerateControls({
@@ -18,9 +19,10 @@ export default function RegenerateControls({
   onSelectVariant,
   onRegenerate,
   isGenerating,
+  maxRegenerations = 3,
 }: RegenerateControlsProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const maxTries = 3;
+  const maxTries = maxRegenerations;
   const triesLeft = maxTries - variants.length;
 
   const handleRegenerate = async () => {

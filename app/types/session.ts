@@ -9,7 +9,9 @@ export type SessionStatus =
   | "PAID_PAGES_READY"
   | "CONFIRMED"
   | "COMPILING_PDF"
-  | "DISPATCHED"
+  | "PDF_FAILED"
+  | "SHIPMENT_QUEUED"
+  | "SHIPMENT_FAILED"
   | "COMPLETED"
   | "FAILED";
 
@@ -92,6 +94,16 @@ export interface CreateSessionResponse {
   expiresAt: string;
 }
 
+export interface CheckoutResponse {
+  orderId: string;
+  razorpayOrderId: string;
+  razorpayKeyId: string;
+  amount: number;
+  currency: string;
+  displayAmount: string;
+  notificationEmail: string | null;
+}
+
 export interface GenerateResponse {
   status: string;
   jobsEnqueued: number;
@@ -140,4 +152,38 @@ export interface PreviewReadyEvent {
   type: "session:preview-ready";
 }
 
-export type WSEvent = PageReadyEvent | PageErrorEvent | PreviewReadyEvent;
+export interface PaidReadyEvent {
+  type: "session:paid-ready";
+}
+
+export type WSEvent = PageReadyEvent | PageErrorEvent | PreviewReadyEvent | PaidReadyEvent;
+
+export interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  order_id: string;
+  name?: string;
+  description?: string;
+  image?: string;
+  prefill?: { name?: string; email?: string; contact?: string };
+  notes?: Record<string, string>;
+  theme?: { color?: string };
+  handler?: (response: RazorpayResponse) => void;
+  modal?: { ondismiss?: () => void; escape?: boolean; confirm_close?: boolean };
+}
+
+export interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => {
+      open(): void;
+      on(event: string, callback: (response: unknown) => void): void;
+    };
+  }
+}

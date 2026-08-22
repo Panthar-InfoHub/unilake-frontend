@@ -62,9 +62,15 @@ export function useSessionPreview(sessionId: string | null) {
     // just poll the GET — which always works and contains everything — whenever the
     // socket is down and there is still something left to stream.
     refetchInterval: (query) => {
-      if (wsConnected) return false;
       const polledStatus = query.state.data?.status;
-      return polledStatus === "PHOTO_UPLOADED" || polledStatus === "GENERATING_PREVIEW"
+      
+      // Payment polling: 2s, regardless of WS state (§12.2)
+      if (polledStatus === "AWAITING_PAYMENT" || polledStatus === "PAID") {
+        return 2_000;
+      }
+
+      if (wsConnected) return false;
+      return polledStatus === "PHOTO_UPLOADED" || polledStatus === "GENERATING_PREVIEW" || polledStatus === "GENERATING_PAID"
         ? 10_000
         : false;
     },
@@ -112,7 +118,7 @@ export function useSessionPreview(sessionId: string | null) {
   const handleWsEvent = useCallback((event: WSEvent) => {
     if (!sessionId) return;
 
-    if (event.type === "session:preview-ready") {
+    if (event.type === "session:preview-ready" || event.type === "session:paid-ready") {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["session", sessionId] });
     } else if (event.type === "page:ready") {
@@ -282,6 +288,24 @@ export function useSessionPreview(sessionId: string | null) {
   // (§1.2) — so an expired session looks fine and then silently never updates.
   const isExpired = !!snapshot?.isExpired;
 
+  const allPages = snapshot?.pages ?? [];
+  const paidPages = allPages.filter((p) => !p.isPreviewPage);
+  const paidPagesReady = paidPages.filter((p) =>
+    p.variants.some((v) => v.status === "SD_READY")
+  ).length;
+  const totalPaidPages = paidPages.length;
+  const isPaid = [
+    "AWAITING_PAYMENT",
+    "PAID",
+    "GENERATING_PAID",
+    "PAID_PAGES_READY",
+    "CONFIRMED",
+    "COMPILING_PDF",
+    "SHIPMENT_QUEUED",
+    "SHIPMENT_FAILED",
+    "COMPLETED",
+  ].includes(status);
+
   return {
     snapshot,
     isLoading,
@@ -292,6 +316,10 @@ export function useSessionPreview(sessionId: string | null) {
     totalPreviewPages,
     hasNoPreviewPages,
     isExpired,
+    paidPages,
+    paidPagesReady,
+    totalPaidPages,
+    isPaid,
     triggerGeneration: handleTriggerGeneration,
     regeneratePage: handleRegeneratePage,
   };

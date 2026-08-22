@@ -15,6 +15,7 @@ interface PreviewPageCardProps {
   comicPageMetadata: PublicComicDetailPage | undefined;
   onRegenerate: (pageNumber: number) => Promise<RegenerateResponse | undefined>;
   isGeneratingSession: boolean;
+  isPaid?: boolean;
 }
 
 export default function PreviewPageCard({
@@ -22,6 +23,7 @@ export default function PreviewPageCard({
   comicPageMetadata,
   onRegenerate,
   isGeneratingSession,
+  isPaid,
 }: PreviewPageCardProps) {
   const [activeVariantIndex, setActiveVariantIndex] = useState<number>(() => {
     // Start on the newest finished variant, or the first slot if none are done yet.
@@ -35,7 +37,7 @@ export default function PreviewPageCard({
   // anything else arriving would yank the view away from what they chose to look at.
   const awaitedVariantRef = useRef<number | null>(null);
 
-  const isLocked = !page.isPreviewPage;
+  const isLocked = isPaid ? false : !page.isPreviewPage;
 
   // Every variant is navigable, including ones still generating: a pending variant is
   // exactly what the user wants to see the status of after hitting regenerate.

@@ -3,32 +3,14 @@
 import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 
-/* ── Dummy Team Members data ── */
-const teamMembers = [
-  {
-    id: 1,
-    name: "Aham Gupta",
-    role: "Graphic Designer",
-    description: "A Graphic Designer Is A Creative Professional Who Uses Visual Elements To Communicate Ideas And Messages.....",
-    avatar: "/assets/home_page/teamSectionImg.png",
-  },
-  {
-    id: 2,
-    name: "Aham Gupta",
-    role: "Graphic Designer",
-    description: "A Graphic Designer Is A Creative Professional Who Uses Visual Elements To Communicate Ideas And Messages.....",
-    avatar: "/assets/home_page/teamSectionImg.png",
-  },
-  {
-    id: 3,
-    name: "Aham Gupta",
-    role: "Graphic Designer",
-    description: "A Graphic Designer Is A Creative Professional Who Uses Visual Elements To Communicate Ideas And Messages.....",
-    avatar: "/assets/home_page/teamSectionImg.png",
-  },
-];
+import { TeamMember } from "@/app/types/teamMember";
+import { Briefcase, Camera, MessageCircle } from "lucide-react";
 
-export default function OurTeam() {
+interface OurTeamProps {
+  members: TeamMember[];
+}
+
+export default function OurTeam({ members }: OurTeamProps) {
   return (
     <>
       {/* ===== Symmetrical Flared Purple Banner ===== */}
@@ -124,7 +106,7 @@ export default function OurTeam() {
           
           {/* 3-Column Team Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10 lg:gap-x-12">
-            {teamMembers.map((member) => (
+            {members.map((member) => (
               <div key={member.id} className="flex justify-center">
                 {/* Organic wobbly outline card */}
                 <div
@@ -145,15 +127,21 @@ export default function OurTeam() {
                   "
                 >
                   {/* Team Member Avatar */}
-                  <div className="relative w-full aspect-square max-w-[220px] mb-6">
-                    <Image
-                      src={member.avatar}
-                      alt={member.name}
-                      fill
-                      sizes="220px"
-                      className="object-contain"
-                      priority
-                    />
+                  <div className="relative w-full aspect-square max-w-[220px] mb-6 rounded-full overflow-hidden flex items-center justify-center bg-[#914B8C]/10">
+                    {member.imageUrl ? (
+                      <Image
+                        src={member.imageUrl}
+                        alt={member.name}
+                        fill
+                        sizes="220px"
+                        className="object-cover"
+                        priority
+                      />
+                    ) : (
+                      <span className={`${chauPhilomeneOne.className} text-[#914B8C] text-6xl uppercase`}>
+                        {member.name.charAt(0)}
+                      </span>
+                    )}
                   </div>
 
                   {/* Name */}
@@ -167,12 +155,32 @@ export default function OurTeam() {
                   </span>
 
                   {/* Description */}
-                  <p className={`${hankenGrotesk.className} text-[#555555] text-sm sm:text-base font-medium leading-relaxed`}>
-                    {member.description}
-                    <span className="text-[#914B8C] ml-1 font-bold cursor-pointer hover:underline">
-                      (More)
-                    </span>
-                  </p>
+                  {member.description && (
+                    <p className={`${hankenGrotesk.className} text-[#555555] text-sm sm:text-base font-medium leading-relaxed mb-4`}>
+                      {member.description}
+                    </p>
+                  )}
+
+                  {/* Social Links */}
+                  {(member.linkedinUrl || member.instagramUrl || member.twitterUrl) && (
+                    <div className="flex items-center justify-center gap-4 mt-auto pt-2">
+                      {member.linkedinUrl && (
+                        <a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#914B8C]/10 text-[#914B8C] hover:bg-[#914B8C] hover:text-white transition-colors cursor-pointer">
+                          <Briefcase className="w-5 h-5" />
+                        </a>
+                      )}
+                      {member.instagramUrl && (
+                        <a href={member.instagramUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#914B8C]/10 text-[#914B8C] hover:bg-[#914B8C] hover:text-white transition-colors cursor-pointer">
+                          <Camera className="w-5 h-5" />
+                        </a>
+                      )}
+                      {member.twitterUrl && (
+                        <a href={member.twitterUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#914B8C]/10 text-[#914B8C] hover:bg-[#914B8C] hover:text-white transition-colors cursor-pointer">
+                          <MessageCircle className="w-5 h-5" />
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

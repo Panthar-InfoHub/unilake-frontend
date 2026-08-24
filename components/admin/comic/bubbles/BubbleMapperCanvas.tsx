@@ -4,8 +4,10 @@ import { useRef, useState, useEffect } from "react";
 import { Stage, Layer, Image as KonvaImage, Rect, Transformer, Text, Group } from "react-konva";
 import useImage from "use-image";
 import { LocalBubble } from "./BubbleSidebar";
+import { SAMPLE_PRONOUNS, substituteTokens } from "@/lib/dialogueTokens";
 import {
   DEFAULT_FONT_SIZE,
+  DEFAULT_FONT_COLOR,
   clampRect,
   fontSizeToPx,
   normalizedToPixel,
@@ -16,6 +18,13 @@ interface BubbleMapperCanvasProps {
   artworkUrl: string | null;
   bubbles: LocalBubble[];
   selectedBubbleId: string | null;
+  /**
+   * Sample child name substituted into `{name}` for the on-canvas preview, so
+   * the admin sizes bubbles against a realistic name instead of the literal
+   * token. Comes from the page's Short/Long toggle — the same one driving the
+   * sidebar preview.
+   */
+  previewName: string;
   onSelectBubble: (id: string | null) => void;
   onUpdateBubble: (id: string, updates: Partial<LocalBubble>) => void;
 }
@@ -24,6 +33,7 @@ export function BubbleMapperCanvas({
   artworkUrl,
   bubbles,
   selectedBubbleId,
+  previewName,
   onSelectBubble,
   onUpdateBubble,
 }: BubbleMapperCanvasProps) {
@@ -214,7 +224,17 @@ export function BubbleMapperCanvas({
                       cornerRadius={8}
                     />
                     <Text
-                      text={bubble.dialogue || "Double click to edit..."}
+                      // Show what the reader will see, not the raw token —
+                      // "{name}" gives no sense of how much room the text needs.
+                      // Note this is still Konva's own layout, not the print
+                      // renderer's: the backend wraps on real glyph widths and
+                      // shrinks the type to fit, so treat this as a guide to
+                      // placement rather than an exact proof of the final page.
+                      text={
+                        bubble.dialogue?.trim()
+                          ? substituteTokens(bubble.dialogue, previewName, SAMPLE_PRONOUNS)
+                          : "Double click to edit..."
+                      }
                       width={width - 10}
                       height={height - 10}
                       x={5}
@@ -223,7 +243,7 @@ export function BubbleMapperCanvas({
                         bubble.fontSize ?? DEFAULT_FONT_SIZE,
                         dimensions.imageHeight
                       )}
-                      fill="#000"
+                      fill={bubble.fontColor ?? DEFAULT_FONT_COLOR}
                       align="center"
                       verticalAlign="middle"
                       wrap="word"

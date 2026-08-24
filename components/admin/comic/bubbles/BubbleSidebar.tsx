@@ -16,6 +16,10 @@ import {
   MIN_FONT_SIZE,
   fontSizeToPx,
   pxToFontSize,
+  DEFAULT_FONT_COLOR,
+  isValidFontColor,
+  normalizeFontColor,
+  isLowContrast,
 } from "./bubbleCoordinates";
 import {
   DIALOGUE_TOKENS,
@@ -25,6 +29,82 @@ import {
   SAMPLE_NAMES,
   SAMPLE_PRONOUNS,
 } from "@/lib/dialogueTokens";
+
+/**
+ * Swatch + hex field for a bubble's text colour.
+ *
+ * Keeps a local draft so a half-typed "#d9" is never pushed to the bubble (and
+ * bounced by the API); only a complete, valid value commits. Mount this with
+ * `key={bubbleId}` so switching bubbles always starts from a clean draft, even
+ * when the two bubbles happen to share a colour.
+ */
+function ColorField({
+  value,
+  onCommit,
+}: {
+  value: string;
+  onCommit: (color: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [committed, setCommitted] = useState(value);
+
+  // Adjusting state during render — React's documented alternative to a
+  // resync effect (react.dev/learn/you-might-not-need-an-effect). Keeps the hex
+  // text in step when the swatch commits, without a cascading re-render.
+  if (value !== committed) {
+    setCommitted(value);
+    setDraft(value);
+  }
+
+  const draftIsValid = isValidFontColor(draft);
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-semibold text-neutral-700">Text Colour</Label>
+      <div className="flex items-center gap-2">
+        {/* The native picker only ever emits a valid #rrggbb, so it commits directly. */}
+        <input
+          type="color"
+          aria-label="Pick text colour"
+          value={value}
+          onChange={(e) => onCommit(e.target.value)}
+          className="h-9 w-11 shrink-0 cursor-pointer rounded-xl border border-neutral-200 bg-neutral-50 p-1"
+        />
+        <Input
+          value={draft}
+          spellCheck={false}
+          placeholder={DEFAULT_FONT_COLOR}
+          aria-label="Text colour hex value"
+          onChange={(e) => {
+            const next = e.target.value;
+            setDraft(next);
+            // Commit the moment it's complete, so the canvas tracks typing.
+            if (isValidFontColor(next)) onCommit(next);
+          }}
+          onBlur={() => {
+            // Anything incomplete reverts to the last saved colour rather than
+            // being sent for the API to reject.
+            if (!isValidFontColor(draft)) setDraft(value);
+          }}
+          className="h-9 flex-1 rounded-xl border-neutral-200 bg-neutral-50 font-mono text-xs focus-visible:ring-[#914A8C]"
+        />
+      </div>
+
+      {!draftIsValid && (
+        <p className="text-[10px] text-neutral-500">
+          Needs a 6-digit hex like <code className="rounded bg-neutral-100 px-1">#1a1a1a</code>.
+        </p>
+      )}
+
+      {/* Advisory only — saving is never blocked on this. */}
+      {draftIsValid && isLowContrast(draft) && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] text-amber-700">
+          ⚠ Very light — this may be hard to read on the artwork. You can still save it.
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Local state representation before saving
 export interface LocalBubble extends Partial<Bubble> {
@@ -44,6 +124,13 @@ interface BubbleSidebarProps {
   onUpdateBubble: (id: string, updates: Partial<LocalBubble>) => void;
   onDeleteBubble: (id: string) => void;
   fonts: FontWithCount[];
+  /**
+   * Whether previews use the long sample name. Owned by the page rather than
+   * this component so the canvas renders the same name the sidebar shows —
+   * one toggle, both surfaces.
+   */
+  previewLongName: boolean;
+  onPreviewLongNameChange: (useLongName: boolean) => void;
 }
 
 export function BubbleSidebar({
@@ -54,13 +141,21 @@ export function BubbleSidebar({
   onAddBubble,
   onUpdateBubble,
   onDeleteBubble,
-  fonts
+  fonts,
+  previewLongName,
+  onPreviewLongNameChange
 }: BubbleSidebarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [previewLongName, setPreviewLongName] = useState(true);
 
   const activeBubbles = bubbles.filter(b => !b.isDeleted);
   const selectedBubble = activeBubbles.find(b => b.id === selectedBubbleId);
+
+  const selectedColor = selectedBubble?.fontColor ?? DEFAULT_FONT_COLOR;
+
+  const commitColor = (value: string) => {
+    if (!selectedBubble || !isValidFontColor(value)) return;
+    onUpdateBubble(selectedBubble.id, { fontColor: normalizeFontColor(value) });
+  };
 
   const invalidTokens = selectedBubble ? findInvalidTokens(selectedBubble.dialogue || "") : [];
   const previewName = previewLongName ? SAMPLE_NAMES.long : SAMPLE_NAMES.short;
@@ -108,7 +203,10 @@ export function BubbleSidebar({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      {/* min-h-0 lets this actually shrink below its content height. Without it
+          flexbox refuses to shrink the list, and the editor panel below gets
+          pushed past the container's bottom edge and clipped by overflow-hidden. */}
+      <ScrollArea className="flex-1 min-h-0 p-4">
         {activeBubbles.length === 0 ? (
           <div className="text-center py-12 text-neutral-400">
             <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -169,9 +267,16 @@ export function BubbleSidebar({
         )}
       </ScrollArea>
 
-      {/* Editor Panel for Selected Bubble */}
+      {/*
+        Editor Panel for Selected Bubble.
+
+        Scrolls internally rather than overflowing the sidebar. The panel is
+        taller than the space available on short viewports, so it is capped and
+        given its own scrollbar — otherwise the last field (Text Colour) renders
+        off-screen with no way to reach it.
+      */}
       {selectedBubble ? (
-        <div className="p-4 border-t border-neutral-100 bg-white/90">
+        <div className="p-4 border-t border-neutral-100 bg-white/90 shrink-0 max-h-[60%] overflow-y-auto">
           <h4 className="font-bold text-sm text-neutral-900 mb-3 flex items-center">
             <Edit2 className="w-4 h-4 mr-2 text-[#914A8C]" /> Edit Selected
           </h4>
@@ -210,13 +315,13 @@ export function BubbleSidebar({
                   <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wide">Preview</span>
                   <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-lg border border-neutral-200">
                     <button
-                      onClick={() => setPreviewLongName(false)}
+                      onClick={() => onPreviewLongNameChange(false)}
                       className={cn("text-[10px] px-2 py-0.5 rounded-md transition-colors", !previewLongName ? "bg-white shadow-sm text-neutral-900 font-medium" : "text-neutral-500 hover:text-neutral-700")}
                     >
                       Short
                     </button>
                     <button
-                      onClick={() => setPreviewLongName(true)}
+                      onClick={() => onPreviewLongNameChange(true)}
                       className={cn("text-[10px] px-2 py-0.5 rounded-md transition-colors", previewLongName ? "bg-white shadow-sm text-neutral-900 font-medium" : "text-neutral-500 hover:text-neutral-700")}
                     >
                       Long
@@ -273,6 +378,12 @@ export function BubbleSidebar({
                 </div>
               </div>
             </div>
+
+            <ColorField
+              key={selectedBubble.id}
+              value={selectedColor}
+              onCommit={commitColor}
+            />
 
             <div className="text-[10px] text-neutral-500 font-mono bg-neutral-50 p-2 rounded-lg border border-neutral-100 flex flex-wrap gap-2 justify-between">
                <span>x: {selectedBubble.x?.toFixed(4)}</span>

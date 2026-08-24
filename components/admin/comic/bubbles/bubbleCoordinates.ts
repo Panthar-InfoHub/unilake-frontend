@@ -57,6 +57,58 @@ export function pxToFontSize(px: number, artworkHeight: number): number {
   return Math.min(Math.max(raw, MIN_FONT_SIZE), MAX_FONT_SIZE);
 }
 
+// ── Bubble text colour ────────────────────────────────────────────────────────
+// Mirrors DEFAULT_FONT_COLOR / FONT_COLOR_PATTERN in the backend's
+// src/config/generation.ts. Exactly one form is accepted end to end: "#rrggbb".
+// No 3-digit shorthand, no 8-digit alpha, no CSS colour names — anything else is
+// a 400. The native <input type="color"> emits precisely this form, so the
+// picker and the API agree without conversion.
+export const DEFAULT_FONT_COLOR = "#000000";
+export const FONT_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
+/** True when `value` is a colour the backend will accept. */
+export function isValidFontColor(value: string): boolean {
+  return FONT_COLOR_PATTERN.test(value.trim());
+}
+
+/** Normalise to the single canonical form the API stores. */
+export function normalizeFontColor(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+/**
+ * WCAG relative luminance, 0 (black) to 1 (white).
+ * Returns 1 for anything unparseable so a malformed value never trips the
+ * low-contrast warning while the admin is mid-typing.
+ */
+export function relativeLuminance(hex: string): number {
+  if (!isValidFontColor(hex)) return 1;
+
+  const channels = [1, 3, 5].map((offset) => {
+    const srgb = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    // sRGB → linear, per the WCAG 2.x definition.
+    return srgb <= 0.03928 ? srgb / 12.92 : Math.pow((srgb + 0.055) / 1.055, 2.4);
+  }) as [number, number, number];
+
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+// Above this luminance, text is too pale to read against the light speech
+// bubbles the artwork uses (~2:1 contrast on white, well under the WCAG 4.5:1
+// floor for body text). Deliberately a named constant: it is a judgement call
+// about this specific artwork style and should be retuned once real comics have
+// been coloured, not treated as a law.
+export const LOW_CONTRAST_LUMINANCE = 0.6;
+
+/**
+ * Advisory only — the admin panel warns, it never blocks the save, and the API
+ * accepts any valid hex. The server cannot see the artwork behind a bubble, so
+ * a hard rule would be guesswork; the person looking at the page decides.
+ */
+export function isLowContrast(hex: string): boolean {
+  return isValidFontColor(hex) && relativeLuminance(hex) > LOW_CONTRAST_LUMINANCE;
+}
+
 // Smallest bubble we allow, as a fraction. Matches the Math.max(0.01, …) the
 // canvas used before clamping was centralised here.
 export const MIN_BUBBLE_SIZE = 0.01;

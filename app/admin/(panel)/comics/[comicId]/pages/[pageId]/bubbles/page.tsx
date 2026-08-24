@@ -23,7 +23,11 @@ import {
   LocalBubble,
 } from "@/components/admin/comic/bubbles/BubbleSidebar";
 import { BubbleMapperCanvas } from "@/components/admin/comic/bubbles/BubbleMapperCanvas";
-import { DEFAULT_FONT_SIZE } from "@/components/admin/comic/bubbles/bubbleCoordinates";
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_FONT_COLOR,
+} from "@/components/admin/comic/bubbles/bubbleCoordinates";
+import { SAMPLE_NAMES } from "@/lib/dialogueTokens";
 
 export default function BubbleMapperPage({
   params,
@@ -44,6 +48,18 @@ export default function BubbleMapperPage({
   const [selectedBubbleId, setSelectedBubbleId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingBubbles, setIsLoadingBubbles] = useState(true);
+
+  // New bubbles inherit the colour last chosen on this page, so colouring a
+  // whole page one shade doesn't mean re-picking it every time. Resets to black
+  // on a fresh page load — deliberately not persisted anywhere.
+  const [lastUsedColor, setLastUsedColor] = useState<string>(DEFAULT_FONT_COLOR);
+
+  // Which sample name previews use. Lives here rather than in the sidebar so the
+  // canvas and the sidebar always agree. Defaults to the LONG name: sizing a
+  // bubble against the worst case is what stops a real "Christopher" from being
+  // shrunk to fit at generation time.
+  const [previewLongName, setPreviewLongName] = useState(true);
+  const previewName = previewLongName ? SAMPLE_NAMES.long : SAMPLE_NAMES.short;
 
   const page = comic?.pages.find((p) => p.id === pageId);
 
@@ -90,6 +106,7 @@ export default function BubbleMapperPage({
       width: 0.3,
       height: 0.15,
       fontSize: DEFAULT_FONT_SIZE,
+      fontColor: lastUsedColor,
       sortOrder: bubbles.filter((b) => !b.isDeleted).length,
       fontId: fonts && fonts.length > 0 ? fonts[0].id : undefined,
       isNew: true,
@@ -101,6 +118,9 @@ export default function BubbleMapperPage({
   };
 
   const handleUpdateBubble = (id: string, updates: Partial<LocalBubble>) => {
+    // Remember the most recent colour so the next new bubble starts there.
+    if (updates.fontColor) setLastUsedColor(updates.fontColor);
+
     setBubbles((prev) =>
       prev.map((b) => {
         if (b.id === id) {
@@ -202,6 +222,7 @@ export default function BubbleMapperPage({
               width: bubble.width || 0,
               height: bubble.height || 0,
               fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
+              fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
               fontId: bubble.fontId,
               sortOrder: index,
             }),
@@ -223,6 +244,7 @@ export default function BubbleMapperPage({
               width: bubble.width,
               height: bubble.height,
               fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
+              fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
               fontId: bubble.fontId,
               sortOrder: index,
             }),
@@ -291,6 +313,7 @@ export default function BubbleMapperPage({
             artworkUrl={page.artworkUrl}
             bubbles={bubbles}
             selectedBubbleId={selectedBubbleId}
+            previewName={previewName}
             onSelectBubble={setSelectedBubbleId}
             onUpdateBubble={handleUpdateBubble}
           />
@@ -306,6 +329,8 @@ export default function BubbleMapperPage({
           onUpdateBubble={handleUpdateBubble}
           onDeleteBubble={handleDeleteBubble}
           fonts={fonts || []}
+          previewLongName={previewLongName}
+          onPreviewLongNameChange={setPreviewLongName}
         />
       </div>
     </div>

@@ -123,9 +123,9 @@ export interface PageWithBubblesAndFont extends Page {
 
 
 // NOTE: There is intentionally no `rotation` field. The backend `Bubble` model
-// stores 8 fields only (x, y, width, height, dialogue, fontId, fontSize,
-// sortOrder) and validateBody strips anything else silently — a rotation sent
-// here would save with a 200 and vanish on reload.
+// stores 9 fields only (x, y, width, height, dialogue, fontId, fontSize,
+// fontColor, sortOrder) and validateBody strips anything else silently — a
+// rotation sent here would save with a 200 and vanish on reload.
 // Removed 2026-08-01. To add it later: rotation column + migration, both Zod
 // schemas, rotation support in the Sharp text stamper, and a decision on whether
 // the x+width<=1 bound applies to the rotated bounding box or the unrotated one.
@@ -141,6 +141,8 @@ export interface Bubble {
   dialogue: string;
   fontId: string | null;
   fontSize: number;
+  /** Canonical "#rrggbb". Never null — the column defaults to #000000. */
+  fontColor: string;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;

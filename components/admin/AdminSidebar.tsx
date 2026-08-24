@@ -15,6 +15,9 @@ import {
   LogOut,
   Globe,
   Palette,
+  Play,
+  HelpCircle,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 
@@ -42,6 +45,9 @@ const NAV_ITEMS = [
   { label: "Team Members", icon: UsersRound, href: "/admin/team-members" },
   { label: "Feedback", icon: MessageSquare, href: "/admin/feedback" },
   { label: "Hero Slides", icon: ImageIcon, href: "/admin/hero-slides" },
+  { label: "How It Works", icon: Play, href: "/admin/how-it-works" },
+  { label: "FAQ", icon: HelpCircle, href: "/admin/faqs" },
+  { label: "Blog", icon: FileText, href: "/admin/blogs" },
 ];
 
 export function AdminSidebar() {

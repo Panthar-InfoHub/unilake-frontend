@@ -5,9 +5,11 @@ import { usePublicComic } from "@/hooks/usePublicComics";
 import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
 import ComicDetailContent from "@/components/comic/ComicDetailContent";
+import ComicFaq from "@/components/comic/ComicFaq";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { MoveLeft } from "lucide-react";
+import { usePublicFaqs } from "@/hooks/usePublicContent";
 
 interface ComicPageProps {
   params: Promise<{
@@ -20,6 +22,7 @@ export default function ComicPage({ params }: ComicPageProps) {
   const { comicId } = use(params);
   
   const { data: comic, isLoading, isError, error } = usePublicComic(comicId);
+  const { data: faqs } = usePublicFaqs("COMIC");
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -57,7 +60,12 @@ export default function ComicPage({ params }: ComicPageProps) {
             </Link>
           </div>
         ) : (
-          <ComicDetailContent comic={comic} />
+          <>
+            <ComicDetailContent comic={comic} />
+            <div className="mt-8">
+              <ComicFaq faqs={faqs || []} />
+            </div>
+          </>
         )}
       </main>
 

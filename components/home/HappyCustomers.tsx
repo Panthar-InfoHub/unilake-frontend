@@ -4,56 +4,22 @@ import { useState } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne } from "@/app/fonts";
 
-/* ── Dummy testimonial video data ── */
-const testimonials = [
-  {
-    id: 1,
-    title: "Happy Customer 1",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    thumbnail: "/assets/home_page/videoImg.png",
-  },
-  {
-    id: 2,
-    title: "Happy Customer 2",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    thumbnail: "/assets/home_page/videoImg.png",
-  },
-  {
-    id: 3,
-    title: "Happy Customer 3",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    thumbnail: "/assets/home_page/videoImg.png",
-  },
-  {
-    id: 4,
-    title: "Happy Customer 4",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-    thumbnail: "/assets/home_page/videoImg.png",
-  },
-  {
-    id: 5,
-    title: "Happy Customer 5",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
-    thumbnail: "/assets/home_page/videoImg.png",
-  },
-  {
-    id: 6,
-    title: "Happy Customer 6",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
-    thumbnail: "/assets/home_page/videoImg.png",
-  },
-];
+import { CustomerReview } from "@/app/types/customerReview";
 
 const ITEMS_PER_PAGE = 3;
 
-export default function HappyCustomers() {
+interface HappyCustomersProps {
+  reviews: CustomerReview[];
+}
+
+export default function HappyCustomers({ reviews }: HappyCustomersProps) {
   const [currentPage, setCurrentPage] = useState(0);
-  const [playingVideoId, setPlayingVideoId] = useState<number | null>(null);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true);
 
-  const totalPages = Math.ceil(testimonials.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(reviews.length / ITEMS_PER_PAGE);
   const startIdx = currentPage * ITEMS_PER_PAGE;
-  const visibleVideos = testimonials.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const visibleVideos = reviews.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const goToPrev = () => {
     setPlayingVideoId(null);
@@ -149,8 +115,8 @@ export default function HappyCustomers() {
 
           {/* Video Grid — 3 columns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-            {visibleVideos.map((video) => (
-              <div key={video.id} className="flex justify-center">
+            {visibleVideos.map((review) => (
+              <div key={review.id} className="flex justify-center">
                 {/* Scrapbook SVG Frame Container */}
                 <div
                   className="
@@ -184,34 +150,34 @@ export default function HappyCustomers() {
                       borderRadius: "12%",
                     }}
                     onClick={() => {
-                      if (playingVideoId === video.id) {
+                      if (playingVideoId === review.id) {
                         setPlayingVideoId(null);
                       } else {
-                        setPlayingVideoId(video.id);
+                        setPlayingVideoId(review.id);
                       }
                     }}
                   >
-                    {playingVideoId === video.id ? (
+                    {playingVideoId === review.id ? (
                       <video
-                        src={video.videoUrl}
+                        src={review.videoUrl}
                         autoPlay
                         loop
                         muted={isMuted}
                         playsInline
+                        preload="none"
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Image
-                        src={video.thumbnail}
-                        alt={video.title}
-                        fill
-                        sizes="240px"
-                        className="object-cover"
+                      <video
+                        src={review.videoUrl}
+                        playsInline
+                        preload="metadata"
+                        className="w-full h-full object-cover"
                       />
                     )}
 
                     {/* Interactive Mute Overlay (only active when playing) */}
-                    {playingVideoId === video.id && (
+                    {playingVideoId === review.id && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -232,7 +198,7 @@ export default function HappyCustomers() {
                     )}
 
                     {/* Custom Play Button Overlay (hidden when video is playing) */}
-                    {playingVideoId !== video.id && (
+                    {playingVideoId !== review.id && (
                       <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                         <div className="w-14 h-14 rounded-full bg-white/30 backdrop-blur-[2px] flex items-center justify-center shadow-lg transition-all duration-300 transform">
                           <svg viewBox="0 0 24 24" className="w-7 h-7 text-white fill-current ml-0.5">

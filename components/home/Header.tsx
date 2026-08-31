@@ -109,7 +109,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
         </div>
 
         {/* Logo */}
-        <div className="flex-shrink-0 flex items-center justify-center lg:justify-start">
+        <div className="flex-shrink-0 lg:flex-1 flex items-center justify-center lg:justify-start">
           <Link href="/">
             <Image
               src="/assets/home_page/logoImg.png"
@@ -280,7 +280,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
       </div>
 
       {/* Hanging Bulb */}
-      <Image
+      {/* <Image
         src="/assets/home_page/bulbImg.png"
         alt="Bulb"
         width={110}
@@ -315,7 +315,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
             : "opacity-100 -translate-y-5"
           }
         `}
-      />
+      /> */}
     </nav>
 
     {/* Mobile Sidebar Overlay */}

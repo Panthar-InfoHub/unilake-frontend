@@ -64,17 +64,29 @@ export default async function Hero() {
 
             </h1>
 
-            <p className="mt-8 text-gray-700 text-xl max-w-lg leading-8">
+            <p className="mt-8 text-gray-700 text-xl max-w-lg leading-8 font-bold">
 
               A personalized storybook crafted around their
               Name, Face and Wildest Imaginations.
 
             </p>
 
-            <button className="mt-10 bg-[#3F3C95] text-white px-9 py-4 rounded-full shadow-xl hover:scale-105 duration-300">
-
+            <button
+              className="
+                mt-10
+                bg-gradient-to-b from-[#3F3C95] to-[#2B2882]
+                text-white
+                font-extrabold text-sm md:text-base
+                uppercase tracking-wider
+                px-8 py-3
+                rounded-full
+                border-b-[4px] border-[#C8942A]
+                shadow-[0_4px_10px_rgba(63,60,149,0.3)]
+                transition-all
+                hover:brightness-110 active:translate-y-[2px] active:border-b-[2px] cursor-pointer
+              "
+            >
               EXPLORE COMICS
-
             </button>
 
           </div>
@@ -83,7 +95,7 @@ export default async function Hero() {
 
           <div className="relative flex justify-center">
 
-            <HeroImageSlideshow 
+            <HeroImageSlideshow
               images={heroImages}
               fallbackSrc="/assets/home_page/boyHeroImg.png"
               width={500}

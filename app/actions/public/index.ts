@@ -7,13 +7,21 @@ import { Faq, FaqPlacement } from "@/app/types/faq";
 import { Blog, BlogListItem } from "@/app/types/blog";
 
 export async function fetchPublicCustomerReviews(): Promise<CustomerReview[]> {
-  const { data } = await api.get<CustomerReview[]>("/api/public/customer-reviews");
-  return data;
+  try {
+    const { data } = await api.get<CustomerReview[]>("/api/public/customer-reviews");
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPublicTeamMembers(): Promise<TeamMember[]> {
-  const { data } = await api.get<TeamMember[]>("/api/public/team-members");
-  return data;
+  try {
+    const { data } = await api.get<TeamMember[]>("/api/public/team-members");
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function submitPublicFeedback(payload: SubmitFeedbackPayload): Promise<void> {
@@ -21,18 +29,30 @@ export async function submitPublicFeedback(payload: SubmitFeedbackPayload): Prom
 }
 
 export async function fetchPublicHowItWorks(): Promise<HowItWorks | null> {
-  const { data } = await api.get<HowItWorks | null>("/api/public/how-it-works");
-  return data;
+  try {
+    const { data } = await api.get<HowItWorks | null>("/api/public/how-it-works");
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchPublicFaqs(placement: FaqPlacement): Promise<Faq[]> {
-  const { data } = await api.get<Faq[]>(`/api/public/faqs?placement=${placement}`);
-  return data;
+  try {
+    const { data } = await api.get<Faq[]>(`/api/public/faqs?placement=${placement}`);
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPublicBlogs(): Promise<BlogListItem[]> {
-  const { data } = await api.get<BlogListItem[]>("/api/public/blogs");
-  return data;
+  try {
+    const { data } = await api.get<BlogListItem[]>("/api/public/blogs");
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPublicBlogBySlug(slug: string): Promise<Blog> {

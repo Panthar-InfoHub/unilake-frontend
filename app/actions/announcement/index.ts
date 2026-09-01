@@ -31,7 +31,11 @@ export async function deleteAnnouncement(id: string): Promise<void> {
 }
 
 export async function fetchPublicAnnouncements(): Promise<Announcement[]> {
-  const { data } = await api.get<Announcement[]>("/api/public/announcements");
-  return data;
+  try {
+    const { data } = await api.get<Announcement[]>("/api/public/announcements");
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 

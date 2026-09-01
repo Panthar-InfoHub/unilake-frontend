@@ -64,8 +64,10 @@ export async function getPublicHeroImages(): Promise<HeroImage[]> {
       return json.data;
     }
     return [];
-  } catch (err) {
-    console.error("Error fetching public hero images:", err);
+  } catch (err: any) {
+    if (err?.cause?.code !== "ECONNREFUSED" && err?.code !== "ECONNREFUSED") {
+      console.error("Error fetching public hero images:", err);
+    }
     return [];
   }
 }

@@ -232,7 +232,7 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
                 </div>
 
                 {/* Right Column: Steps */}
-                <div className="flex flex-col gap-8 md:gap-10">
+                <div className={`${hankenGrotesk.className} flex flex-col gap-8 md:gap-10`}>
                   {howItWorks.steps.map((step, index) => (
                     <div key={index} className="flex items-start gap-5 group">
                       {/* Circular Step Badge */}
@@ -241,7 +241,7 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
                       </div>
 
                       {/* Text Content */}
-                      <div className={`${hankenGrotesk.className} flex flex-col gap-1.5`}>
+                      <div className="flex flex-col gap-1.5">
                         <h4 className="text-[#1A1A1A] font-extrabold text-xl md:text-2xl transition-colors duration-300 group-hover:text-[#914B8C]">
                           {step.heading}
                         </h4>

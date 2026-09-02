@@ -34,12 +34,15 @@ export function HeroImageSlideshow({
   // Fallback state if no images are active
   if (images.length === 0) {
     return (
-      <div className={`relative ${className}`} style={{ width, height }}>
+      <div
+        className={`relative overflow-hidden w-full max-w-full ${className}`}
+        style={{ maxWidth: width, aspectRatio: `${width} / ${height}` }}
+      >
         <Image
           src={fallbackSrc}
           alt="Hero Image"
-          width={width}
-          height={height}
+          fill
+          sizes="(max-width: 768px) 100vw, 500px"
           className="object-cover w-full h-full"
           priority
         />
@@ -48,7 +51,10 @@ export function HeroImageSlideshow({
   }
 
   return (
-    <div className={`relative overflow-hidden ${className}`} style={{ width, height }}>
+    <div
+      className={`relative overflow-hidden w-full max-w-full ${className}`}
+      style={{ maxWidth: width, aspectRatio: `${width} / ${height}` }}
+    >
       {images.map((img, index) => (
         <div
           key={img.id}
@@ -60,7 +66,7 @@ export function HeroImageSlideshow({
             src={img.imageUrl}
             alt="Hero Slideshow Image"
             fill
-            sizes={`${width}px`}
+            sizes="(max-width: 768px) 100vw, 500px"
             className="object-cover w-full h-full"
             priority={index === 0}
           />

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PublicComicListItem } from "@/app/types/comic";
 import { CoverType } from "@/app/types/comic";
 import { useCountryStore } from "@/stores/useCountryStore";
+import { hankenGrotesk } from "@/app/fonts";
 
 interface StoryCardProps {
   comic: PublicComicListItem;
@@ -57,7 +58,7 @@ export default function StoryCard({ comic }: StoryCardProps) {
 
   return (
     <div
-      className="
+      className={`
         relative
         w-full
         max-w-[330px] sm:max-w-[355px] md:max-w-[380px]
@@ -66,7 +67,8 @@ export default function StoryCard({ comic }: StoryCardProps) {
         overflow-visible
         transition-all duration-300 hover:-translate-y-2
         group
-      "
+        ${hankenGrotesk.className}
+      `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

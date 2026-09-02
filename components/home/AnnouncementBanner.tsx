@@ -25,8 +25,13 @@ export default function AnnouncementBanner({ onHeightChange }: AnnouncementBanne
         if (isMounted) {
           setAnnouncements(data || []);
         }
-      } catch (e) {
-        console.error("Failed to load storefront announcements", e);
+      } catch (e: any) {
+        if (isMounted) {
+          setAnnouncements([]);
+        }
+        if (e?.code !== "ERR_NETWORK" && e?.code !== "NETWORK_ERROR") {
+          console.error("Failed to load storefront announcements", e);
+        }
       }
     }
     load();

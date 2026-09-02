@@ -97,20 +97,20 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
         duration-300
       `}
     >
-      <div className="max-w-[1440px] mx-auto h-full px-5 lg:px-10 flex items-center justify-between">
-        {/* Mobile Left: Hamburger */}
-        <div className="flex-1 lg:hidden flex justify-start">
+      <div className="max-w-[1440px] mx-auto h-full px-5 sm:px-8 lg:px-12 flex lg:grid lg:grid-cols-[1fr_auto_1fr] items-center justify-between">
+        {/* Zone 1 — Left: Logo & Mobile Menu Button */}
+        <div className="flex items-center justify-start gap-4">
+          {/* Mobile Left: Hamburger */}
           <button 
             onClick={() => setIsMobileMenuOpen(true)} 
-            className="text-white hover:text-[#FFD54A] transition-colors cursor-pointer p-1"
+            className="lg:hidden text-white hover:text-[#FFD54A] transition-colors cursor-pointer p-1"
+            aria-label="Open menu"
           >
             <Menu size={28} />
           </button>
-        </div>
 
-        {/* Logo */}
-        <div className="flex-shrink-0 lg:flex-1 flex items-center justify-center lg:justify-start">
-          <Link href="/">
+          {/* Logo */}
+          <Link href="/" className="flex items-center">
             <Image
               src="/assets/home_page/logoImg.png"
               alt="UniLake Logo"
@@ -118,13 +118,13 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
               height={60}
               style={{ width: "auto", height: "auto" }}
               priority
-              className="h-10 w-auto lg:h-[60px]"
+              className="h-10 w-auto lg:h-[56px] xl:h-[60px]"
             />
           </Link>
         </div>
 
-        {/* Navigation Links */}
-        <ul className="hidden lg:flex items-center gap-8 xl:gap-12 text-white text-[15px] font-medium tracking-wide">
+        {/* Zone 2 — Center: Main Navigation */}
+        <ul className="hidden lg:flex items-center justify-center gap-6 xl:gap-8 2xl:gap-10 text-white text-[15px] font-medium tracking-wide select-none whitespace-nowrap">
           <li className="text-[#FFD54A] cursor-pointer hover:text-[#FFD54A] transition-colors duration-200">
             Home
           </li>
@@ -142,24 +142,24 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
           </li>
         </ul>
 
-        {/* Right Section: Icons + Language Dropdown */}
-        <div className="flex-1 flex justify-end items-center gap-4 lg:gap-6 text-white">
+        {/* Zone 3 — Right: Utility Controls */}
+        <div className="flex items-center justify-end gap-4 sm:gap-5 lg:gap-6 text-white">
           {/* Desktop Only Icons */}
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-4 xl:gap-5">
             {/* Admin Settings - Only visible to admins */}
             {!loading && user?.role === UserRole.ADMIN && (
-              <Link href="/admin" className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">
+              <Link href="/admin" className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Admin Dashboard">
                 <Settings size={20} strokeWidth={2} />
               </Link>
             )}
 
             {/* Wishlist */}
-            <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">
+            <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Wishlist">
               <Heart size={20} strokeWidth={2} />
             </button>
 
             {/* Search */}
-            <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">
+            <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Search">
               <Search size={20} strokeWidth={2} />
             </button>
 
@@ -174,6 +174,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
                   }
                 }}
                 className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1"
+                title="Profile"
               >
                 <User size={20} strokeWidth={2} />
               </button>
@@ -213,17 +214,17 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
             </div>
 
             {/* Cart with Blue Dot Badge */}
-            <button className="relative hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1">
+            <button className="relative hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Shopping Bag">
               <ShoppingBag size={20} strokeWidth={2} />
               <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#4AA6FF] rounded-full border border-[#914A8C]"></span>
             </button>
           </div>
 
-          {/* Language Selector Dropdown (Visible on both) */}
+          {/* Language Selector Dropdown (Visible on both mobile & desktop) */}
           <div className="relative" ref={dropdownRef}>
             <button
                onClick={() => !isLoading && !isError && countries.length > 0 && setIsOpen(!isOpen)}
-               className={`flex items-center gap-2 border border-white/80 rounded-full px-2 sm:px-3 py-1 text-[13px] hover:bg-white/10 transition-all font-medium select-none ${isLoading || isError || countries.length === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+               className={`flex items-center gap-2 border border-white/80 rounded-full px-2.5 sm:px-3 py-1 text-[13px] hover:bg-white/10 transition-all font-medium select-none ${isLoading || isError || countries.length === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -280,7 +281,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
       </div>
 
       {/* Hanging Bulb */}
-      {/* <Image
+      <Image
         src="/assets/home_page/bulbImg.png"
         alt="Bulb"
         width={110}
@@ -310,12 +311,15 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
           transition-all
           duration-500
 
+          invisible
+          lg:visible
+
           ${hideBulb
             ? "opacity-0 -translate-y-16"
             : "opacity-100 -translate-y-5"
           }
         `}
-      /> */}
+      />
     </nav>
 
     {/* Mobile Sidebar Overlay */}

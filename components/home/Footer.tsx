@@ -77,9 +77,16 @@ export default function Footer() {
 
             {/* Left Column: Brand & Logo */}
             <div className="md:col-span-6 flex flex-col items-start">
-              {/* Logo Text */}
+              {/* Logo Image */}
               <div className="mb-6">
-                <h2 className="text-3xl font-normal tracking-wide">LOGO</h2>
+                <Image
+                  src="/Unialke Logo with Emblem 2 2.svg"
+                  alt="UniLake Logo"
+                  width={220}
+                  height={80}
+                  className="h-12 sm:h-14 lg:h-16 w-auto object-contain"
+                  priority
+                />
               </div>
 
               {/* Description */}

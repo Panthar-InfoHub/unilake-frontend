@@ -36,19 +36,11 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
           />
         </svg>
 
-        {/* Text overlay — centered vertically over the SVG */}
+        {/* Text/SVG overlay — centered vertically over the SVG */}
         <div className="absolute inset-0 flex items-center pointer-events-none">
           <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-start">
-            <h2
-              className={`
-                ${chauPhilomeneOne.className}
-                text-white
-                uppercase
-                text-xl
-                sm:text-2xl
-                md:text-3xl
-                lg:text-4xl
-                xl:text-5xl
+            <div
+              className="
                 z-30
                 relative
                 pl-[80px]
@@ -56,10 +48,25 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
                 md:pl-[180px]
                 lg:pl-[240px]
                 xl:pl-[280px]
-              `}
+              "
             >
-              FAQ&rsquo;s &amp; LATEST BLOGS
-            </h2>
+              <Image
+                src="/FAQ’s & FEEDBACK.svg"
+                alt="FAQ's & FEEDBACK"
+                width={764}
+                height={68}
+                className="
+                  w-auto
+                  h-5
+                  sm:h-7
+                  md:h-9
+                  lg:h-11
+                  xl:h-12
+                  object-contain
+                "
+                priority
+              />
+            </div>
           </div>
         </div>
 

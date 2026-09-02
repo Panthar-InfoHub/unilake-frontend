@@ -14,12 +14,12 @@ export default async function BlogIndexPage() {
       <HomeHeaderSection />
 
       {/* Hero Section */}
-      <div className="relative w-full pt-32 pb-16 bg-[#8E4A92] text-white">
+      <div className="relative w-full pt-32 pb-9 text-center">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-          <h1 className={`${chauPhilomeneOne.className} text-4xl md:text-5xl lg:text-6xl uppercase mb-4`}>
+          <h1 className={`${chauPhilomeneOne.className} text-4xl md:text-5xl lg:text-6xl uppercase text-[#914A8C] mb-4`}>
             Our Blog
           </h1>
-          <p className={`${hankenGrotesk.className} text-lg md:text-xl text-[#F8E7D2] max-w-2xl mx-auto`}>
+          <p className={`${chauPhilomeneOne.className} text-lg md:text-xl text-[#555555] max-w-2xl mx-auto tracking-wide`}>
             Discover stories, tips, and updates from the world of personalized children&rsquo;s books.
           </p>
         </div>
@@ -48,8 +48,8 @@ export default async function BlogIndexPage() {
               const displayTags = blog.tags.slice(0, 3);
 
               return (
-                <Link 
-                  href={`/blog/${blog.slug}`} 
+                <Link
+                  href={`/blog/${blog.slug}`}
                   key={blog.id}
                   className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group border border-transparent hover:border-[#8E4A92]/20"
                 >

@@ -81,7 +81,7 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
   return (
     <div
       ref={containerRef}
-      className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 py-8"
+      className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-6 py-8"
     >
       {filters.map((filter) => (
         <div key={filter.id} className="relative">
@@ -92,10 +92,9 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
               flex items-center gap-4 px-5 py-2 rounded-full
               border-[2.5px] border-[#D6CFFF] bg-white
               transition-all duration-300
-              ${
-                openFilter === filter.id || selected[filter.id]
-                  ? "shadow-sm bg-[#F9F8FF]"
-                  : "shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md hover:bg-[#F9F8FF]"
+              ${openFilter === filter.id || selected[filter.id]
+                ? "shadow-sm bg-[#F9F8FF]"
+                : "shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md hover:bg-[#F9F8FF]"
               }
             `}
           >
@@ -124,10 +123,9 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
                       text-sm font-medium
                       transition-colors duration-150
                       hover:bg-[#F9F8FF] hover:text-[#7C5DFA]
-                      ${
-                        selected[filter.id] === option.value
-                          ? "bg-[#F9F8FF] text-[#7C5DFA] font-bold"
-                          : "text-gray-600"
+                      ${selected[filter.id] === option.value
+                        ? "bg-[#F9F8FF] text-[#7C5DFA] font-bold"
+                        : "text-gray-600"
                       }
                     `}
                   >

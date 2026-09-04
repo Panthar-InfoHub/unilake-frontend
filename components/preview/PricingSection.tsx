@@ -4,7 +4,8 @@ import { usePublicComic } from "@/hooks/usePublicComics";
 import { useCountryStore } from "@/stores/useCountryStore";
 import { useState } from "react";
 import { toast } from "sonner";
-import { chauPhilomeneOne } from "@/app/fonts";
+import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import Image from "next/image";
 
 import { SessionSnapshot } from "@/app/types/session";
 import { updateSession, attachUser } from "@/app/actions/session";
@@ -77,45 +78,64 @@ export default function PricingSection({ comicId, sessionId, snapshot }: Pricing
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-16 px-4 flex flex-col items-center border-t border-gray-200 mt-12">
-      <h2 className={`${chauPhilomeneOne.className} text-3xl md:text-5xl text-center text-[#3F3C95] uppercase mb-4`}>
-        Complete Your Order<br />To Unlock The Full Story
+    <div className="w-full max-w-3xl mx-auto py-10 px-8 flex flex-col items-center bg-[#FFFFFF] rounded-[40px] border-[4px] border-[#914BBC] shadow-[12px_12px_0px_#403A8B] mt-12 mb-20 relative">
+      <h2 className={`${hankenGrotesk.className} text-2xl md:text-3xl text-center text-black font-semibold mb-2`}>
+        Complete Your Order To Unlock The Full Story
       </h2>
-      <p className="text-gray-500 mb-8 font-medium">Choose Cover Format</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl mb-10">
+      <div className="md:hidden font-medium text-sm text-black mb-4 mt-2">
+        Choose Cover Format
+      </div>
+
+      <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 w-full max-w-2xl mb-10 mt-8">
         {/* Softcover Option */}
         <div 
           onClick={() => softcoverRule && setSelectedFormat("SOFTCOVER")}
-          className={`flex flex-col items-center p-8 rounded-2xl border-4 transition-all cursor-pointer ${
-            !softcoverRule ? "opacity-50 cursor-not-allowed border-gray-200" :
-            selectedFormat === "SOFTCOVER" ? "border-[#914A8C] bg-[#914A8C]/5 shadow-lg scale-[1.02]" : "border-gray-200 hover:border-[#914A8C]/50"
+          className={`flex flex-col items-center p-5 rounded-[30px] transition-all cursor-pointer w-full max-w-[220px] ${
+            !softcoverRule ? "opacity-50 cursor-not-allowed border border-gray-200" :
+            selectedFormat === "SOFTCOVER" ? "border-[4px] border-[#914BBC] scale-[1.02]" : "border border-black hover:border-gray-500"
           }`}
         >
-          <h3 className={`${chauPhilomeneOne.className} text-3xl text-gray-800 uppercase mb-2`}>
-            SoftCover
-          </h3>
-          <div className="text-4xl font-bold text-[#3F3C95]">
-            {softcoverRule ? `${currencySymbol}${softcoverRule.price}` : "N/A"}
+          <div className="text-[#403A8B] text-lg font-bold mb-1">SoftCover</div>
+          <div className="text-black text-xs mb-3 text-center">Flexible & Lightweight</div>
+          <div className="relative w-[110px] h-[145px] mb-3">
+            <Image 
+              src="/assets/home_page/softcover.png" 
+              alt="SoftCover" 
+              fill
+              className="object-contain drop-shadow-md" 
+            />
           </div>
+          <div className="text-black text-lg font-bold">
+            {softcoverRule ? `${currencySymbol} ${Number(softcoverRule.price).toLocaleString('en-IN')}` : "N/A"}
+          </div>
+        </div>
+
+        {/* Middle Text */}
+        <div className="hidden md:flex flex-col items-center justify-center font-medium text-sm text-black">
+          Choose Cover Format
         </div>
 
         {/* Hardcover Option */}
         <div 
           onClick={() => hardcoverRule && setSelectedFormat("HARDCOVER")}
-          className={`flex flex-col items-center p-8 rounded-2xl border-4 transition-all cursor-pointer ${
-            !hardcoverRule ? "opacity-50 cursor-not-allowed border-gray-200" :
-            selectedFormat === "HARDCOVER" ? "border-[#914A8C] bg-[#914A8C]/5 shadow-lg scale-[1.02]" : "border-gray-200 hover:border-[#914A8C]/50"
+          className={`flex flex-col items-center p-5 rounded-[30px] transition-all cursor-pointer w-full max-w-[220px] ${
+            !hardcoverRule ? "opacity-50 cursor-not-allowed border border-gray-200" :
+            selectedFormat === "HARDCOVER" ? "border-[4px] border-[#914BBC] scale-[1.02]" : "border border-black hover:border-gray-500"
           }`}
         >
-          <div className="bg-[#FFD54A] text-[#3F3C95] text-xs font-bold px-3 py-1 rounded-full uppercase mb-2">
-            Most Popular
+          <div className="text-[#403A8B] text-lg font-bold mb-1">HardCover</div>
+          <div className="text-black text-xs mb-3 text-center">Sturdy & Long Lasting</div>
+          <div className="relative w-[110px] h-[145px] mb-3">
+            <Image 
+              src="/assets/home_page/hardcover.png" 
+              alt="HardCover" 
+              fill
+              className="object-contain drop-shadow-md" 
+            />
           </div>
-          <h3 className={`${chauPhilomeneOne.className} text-3xl text-gray-800 uppercase mb-2`}>
-            HardCover
-          </h3>
-          <div className="text-4xl font-bold text-[#3F3C95]">
-            {hardcoverRule ? `${currencySymbol}${hardcoverRule.price}` : "N/A"}
+          <div className="text-black text-lg font-bold">
+            {hardcoverRule ? `${currencySymbol} ${Number(hardcoverRule.price).toLocaleString('en-IN')}` : "N/A"}
           </div>
         </div>
       </div>
@@ -123,7 +143,7 @@ export default function PricingSection({ comicId, sessionId, snapshot }: Pricing
       <button
         onClick={handleCheckout}
         disabled={isUpdating || authLoading}
-        className="px-12 py-4 bg-[#FFD54A] hover:bg-[#ffcd2b] text-[#3F3C95] rounded-full font-bold text-xl md:text-2xl uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 transition-all w-full max-w-md border-[3px] border-[#3F3C95] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+        className="px-8 py-3 bg-gradient-to-b from-[#5c58c2] to-[#403A8B] hover:from-[#6a66d0] hover:to-[#4a449d] text-white rounded-full font-bold text-sm md:text-base uppercase tracking-wider transition-all w-full max-w-[340px] border-2 border-[#1e1c4a] shadow-[0px_4px_0px_#FFD54A,0px_10px_20px_rgba(64,58,139,0.5)] active:translate-y-[4px] active:shadow-[0px_0px_0px_#FFD54A,0px_4px_10px_rgba(64,58,139,0.5)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isUpdating ? (
           <>
@@ -131,7 +151,7 @@ export default function PricingSection({ comicId, sessionId, snapshot }: Pricing
             Updating...
           </>
         ) : (
-          "Continue to Checkout"
+          "CONTIUNE TO CHECKOUT"
         )}
       </button>
 

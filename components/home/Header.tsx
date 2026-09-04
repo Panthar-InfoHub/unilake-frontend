@@ -61,7 +61,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
       }
-    }
+      }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -126,19 +126,19 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
         {/* Zone 2 — Center: Main Navigation */}
         <ul className="hidden lg:flex items-center justify-center gap-6 xl:gap-8 2xl:gap-10 text-white text-[15px] font-medium tracking-wide select-none whitespace-nowrap">
           <li className="text-[#FFD54A] cursor-pointer hover:text-[#FFD54A] transition-colors duration-200">
-            Home
+            <Link href="/">Home</Link>
           </li>
           <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            Our Books
+            <Link href="/comic">Our Books</Link>
           </li>
           <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            How its works
+            <Link href="/how_it_work">How its works</Link>
           </li>
           <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            Blogs
+            <Link href="/blog">Blogs</Link>
           </li>
           <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            Team
+            <Link href="/team">Team</Link>
           </li>
         </ul>
 
@@ -153,15 +153,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
               </Link>
             )}
 
-            {/* Wishlist */}
-            <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Wishlist">
-              <Heart size={20} strokeWidth={2} />
-            </button>
 
-            {/* Search */}
-            <button className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Search">
-              <Search size={20} strokeWidth={2} />
-            </button>
 
             {/* Profile */}
             <div className="relative" ref={profileDropdownRef}>
@@ -213,11 +205,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
               )}
             </div>
 
-            {/* Cart with Blue Dot Badge */}
-            <button className="relative hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Shopping Bag">
-              <ShoppingBag size={20} strokeWidth={2} />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#4AA6FF] rounded-full border border-[#914A8C]"></span>
-            </button>
+
           </div>
 
           {/* Language Selector Dropdown (Visible on both mobile & desktop) */}
@@ -356,26 +344,24 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
       </div>
 
       <div className="p-5 overflow-y-auto flex-1 flex flex-col gap-6">
-        {/* Search Bar */}
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder="Search books..." 
-            className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-11 pr-4 text-white placeholder-white/50 focus:outline-none focus:bg-white/20 focus:border-white/30 transition-all text-sm shadow-inner"
-          />
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
-        </div>
+
 
         {/* Main Links */}
         <div className="flex flex-col gap-1.5">
-          {["Home", "Our Books", "How its works", "Blogs", "Team"].map((item) => (
+          {[
+            { name: "Home", href: "/" },
+            { name: "Our Books", href: "/comic" },
+            { name: "How its works", href: "/how_it_work" },
+            { name: "Blogs", href: "/blog" },
+            { name: "Team", href: "/team" }
+          ].map((item) => (
             <Link 
-              key={item} 
-              href="#" 
+              key={item.name} 
+              href={item.href} 
               onClick={() => setIsMobileMenuOpen(false)}
               className="py-2.5 px-4 text-white font-medium hover:bg-white/10 rounded-xl transition-colors text-sm"
             >
-              {item}
+              {item.name}
             </Link>
           ))}
         </div>
@@ -384,25 +370,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
 
         {/* User actions */}
         <div className="flex flex-col gap-1.5 pb-8">
-          <Link 
-            href="#" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3.5 py-3 px-4 text-white hover:bg-white/10 rounded-xl transition-colors"
-          >
-            <Heart size={18} strokeWidth={2.5} />
-            <span className="font-medium text-sm">Wishlist</span>
-          </Link>
-          <Link 
-            href="#" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3.5 py-3 px-4 text-white hover:bg-white/10 rounded-xl transition-colors"
-          >
-             <div className="relative">
-               <ShoppingBag size={18} strokeWidth={2.5} />
-               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#4AA6FF] rounded-full border-2 border-[#914A8C]"></span>
-             </div>
-            <span className="font-medium text-sm">Shopping Bag</span>
-          </Link>
+
 
           {isAuthenticated ? (
             <>

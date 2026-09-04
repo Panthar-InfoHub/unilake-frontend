@@ -4,6 +4,7 @@ import {
   Poppins,
   Chau_Philomene_One,
   Hanken_Grotesk,
+  Protest_Strike,
 } from "next/font/google";
 
 export const geistSans = Geist({
@@ -32,4 +33,10 @@ export const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
   variable: "--font-hanken-grotesk",
   weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+export const protestStrike = Protest_Strike({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-protest-strike",
 });

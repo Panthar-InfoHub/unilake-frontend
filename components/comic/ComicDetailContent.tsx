@@ -5,8 +5,7 @@ import { PublicComicDetail } from "@/app/types/comic";
 import ComicThumbnailCarousel from "./ComicThumbnailCarousel";
 import ComicInfoCards from "./ComicInfoCards";
 import ComicPersonalizeForm from "./ComicPersonalizeForm";
-import ComicPreloader from "./ComicPreloader";
-import { clearSession, getSession as getStoredSession } from "@/app/lib/session-storage";
+import { clearSession, getSession as getStoredSession, setShowPreloader } from "@/app/lib/session-storage";
 import { getSession as fetchSession } from "@/app/actions/session";
 import { useRouter } from "next/navigation";
 import { Play } from "lucide-react";
@@ -18,10 +17,6 @@ interface ComicDetailContentProps {
 export default function ComicDetailContent({ comic }: ComicDetailContentProps) {
   const router = useRouter();
   const [resumeSessionId, setResumeSessionId] = useState<string | null>(null);
-  
-  const [showPreloader, setShowPreloader] = useState(false);
-  const [childName, setChildName] = useState("");
-  const [redirectUrl, setRedirectUrl] = useState("");
 
   // A stored session is only a hint. Before offering "Continue" we confirm with the
   // server that it still exists, hasn't expired, and actually has a photo — otherwise
@@ -62,11 +57,8 @@ export default function ComicDetailContent({ comic }: ComicDetailContentProps) {
   return (
     <div className="bg-[#F8E7D2] min-h-screen py-10 lg:py-16 flex flex-col justify-center">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full">
-        {showPreloader ? (
-          <ComicPreloader childName={childName} redirectUrl={redirectUrl} />
-        ) : (
-          <>
-            {/* Resume Banner */}
+        <>
+          {/* Resume Banner */}
             {resumeSessionId && (
               <div className="mb-8 w-full bg-[#3F3C95] text-white p-6 rounded-2xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#2B2882]">
                 <div>
@@ -96,16 +88,15 @@ export default function ComicDetailContent({ comic }: ComicDetailContentProps) {
               <div className="w-full lg:w-[55%] flex justify-center lg:justify-start">
                 <ComicPersonalizeForm 
                   comic={comic} 
-                  onSuccess={(name, url) => {
-                    setChildName(name);
-                    setRedirectUrl(url);
-                    setShowPreloader(true);
+                  onSuccess={(_name, url) => {
+                    const sessionId = url.split("/")[2];
+                    if (sessionId) setShowPreloader(sessionId);
+                    router.push(url);
                   }}
                 />
               </div>
             </div>
           </>
-        )}
       </div>
     </div>
   );

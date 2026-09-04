@@ -1,14 +1,15 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import { useSessionPreview } from "@/hooks/useSessionPreview";
 import PreviewViewer from "@/components/preview/PreviewViewer";
+import ComicPreloader from "@/components/comic/ComicPreloader";
 import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { clearSession, isValidSessionId } from "@/app/lib/session-storage";
+import { clearSession, isValidSessionId, consumeShowPreloader, getSessionBySessionId } from "@/app/lib/session-storage";
 
 function PreviewErrorState({
   title,
@@ -43,6 +44,14 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
   // rather than 404ing (§13.1), so screen it here and never make the call at all.
   const sessionIdIsValid = isValidSessionId(resolvedParams.sessionId);
   const sessionId = sessionIdIsValid ? resolvedParams.sessionId : null;
+
+  const [showPreloader, setShowPreloader] = useState(() => {
+    return sessionIdIsValid ? consumeShowPreloader(resolvedParams.sessionId) : false;
+  });
+
+  const childNameFromStorage = sessionIdIsValid
+    ? getSessionBySessionId(resolvedParams.sessionId)?.childName ?? ""
+    : "";
 
   const {
     snapshot,
@@ -88,6 +97,15 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
   };
 
   const renderBody = () => {
+    if (showPreloader) {
+      return (
+        <ComicPreloader
+          childName={childNameFromStorage}
+          onComplete={() => setShowPreloader(false)}
+        />
+      );
+    }
+
     if (!sessionIdIsValid) {
       return (
         <PreviewErrorState
@@ -219,7 +237,7 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
   };
 
   return (
-    <div className="min-h-screen bg-[#fcf9f2] flex flex-col">
+    <div className="min-h-screen bg-[#F1E0CA] flex flex-col">
       <HomeHeaderSection />
       <main className="grow flex flex-col items-center justify-center">{renderBody()}</main>
       <Footer />

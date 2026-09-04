@@ -5,11 +5,12 @@ import { usePublicComic } from "@/hooks/usePublicComics";
 import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
 import ComicDetailContent from "@/components/comic/ComicDetailContent";
-import ComicFaq from "@/components/comic/ComicFaq";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { MoveLeft } from "lucide-react";
 import { usePublicFaqs } from "@/hooks/usePublicContent";
+import ComicPageFaqSection from "@/components/comic/ComicPageFaqSection";
+import ExploreMoreBooks from "@/components/comic/ExploreMoreBooks";
 
 interface ComicPageProps {
   params: Promise<{
@@ -28,7 +29,7 @@ export default function ComicPage({ params }: ComicPageProps) {
     <div className="flex flex-col min-h-screen">
       <HomeHeaderSection />
       
-      <main className="flex-1 bg-[#F8E7D2] pt-24 pb-10">
+      <main className="flex-1 bg-[#F8E7D2] pt-24">
         {isLoading ? (
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10 lg:py-16 flex flex-col lg:flex-row gap-12 lg:gap-16">
             <div className="w-full lg:w-[45%] flex flex-col items-center">
@@ -62,14 +63,15 @@ export default function ComicPage({ params }: ComicPageProps) {
         ) : (
           <>
             <ComicDetailContent comic={comic} />
-            <div className="mt-8">
-              <ComicFaq faqs={faqs || []} />
-            </div>
+            <ComicPageFaqSection faqs={faqs || []} />
+            <ExploreMoreBooks comicId={comicId} />
           </>
         )}
-      </main>
 
-      <Footer />
+        <div className="flow-root bg-[#F8E7D2]">
+          <Footer />
+        </div>
+      </main>
     </div>
   );
 }

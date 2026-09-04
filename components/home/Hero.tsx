@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import { getPublicHeroImages } from "@/app/actions/heroimage";
 import { HeroImageSlideshow } from "./HeroImageSlideshow";
@@ -71,29 +72,30 @@ export default async function Hero() {
 
             </p>
 
-            <button
-              className={`${hankenGrotesk.className} mt-10 bg-gradient-to-b from-[#3F3C95] to-[#2B2882] text-white font-extrabold text-sm md:text-base uppercase tracking-wider px-8 py-3 rounded-full border-b-[4px] border-[#C8942A] shadow-[0_4px_10px_rgba(63,60,149,0.3)] transition-all hover:brightness-110 active:translate-y-[2px] active:border-b-[2px] cursor-pointer`}
+            <Link
+              href="/comic"
+              className={`${hankenGrotesk.className} mt-10 inline-block bg-gradient-to-b from-[#3F3C95] to-[#2B2882] text-white font-extrabold text-sm md:text-base uppercase tracking-wider px-8 py-3 rounded-full border-b-[4px] border-[#C8942A] shadow-[0_4px_10px_rgba(63,60,149,0.3)] transition-all hover:brightness-110 active:translate-y-[2px] active:border-b-[2px] cursor-pointer`}
             >
-      EXPLORE COMICS
-    </button>
+              EXPLORE COMICS
+            </Link>
 
-  </div>
+          </div>
 
-  {/* RIGHT */ }
+          {/* RIGHT */}
 
-  <div className="relative flex justify-center w-full min-w-0">
+          <div className="relative flex justify-center w-full min-w-0">
 
-    <HeroImageSlideshow
-      images={heroImages}
-      fallbackSrc="/assets/home_page/boyHeroImg.png"
-      width={500}
-      height={550}
-      className="drop-shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
-    />
+            <HeroImageSlideshow
+              images={heroImages}
+              fallbackSrc="/assets/home_page/boyHeroImg.png"
+              width={500}
+              height={550}
+              className="drop-shadow-[0_20px_40px_rgba(0,0,0,0.25)]"
+            />
 
 
 
-  </div>
+          </div>
 
         </div >
 

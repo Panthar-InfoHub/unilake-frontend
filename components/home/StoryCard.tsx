@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { PublicComicListItem } from "@/app/types/comic";
 import { CoverType } from "@/app/types/comic";
 import { useCountryStore } from "@/stores/useCountryStore";
-import { hankenGrotesk } from "@/app/fonts";
+import { hankenGrotesk, poppins, protestStrike } from "@/app/fonts";
 
 interface StoryCardProps {
   comic: PublicComicListItem;
@@ -114,17 +114,16 @@ export default function StoryCard({ comic }: StoryCardProps) {
         className="
           absolute
           left-[13.5%]
-          top-[48.5%]
+          top-[46%]
           w-[73%]
-          h-[48%]
+          h-[52%]
           z-10
           flex flex-col
           gap-0
-          pt-1
         "
       >
         {/* Tags */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+        <div className="flex items-center gap-1.5 flex-wrap mb-1 md:mb-2">
           {/* Age Pill */}
           <span className="text-[8px] font-extrabold text-[#5C53C6] bg-[#EBE7FF] border border-[#D6CFFF]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
             AGE: {ageLabel}
@@ -142,28 +141,28 @@ export default function StoryCard({ comic }: StoryCardProps) {
         </div>
 
         {/* Title */}
-        <h3 className="text-sm font-extrabold text-[#1A1A1A] uppercase leading-snug tracking-normal line-clamp-1 mb-2">
+        <h3 className={`${hankenGrotesk.className} text-base sm:text-lg md:text-[24px] font-bold text-[#000000] uppercase leading-tight md:leading-[48px] tracking-normal line-clamp-1 mb-1 md:mb-2`}>
           {comic.title}
         </h3>
 
         {/* Description */}
-        <p className="text-[10px] text-gray-500 leading-relaxed line-clamp-2 mb-3 h-[28px] overflow-hidden">
+        <p className={`${poppins.className} text-[10px] sm:text-xs md:text-[14px] font-normal text-[#000000]/[0.74] leading-snug md:leading-[18px] line-clamp-2 mb-1 md:mb-3 overflow-hidden`}>
           {comic.description || "A personalized storybook adventure for your child."}
         </p>
 
         {/* Price Layout */}
         {pricing ? (
-          <div className="flex flex-col gap-0.5 mb-3 h-[38px]">
-            <span className="text-base font-extrabold text-gray-900 leading-none">
+          <div className="flex flex-col gap-0 md:gap-0.5 mb-2 md:mb-3 h-[36px] md:h-[50px]">
+            <span className={`${protestStrike.className} text-[18px] sm:text-[20px] md:text-[24px] font-normal text-[#000000] leading-none md:leading-[16px] uppercase`}>
               {currencySymbol} {basePrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
             </span>
-            <span className="text-[10px] text-gray-400 line-through mt-0.5">
+            <span className={`${protestStrike.className} text-[12px] sm:text-[14px] md:text-[18px] text-[#6B7280] line-through uppercase mt-0.5`}>
               {currencySymbol} {originalPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
             </span>
           </div>
         ) : (
-          <div className="flex flex-col justify-center gap-0.5 mb-3 h-[38px]">
-             <span className="text-[10px] font-bold text-red-500 leading-tight">
+          <div className="flex flex-col justify-center gap-0 md:gap-0.5 mb-2 md:mb-3 h-[36px] md:h-[50px]">
+             <span className="text-[9px] md:text-[10px] font-bold text-red-500 leading-tight">
                Not available for shipping in {selectedCountry?.name || "this country"}
              </span>
           </div>

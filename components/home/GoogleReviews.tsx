@@ -75,11 +75,12 @@ export default function GoogleReviews() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex items-center gap-0 sm:gap-2 max-w-7xl w-full px-8 justify-center">
             {/* UFO */}
-            <div className="relative w-[140px] sm:w-[220px] md:w-[300px] lg:w-[380px] xl:w-[440px] aspect-[580/220] -mt-6 sm:-mt-10 lg:-mt-28 select-none pointer-events-none">
+            <div className="relative w-[100px] sm:w-[220px] md:w-[300px] lg:w-[380px] xl:w-[440px] aspect-[580/220] -mt-4 sm:-mt-10 lg:-mt-28 select-none pointer-events-none">
               <Image
                 src="/assets/home_page/ufoImg.png"
                 alt="5 Star UFO"
                 fill
+                sizes="(max-width: 640px) 140px, (max-width: 768px) 220px, (max-width: 1024px) 300px, (max-width: 1280px) 380px, 440px"
                 priority
                 className="object-contain"
               />

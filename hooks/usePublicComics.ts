@@ -22,6 +22,20 @@ export function usePublicComic(comicId: string) {
   });
 }
 
+export function useLatestPublicComics(excludeComicId?: string, count = 4) {
+  const query = useQuery({
+    queryKey: ["public-comics-latest"],
+    queryFn: () => fetchPublicComics(),  // no filters → all published comics
+  });
+
+  // Derive: exclude current comic, take latest `count`
+  const comics = query.data
+    ?.filter((c) => c.id !== excludeComicId)
+    .slice(0, count) ?? [];
+
+  return { ...query, data: comics };
+}
+
 export function usePublicThemes() {
   return useQuery({
     queryKey: ["public-themes"],

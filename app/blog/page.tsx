@@ -4,7 +4,86 @@ import Footer from "@/components/home/Footer";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import Link from "next/link";
 import Image from "next/image";
-import { MoveRight, MoveLeft } from "lucide-react";
+import { MoveLeft } from "lucide-react";
+import { BlogListItem } from "@/app/types/blog";
+
+function BlogCard({ blog }: { blog: BlogListItem }) {
+  return (
+    <Link
+      href={`/blog/${blog.slug}`}
+      className="relative group block w-full"
+    >
+      {/* SVG background shape — default state */}
+      <Image
+        src="/assets/home_page/blog.svg"
+        alt=""
+        width={387}
+        height={497}
+        aria-hidden="true"
+        className="w-full h-auto block transition-opacity duration-900 ease-in-out group-hover:opacity-0"
+        draggable={false}
+      />
+      {/* SVG background shape — hover state */}
+      <Image
+        src="/assets/home_page/blog_on_hover.svg"
+        alt=""
+        width={387}
+        height={497}
+        aria-hidden="true"
+        className="w-full h-auto absolute inset-0 opacity-0 transition-opacity duration-900 ease-in-out group-hover:opacity-100"
+        draggable={false}
+      />
+
+      {/* Card content overlay */}
+      <div className="absolute inset-0 flex flex-col px-[10%] pt-[8%] pb-[8%]">
+        {/* Top section: Title (left) — arrow is part of the SVG */}
+        <div className="pr-[35%]">
+          <h3
+            className={`${chauPhilomeneOne.className} text-white text-xl sm:text-[22px] leading-[1.15] uppercase line-clamp-3`}
+          >
+            {blog.title}
+          </h3>
+        </div>
+
+        {/* Excerpt */}
+        {blog.excerpt && (
+          <p
+            className={`${hankenGrotesk.className} text-white/90 text-xs sm:text-sm leading-relaxed mt-2 line-clamp-3 pr-[10%]`}
+          >
+            {blog.excerpt}
+          </p>
+        )}
+
+        {/* Cover image — inset in the lower portion */}
+        <div className="mt-auto relative w-full aspect-[16/10] rounded-xl overflow-hidden">
+          {blog.coverImageUrl ? (
+            <Image
+              src={blog.coverImageUrl}
+              alt={blog.title}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-[#F3E8FF] text-[#8E4A92]/40">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="w-12 h-12"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export default async function BlogIndexPage() {
   const blogs = await fetchPublicBlogs();
@@ -14,12 +93,12 @@ export default async function BlogIndexPage() {
       <HomeHeaderSection />
 
       {/* Hero Section */}
-      <div className="relative w-full pt-32 pb-16 bg-[#8E4A92] text-white">
+      <div className="relative w-full pt-32 pb-9 text-center">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-          <h1 className={`${chauPhilomeneOne.className} text-4xl md:text-5xl lg:text-6xl uppercase mb-4`}>
+          <h1 className={`${chauPhilomeneOne.className} text-4xl md:text-5xl lg:text-6xl uppercase text-[#914A8C] mb-4`}>
             Our Blog
           </h1>
-          <p className={`${hankenGrotesk.className} text-lg md:text-xl text-[#F8E7D2] max-w-2xl mx-auto`}>
+          <p className={`${chauPhilomeneOne.className} text-lg md:text-xl text-[#555555] max-w-2xl mx-auto tracking-wide`}>
             Discover stories, tips, and updates from the world of personalized children&rsquo;s books.
           </p>
         </div>
@@ -39,75 +118,9 @@ export default async function BlogIndexPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogs.map((blog) => {
-              const dateStr = new Date(blog.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric"
-              });
-              const displayTags = blog.tags.slice(0, 3);
-
-              return (
-                <Link 
-                  href={`/blog/${blog.slug}`} 
-                  key={blog.id}
-                  className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group border border-transparent hover:border-[#8E4A92]/20"
-                >
-                  {/* Cover Image */}
-                  <div className="relative w-full aspect-[16/10] bg-gray-100 overflow-hidden">
-                    {blog.coverImageUrl ? (
-                      <Image
-                        src={blog.coverImageUrl}
-                        alt={blog.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-[#F3E8FF] text-[#8E4A92]/40">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-12 h-12">
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                          <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-6 flex flex-col flex-1">
-                    {/* Meta: Tags & Date */}
-                    <div className="flex items-center justify-between mb-3 text-xs font-medium">
-                      <div className="flex gap-2 flex-wrap">
-                        {displayTags.map(tag => (
-                          <span key={tag} className="bg-[#F3E8FF] text-[#8E4A92] px-2.5 py-1 rounded-full uppercase tracking-wider text-[10px]">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-gray-500 shrink-0">{dateStr}</span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className={`${hankenGrotesk.className} font-extrabold text-xl text-[#222222] mb-3 line-clamp-2 group-hover:text-[#8E4A92] transition-colors`}>
-                      {blog.title}
-                    </h3>
-
-                    {/* Excerpt */}
-                    {blog.excerpt && (
-                      <p className={`${hankenGrotesk.className} text-[#555555] text-sm leading-relaxed line-clamp-3 mb-4 flex-1`}>
-                        {blog.excerpt}
-                      </p>
-                    )}
-
-                    {/* Read More link */}
-                    <div className="mt-auto pt-4 border-t border-gray-100 flex items-center text-[#8E4A92] font-bold text-sm">
-                      Read Article <MoveRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+            {blogs.map((blog) => (
+              <BlogCard key={blog.id} blog={blog} />
+            ))}
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import StoryFilters from "@/components/home/StoryFilters";
@@ -8,6 +8,7 @@ import StoryCard from "@/components/home/StoryCard";
 import { usePublicComics } from "@/hooks/usePublicComics";
 import { Loader2 } from "lucide-react";
 import { HowItWorks } from "@/app/types/howItWorks";
+import { HowItWorksVideo } from "./HowItWorksVideo";
 
 interface ChooseStoryProps {
   howItWorks: HowItWorks | null;
@@ -50,7 +51,7 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
 
         {/* Text overlay — centered vertically over the SVG */}
         <div className="absolute inset-0 flex items-center pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full px-8 md:px-14 lg:px-20">
+          <div className="max-w-7xl mx-auto w-full px-8 pl-12 sm:pl-28 md:pl-40 lg:pl-52 xl:pl-[280px]">
             <h2
               className={`
                 ${chauPhilomeneOne.className}
@@ -78,8 +79,11 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
           priority
           className="
             absolute
-            right-0
-            lg:right-4
+            right-4
+            sm:right-8
+            md:right-16
+            lg:right-32
+            xl:right-48
 
             bottom-[-10px]
             sm:bottom-[-15px]
@@ -130,7 +134,7 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
           ) : (
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-[#555555] font-medium text-lg">No stories found matching your criteria.</p>
-              <button 
+              <button
                 onClick={() => setSelectedFilters({})}
                 className="mt-4 px-6 py-2 bg-white border border-[#914B8C] text-[#914B8C] rounded-full hover:bg-[#FDF9F3] transition-colors"
               >
@@ -175,7 +179,7 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
                     relative
                   `}
                 >
-                  How It Works
+                  How to personalize
                 </h2>
               </div>
             </div>
@@ -222,21 +226,14 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
 
                 {/* Left Column: Video Mockup */}
                 <div className="relative w-full flex justify-center lg:justify-start">
-                  <div className="relative w-full max-w-[500px] aspect-[616/695] bg-[#3F3C95] rounded-3xl overflow-hidden shadow-xl border-4 border-[#FFD54A]">
-                    {howItWorks.videoUrl && (
-                      <video
-                        src={howItWorks.videoUrl}
-                        poster={howItWorks.posterUrl ?? undefined}
-                        preload="none"
-                        controls
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
+                  <HowItWorksVideo
+                    videoUrl={howItWorks.videoUrl}
+                    posterUrl={howItWorks.posterUrl ?? undefined}
+                  />
                 </div>
 
                 {/* Right Column: Steps */}
-                <div className="flex flex-col gap-8 md:gap-10">
+                <div className={`${hankenGrotesk.className} flex flex-col gap-8 md:gap-10`}>
                   {howItWorks.steps.map((step, index) => (
                     <div key={index} className="flex items-start gap-5 group">
                       {/* Circular Step Badge */}
@@ -245,7 +242,7 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
                       </div>
 
                       {/* Text Content */}
-                      <div className={`${hankenGrotesk.className} flex flex-col gap-1.5`}>
+                      <div className="flex flex-col gap-1.5">
                         <h4 className="text-[#1A1A1A] font-extrabold text-xl md:text-2xl transition-colors duration-300 group-hover:text-[#914B8C]">
                           {step.heading}
                         </h4>
@@ -265,3 +262,5 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
     </>
   );
 }
+
+

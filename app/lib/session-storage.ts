@@ -20,6 +20,40 @@ interface StoredSession {
   wsRoomToken: string;
   comicId: string;
   createdAt: string; // ISO timestamp
+  childName?: string;
+}
+
+const PRELOADER_KEY_PREFIX = "unilake_preloader_";
+
+export function setShowPreloader(sessionId: string): void {
+  try {
+    sessionStorage.setItem(`${PRELOADER_KEY_PREFIX}${sessionId}`, "1");
+  } catch {}
+}
+
+export function consumeShowPreloader(sessionId: string): boolean {
+  try {
+    const val = sessionStorage.getItem(`${PRELOADER_KEY_PREFIX}${sessionId}`);
+    if (val) {
+      sessionStorage.removeItem(`${PRELOADER_KEY_PREFIX}${sessionId}`);
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+export function getSessionBySessionId(sessionId: string): StoredSession | null {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(STORAGE_KEY_PREFIX)) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const data = JSON.parse(raw) as StoredSession;
+      if (data.sessionId === sessionId) return data;
+    }
+  } catch {}
+  return null;
 }
 
 export function saveSession(comicId: string, data: StoredSession): void {

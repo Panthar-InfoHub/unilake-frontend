@@ -40,7 +40,7 @@ export default function PreviewViewer({
   const coverUrl = snapshot.comic.coverThumbnailUrls?.[0];
 
   return (
-    <div className="w-full flex flex-col items-center bg-[#fcf9f2] min-h-screen py-12">
+    <div className="w-full flex flex-col items-center bg-[#F1E0CA] min-h-screen py-12">
       
       {isGeneratingSession && (
         <PreviewProgress pagesReady={pagesReady} totalPages={totalPreviewPages} />
@@ -50,9 +50,9 @@ export default function PreviewViewer({
         <PreviewProgress pagesReady={paidPagesReady} totalPages={totalPaidPages} />
       )}
 
-      <div className="w-full max-w-4xl px-4 flex flex-col items-center gap-16">
+      <div className="w-full max-w-4xl px-4 flex flex-col items-center gap-4">
         
-        <div className="text-center mb-8 w-full mt-2 relative z-10 translate-y-20">
+        <div className="text-center mb-8 w-full mt-20 relative z-10">
           <h2 className={`${chauPhilomeneOne.className} text-2xl md:text-4xl text-[#3F3C95]`}>
             {isPaid ? "Your Complete Storybook" : `Preview for ${snapshot.childName || "Your Child"}`}
           </h2>

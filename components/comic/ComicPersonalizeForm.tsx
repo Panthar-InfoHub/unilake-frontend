@@ -207,6 +207,7 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
         wsRoomToken,
         comicId: comic.id,
         createdAt: new Date().toISOString(),
+        childName: formData.name,
       });
 
       // 7. Redirect

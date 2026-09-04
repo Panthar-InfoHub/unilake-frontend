@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 
 interface ComicPreloaderProps {
   childName: string;
-  redirectUrl: string;
+  onComplete: () => void;
 }
 
-export default function ComicPreloader({ childName, redirectUrl }: ComicPreloaderProps) {
-  const router = useRouter();
+export default function ComicPreloader({ childName, onComplete }: ComicPreloaderProps) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -36,17 +34,17 @@ export default function ComicPreloader({ childName, redirectUrl }: ComicPreloade
       if (currentStep >= steps) {
         newProgress = 100;
         clearInterval(interval);
-        router.push(redirectUrl);
+        onComplete();
       }
       
       setProgress(newProgress);
     }, intervalTime);
 
     return () => clearInterval(interval);
-  }, [router, redirectUrl]);
+  }, [onComplete]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-[calc(100vh-200px)] py-4 px-4 overflow-hidden">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-[calc(100vh-100px)] pt-32 lg:pt-40 pb-12 px-4 overflow-hidden relative z-10">
        <h1 className={`${chauPhilomeneOne.className} text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#1a1a1a] text-center mb-3`}>
           Generating {childName}&apos;s Book
        </h1>

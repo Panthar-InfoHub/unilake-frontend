@@ -5,9 +5,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import { UserRole } from "@/app/types/auth";
 import { toast } from "sonner";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Header from "@/components/home/Header";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -68,14 +69,15 @@ export default function AdminPanelLayout({
 
     return (
         <QueryClientProvider client={queryClient}>
+            <Header hideBulbForced={true} flatBackground={true} />
             <SidebarProvider>
-            <div className="flex min-h-screen w-full bg-[#F8E7D2] font-poppins selection:bg-[#914A8C] selection:text-white">
+            <div className="flex min-h-screen w-full bg-[#F8E7D2] font-poppins selection:bg-[#914A8C] selection:text-white pt-[86px]">
                 <AdminSidebar />
-                <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                    <header className="h-14 border-b border-[#914A8C]/20 flex items-center px-4 bg-white/50 backdrop-blur-sm shrink-0">
+                <div className="flex-1 flex flex-col h-[calc(100vh-86px)] overflow-hidden">
+                    <div className="p-4 md:px-8 pt-4 pb-0 shrink-0">
                         <SidebarTrigger className="text-[#914A8C] hover:bg-[#914A8C]/10" />
-                    </header>
-                    <main className="flex-1 overflow-y-auto p-6 md:p-8">
+                    </div>
+                    <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-4 md:pt-4">
                         <div className="mx-auto max-w-6xl">
                             {children}
                         </div>

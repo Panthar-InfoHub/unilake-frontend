@@ -143,3 +143,25 @@ body {
     @apply font-sans;
   }
 }
+
+/*
+ * Preloader progress bar (components/comic/ComicPreloader.tsx).
+ *
+ * An animation rather than a transition on purpose. A transition needs the
+ * browser to paint the 0% width BEFORE the value changes to 100%, which means
+ * depending on React's effect timing landing in a different frame from the
+ * initial paint — when it doesn't, the bar snaps straight to full and never
+ * animates. A keyframe animation always starts from `from`, so it cannot fail
+ * that way regardless of when React commits.
+ *
+ * Duration is set inline by the component so PRELOADER_DURATION_MS stays the
+ * single source of truth for both the bar and the completion timer.
+ */
+@keyframes preloader-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}

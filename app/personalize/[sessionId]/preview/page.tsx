@@ -69,6 +69,33 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
     regeneratePage,
   } = useSessionPreview(sessionId);
 
+  // The preloader is a deliberate stall, and it renders ahead of every error
+  // branch below — so without this, someone whose session is already dead would
+  // watch a progress bar for 55 seconds before being told so. These are exactly
+  // the conditions renderBody() would have rendered an error for.
+  //
+  // `!isLoading` guards the `!snapshot` term: on the very first render there is
+  // no snapshot yet and the fetch is still in flight, which is not a failure.
+  // Without it the preloader would be killed instantly on every single load.
+  const preloaderInterrupted =
+    !sessionIdIsValid ||
+    isExpired ||
+    hasNoPreviewPages ||
+    status === "FAILED" ||
+    (!isLoading && !snapshot);
+
+  // Adjusted during render rather than in an effect: this is derived state, and
+  // React re-renders immediately without committing the intermediate UI, so the
+  // preloader never paints for a frame before the error replaces it.
+  //
+  // Writing it to state rather than deriving it inline makes the dismissal a
+  // one-way door — otherwise a background refetch that recovered `snapshot`
+  // would flip the condition back and pull the preloader over an error the user
+  // had already started reading.
+  if (showPreloader && preloaderInterrupted) {
+    setShowPreloader(false);
+  }
+
   // Automatically trigger generation if we just arrived with PHOTO_UPLOADED status.
   // Deliberately NOT depending on `snapshot`: it is a new object on every refetch, so
   // depending on it re-ran this effect constantly. `status` is a primitive derived from

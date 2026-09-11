@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Heart, Search, User, ShoppingBag, ChevronDown, Settings, LogOut, Loader2, Menu, X } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import { UserRole } from "@/app/types/auth";
@@ -12,9 +12,11 @@ import { useCountryHydration } from "@/hooks/useCountryHydration";
 
 interface HeaderProps {
   topOffset?: number;
+  hideBulbForced?: boolean;
+  flatBackground?: boolean;
 }
 
-export default function Header({ topOffset = 0 }: HeaderProps = {}) {
+export default function Header({ topOffset = 0, hideBulbForced = false, flatBackground = false }: HeaderProps = {}) {
   // Trigger fetch and store sync
   const { isLoading, isError } = useCountryHydration();
   
@@ -27,7 +29,13 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, loading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const [hideBulb, setHideBulb] = useState(false);
   const [showHeader, setShowHeader] = useState(true);
@@ -125,33 +133,29 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
 
         {/* Zone 2 — Center: Main Navigation */}
         <ul className="hidden lg:flex items-center justify-center gap-6 xl:gap-8 2xl:gap-10 text-white text-[15px] font-medium tracking-wide select-none whitespace-nowrap">
-          <li className="text-[#FFD54A] cursor-pointer hover:text-[#FFD54A] transition-colors duration-200">
-            <Link href="/">Home</Link>
-          </li>
-          <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            <Link href="/comic">Our Books</Link>
-          </li>
-          <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            <Link href="/how_it_work">How its works</Link>
-          </li>
-          <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            <Link href="/blog">Blogs</Link>
-          </li>
-          <li className="hover:text-[#FFD54A] cursor-pointer transition-colors duration-200">
-            <Link href="/team">Team</Link>
-          </li>
+          {[
+            { name: "Home", href: "/" },
+            { name: "Our Books", href: "/comic" },
+            { name: "How its works", href: "/how_it_work" },
+            { name: "Blogs", href: "/blog" },
+            { name: "Team", href: "/team" }
+          ].map((item) => (
+            <li key={item.name} className={`${isActive(item.href) ? "text-[#FFD54A]" : "hover:text-[#FFD54A]"} cursor-pointer transition-colors duration-200`}>
+              <Link href={item.href}>{item.name}</Link>
+            </li>
+          ))}
+          {!loading && user?.role === UserRole.ADMIN && (
+            <li className={`${isActive("/admin") ? "text-[#FFD54A]" : "hover:text-[#FFD54A]"} cursor-pointer transition-colors duration-200`}>
+              <Link href="/admin">Dashboard</Link>
+            </li>
+          )}
         </ul>
 
         {/* Zone 3 — Right: Utility Controls */}
         <div className="flex items-center justify-end gap-4 sm:gap-5 lg:gap-6 text-white">
           {/* Desktop Only Icons */}
           <div className="hidden lg:flex items-center gap-4 xl:gap-5">
-            {/* Admin Settings - Only visible to admins */}
-            {!loading && user?.role === UserRole.ADMIN && (
-              <Link href="/admin" className="hover:text-[#FFD54A] transition-colors duration-200 cursor-pointer p-1" title="Admin Dashboard">
-                <Settings size={20} strokeWidth={2} />
-              </Link>
-            )}
+
 
 
 
@@ -252,21 +256,25 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
         </div>
       </div>
 
-      {/* Background SVG shape with contour-hugging shadow */}
-      <div className="absolute inset-0 w-full h-[138px] pointer-events-none -z-10 drop-shadow-md">
-        <svg
-          className="w-full h-full"
-          viewBox="0 0 1728 205"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0 0H1728V205L1699.6 175.084C1670.8 144.755 1630.82 127.582 1589 127.582H1511.5H1436H1348.5H1280H1205H1128H1044.5H957H869H775.5H686.5H600H524H441H356.5H295.5H229H156.5C112.973 127.582 70.9127 143.315 38.0718 171.883L0 205V0Z"
-            fill="#914A8C"
-          />
-        </svg>
-      </div>
+      {/* Background shape */}
+      {flatBackground ? (
+        <div className="absolute inset-0 w-full h-full bg-[#914A8C] pointer-events-none -z-10 shadow-md" />
+      ) : (
+        <div className="absolute inset-0 w-full h-[138px] pointer-events-none -z-10 drop-shadow-md">
+          <svg
+            className="w-full h-full"
+            viewBox="0 0 1728 205"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 0H1728V205L1699.6 175.084C1670.8 144.755 1630.82 127.582 1589 127.582H1511.5H1436H1348.5H1280H1205H1128H1044.5H957H869H775.5H686.5H600H524H441H356.5H295.5H229H156.5C112.973 127.582 70.9127 143.315 38.0718 171.883L0 205V0Z"
+              fill="#914A8C"
+            />
+          </svg>
+        </div>
+      )}
 
       {/* Hanging Bulb */}
       <Image
@@ -302,7 +310,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
           invisible
           lg:visible
 
-          ${hideBulb
+          ${(hideBulb || hideBulbForced)
             ? "opacity-0 -translate-y-16"
             : "opacity-100 -translate-y-5"
           }
@@ -359,7 +367,7 @@ export default function Header({ topOffset = 0 }: HeaderProps = {}) {
               key={item.name} 
               href={item.href} 
               onClick={() => setIsMobileMenuOpen(false)}
-              className="py-2.5 px-4 text-white font-medium hover:bg-white/10 rounded-xl transition-colors text-sm"
+              className={`py-2.5 px-4 font-medium rounded-xl transition-colors text-sm ${isActive(item.href) ? "text-[#FFD54A] bg-white/10" : "text-white hover:bg-white/10"}`}
             >
               {item.name}
             </Link>

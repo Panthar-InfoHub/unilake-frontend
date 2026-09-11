@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Mail } from "lucide-react";
 import { hankenGrotesk } from "@/app/fonts";
 
@@ -90,8 +91,8 @@ export default function Footer() {
               </div>
 
               {/* Description */}
-              <p className={`${hankenGrotesk.className} text-white/90 text-[13px] sm:text-sm leading-relaxed max-w-[280px] mb-6`}>
-                Creataing magical personalized stories that spark imagination and create lasting memories for children and families.
+              <p className={`${hankenGrotesk.className} text-white/90 text-base sm:text-lg leading-relaxed max-w-[320px] mb-6`}>
+                Creating magical personalized stories that spark imagination and create lasting memories for children and families.
               </p>
 
               {/* Social Buttons */}
@@ -161,39 +162,39 @@ export default function Footer() {
             {/* Middle Column: Explore */}
             <div className="md:col-span-3 flex flex-col items-center">
               <div className="flex flex-col items-center text-center">
-                <h4 className="text-[17px] font-normal uppercase tracking-wide mb-6">
+                <h4 className="text-xl font-medium uppercase tracking-wide mb-6">
                   EXPLORE
                 </h4>
-                <ul className={`${hankenGrotesk.className} flex flex-col gap-2.5 text-[11px] uppercase text-white/80`}>
+                <ul className={`${hankenGrotesk.className} flex flex-col gap-3 text-[15px] uppercase text-white/90`}>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/" className="hover:text-white transition-colors duration-200">
                       HOME
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/comic" className="hover:text-white transition-colors duration-200">
                       BOOKS
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/blog" className="hover:text-white transition-colors duration-200">
                       BLOG
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/team" className="hover:text-white transition-colors duration-200">
                       TEAM
-                    </a>
+                    </Link>
                   </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                  {/* <li>
+                    <Link href="/faq" className="hover:text-white transition-colors duration-200">
                       FAQ
-                    </a>
-                  </li>
+                    </Link>
+                  </li> */}
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/how_it_work" className="hover:text-white transition-colors duration-200">
                       HOW ITS WORK
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -202,24 +203,24 @@ export default function Footer() {
             {/* Right Column: Legal & Support */}
             <div className="md:col-span-3 flex flex-col items-center">
               <div className="flex flex-col items-center text-center">
-                <h4 className="text-[17px] font-normal uppercase tracking-wide mb-6">
+                <h4 className="text-xl font-medium uppercase tracking-wide mb-6">
                   LEGAL &amp; SUPPORT
                 </h4>
-                <ul className={`${hankenGrotesk.className} flex flex-col gap-2.5 text-[11px] uppercase text-white/80`}>
+                <ul className={`${hankenGrotesk.className} flex flex-col gap-3 text-[15px] uppercase text-white/90`}>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/privacy" className="hover:text-white transition-colors duration-200">
                       PRIVACY
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/terms" className="hover:text-white transition-colors duration-200">
                       TERMS
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-white transition-colors duration-200">
+                    <Link href="/contact" className="hover:text-white transition-colors duration-200">
                       CONTACT
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>

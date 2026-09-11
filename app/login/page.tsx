@@ -73,17 +73,17 @@ function SocialButton({ provider, isRedirecting, redirectingTo, onClick }: Socia
     const isDisabled = isRedirecting;
 
     const baseClass =
-        "w-full h-14 rounded-2xl border-[3px] border-[#3F3C95] flex items-center justify-center gap-3 font-bold text-base transition-all duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#B096FF] focus-visible:ring-offset-2";
+        "w-full h-14 rounded-2xl border-2 border-[#914A8C]/30 flex items-center justify-center gap-3 font-bold text-base transition-all duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#914A8C]/30 focus-visible:ring-offset-2";
 
-    const googleClass = `${baseClass} bg-white text-gray-800 shadow-[4px_4px_0px_0px_#3F3C95]
+    const googleClass = `${baseClass} bg-white text-gray-800 shadow-md
         ${!isDisabled
-            ? "cursor-pointer hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#3F3C95] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#3F3C95]"
+            ? "cursor-pointer hover:shadow-lg hover:border-[#914A8C]/50 active:translate-y-[1px] active:shadow-md"
             : "cursor-not-allowed opacity-70"
         }`;
 
-    const facebookClass = `${baseClass} bg-[#1877F2] text-white shadow-[4px_4px_0px_0px_#3F3C95]
+    const facebookClass = `${baseClass} bg-[#1877F2] text-white shadow-md
         ${!isDisabled
-            ? "cursor-pointer hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0px_0px_#3F3C95] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#3F3C95]"
+            ? "cursor-pointer hover:shadow-lg hover:border-[#914A8C]/50 active:translate-y-[1px] active:shadow-md"
             : "cursor-not-allowed opacity-70"
         }`;
 
@@ -149,10 +149,10 @@ export default function LoginPage() {
 
     if (loading || isAuthenticated) {
         return (
-            <div className="min-h-screen bg-[#B096FF] flex items-center justify-center font-poppins">
+            <div className="min-h-screen bg-[#F8E7D2] flex items-center justify-center font-poppins">
                 <div className="flex flex-col items-center gap-4">
                     <svg
-                        className="animate-spin h-10 w-10 text-white"
+                        className="animate-spin h-10 w-10 text-[#914A8C]"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -161,7 +161,7 @@ export default function LoginPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    <p className="text-white font-bold text-lg">Loading session…</p>
+                    <p className="text-[#914A8C] font-bold text-lg">Loading session…</p>
                 </div>
             </div>
         );
@@ -169,24 +169,24 @@ export default function LoginPage() {
 
     return (
         <main
-            className="min-h-screen flex flex-col bg-[#B096FF] relative overflow-hidden font-poppins select-none"
+            className="min-h-screen flex flex-col bg-[#F8E7D2] relative overflow-hidden font-poppins select-none"
             role="main"
         >
             {/* Top Banner */}
             <div
-                className="w-full bg-white pt-6 pb-2 text-center text-xs sm:text-sm md:text-base font-extrabold text-[#8C6DFD] tracking-wide px-4 z-10 uppercase"
+                className="w-full bg-[#914A8C] pt-6 pb-2 text-center text-xs sm:text-sm md:text-base font-extrabold text-white tracking-wide px-4 z-10 uppercase"
                 aria-label="Promotional banner"
             >
                 Turn your child&apos;s photo into a personalized storybook
             </div>
 
             {/* SVG Wave Divider */}
-            <div className="w-full h-8 relative z-10 bg-[#B096FF]">
+            <div className="w-full h-8 relative z-10 bg-[#F8E7D2]">
                 <div
                     className="absolute top-0 left-0 w-full h-8"
                     aria-hidden="true"
                     style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' width='60' height='20'%3E%3Cpath d='M 0 0 L 60 0 C 45 20, 15 20, 0 0 Z' fill='%23ffffff'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' width='60' height='20'%3E%3Cpath d='M 0 0 L 60 0 C 45 20, 15 20, 0 0 Z' fill='%23914A8C'/%3E%3C/svg%3E")`,
                         backgroundRepeat: "repeat-x",
                         backgroundSize: "60px 100%",
                     }}
@@ -225,7 +225,7 @@ export default function LoginPage() {
             {/* Main Content */}
             <div className="flex-1 flex items-center justify-center p-6 z-10">
                 <div
-                    className="bg-white rounded-[32px] p-8 md:p-12 w-[90%] max-w-[460px] border-[3px] border-[#3F3C95] shadow-[6px_6px_0px_0px_#3F3C95]"
+                    className="bg-white rounded-3xl p-8 md:p-12 w-[90%] max-w-[460px] border-2 border-[#914A8C]/20 shadow-xl"
                     role="region"
                     aria-label="Login options"
                 >
@@ -243,7 +243,7 @@ export default function LoginPage() {
 
                     {/* Heading */}
                     <div className="text-center space-y-2 mb-8">
-                        <h1 className="text-2xl font-black text-[#3F3C95] tracking-wide uppercase">
+                        <h1 className="text-2xl font-black text-[#914A8C] tracking-wide uppercase">
                             Welcome to UniLake
                         </h1>
                         <p className="text-gray-600 text-sm font-semibold">
@@ -290,11 +290,11 @@ export default function LoginPage() {
                     {/* Terms */}
                     <p className="mt-6 text-center text-xs text-gray-400 leading-relaxed">
                         By signing in you agree to our{" "}
-                        <a href="/terms" className="underline hover:text-[#3F3C95] transition-colors">
+                        <a href="/terms" className="underline hover:text-[#914A8C] transition-colors">
                             Terms of Service
                         </a>{" "}
                         and{" "}
-                        <a href="/privacy" className="underline hover:text-[#3F3C95] transition-colors">
+                        <a href="/privacy" className="underline hover:text-[#914A8C] transition-colors">
                             Privacy Policy
                         </a>
                         .

@@ -1,17 +1,81 @@
-import { ShoppingCart } from "lucide-react";
+"use client";
+
+import { useCallback, useState } from "react";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminOrders } from "@/hooks/useOrders";
+import type { AdminOrdersFilters } from "@/app/types/order";
+import { OrderListPageHeader } from "@/components/admin/order/OrderListPageHeader";
+import { OrderListFilters } from "@/components/admin/order/OrderListFilters";
+import { OrderListTable } from "@/components/admin/order/OrderListTable";
+import { OrderPagination } from "@/components/admin/order/OrderPagination";
+
+const PAGE_SIZE = 20;
 
 export default function OrdersPage() {
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<Omit<AdminOrdersFilters, "page" | "pageSize">>({
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
+
+  const { data, isLoading, error, refetch } = useAdminOrders({
+    ...filters,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
+  // Stable — OrderListFilters lists it in a debounce effect's dependencies.
+  const handleFiltersChange = useCallback(
+    (next: Omit<AdminOrdersFilters, "page" | "pageSize">) => {
+      setFilters(next);
+      setPage(1); // A narrower result set makes the old page number meaningless.
+    },
+    []
+  );
+
   return (
-    <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-      <div className="text-center space-y-4">
-        <ShoppingCart className="mx-auto h-16 w-16 text-[#914A8C]/30" />
-        <h1 className="text-2xl font-black text-[#914A8C] uppercase tracking-wide">
-          Orders
-        </h1>
-        <p className="text-sm font-semibold text-[#914A8C]/70">
-          🚧 Under construction — will be completed soon
-        </p>
-      </div>
+    <div className="space-y-6 max-w-6xl mx-auto py-2">
+      <OrderListPageHeader total={data?.pagination.total} />
+
+      <OrderListFilters onFiltersChange={handleFiltersChange} />
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between p-4 bg-white/70 backdrop-blur-sm rounded-2xl border border-[#914A8C]/15"
+            >
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-56 bg-[#F8E7D2]/80" />
+                <Skeleton className="h-4 w-36 bg-[#F8E7D2]/60" />
+              </div>
+              <Skeleton className="h-6 w-28 rounded-full bg-[#F8E7D2]/80" />
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center text-red-800 flex flex-col items-center">
+          <AlertCircle className="w-10 h-10 text-red-500 mb-3" />
+          <h3 className="font-bold text-lg mb-1">Failed to load orders</h3>
+          <p className="text-sm text-red-600 mb-5">
+            {(error as { message?: string })?.message || "Network error"}
+          </p>
+          <Button
+            onClick={() => refetch()}
+            className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold"
+          >
+            Try Again
+          </Button>
+        </div>
+      ) : data ? (
+        <>
+          <OrderListTable orders={data.orders} />
+          <OrderPagination pagination={data.pagination} onPageChange={setPage} />
+        </>
+      ) : null}
     </div>
   );
 }

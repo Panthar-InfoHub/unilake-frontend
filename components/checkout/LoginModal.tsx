@@ -85,9 +85,17 @@ function SocialButton({ provider, isRedirecting, redirectingTo, onClick }: Socia
 interface LoginModalProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
+    /** Defaults suit checkout; override when logging in for something else. */
+    title?: string;
+    description?: string;
 }
 
-export default function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
+export default function LoginModal({
+    isOpen,
+    onOpenChange,
+    title = "Log in to continue",
+    description = "You need to be signed in to complete your purchase",
+}: LoginModalProps) {
     const { login } = useAuth();
     const [redirectingTo, setRedirectingTo] = useState<OAuthProvider | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -112,10 +120,10 @@ export default function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
             <DialogContent className="sm:max-w-md p-8 rounded-[32px] border-[3px] border-[#3F3C95] shadow-[6px_6px_0px_0px_#3F3C95]">
                 <DialogHeader className="mb-6">
                     <DialogTitle className="text-2xl font-black text-[#3F3C95] tracking-wide text-center uppercase">
-                        Log in to continue
+                        {title}
                     </DialogTitle>
                     <DialogDescription className="text-center text-gray-600 font-semibold">
-                        You need to be signed in to complete your purchase
+                        {description}
                     </DialogDescription>
                 </DialogHeader>
 

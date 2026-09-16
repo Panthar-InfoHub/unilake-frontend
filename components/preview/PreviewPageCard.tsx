@@ -16,6 +16,13 @@ interface PreviewPageCardProps {
   onRegenerate: (pageNumber: number) => Promise<RegenerateResponse | undefined>;
   isGeneratingSession: boolean;
   isPaid?: boolean;
+  /**
+   * Which variant this page is showing. Owned by the parent because send-to-print
+   * needs one variant per page, and a card can't report state it keeps to itself.
+   * Null while nothing has finished generating yet.
+   */
+  selectedVariantIndex: number | null;
+  onVariantChange: (pageNumber: number, variantIndex: number) => void;
 }
 
 export default function PreviewPageCard({
@@ -24,13 +31,14 @@ export default function PreviewPageCard({
   onRegenerate,
   isGeneratingSession,
   isPaid,
+  selectedVariantIndex,
+  onVariantChange,
 }: PreviewPageCardProps) {
-  const [activeVariantIndex, setActiveVariantIndex] = useState<number>(() => {
-    // Start on the newest finished variant, or the first slot if none are done yet.
-    const ready = page.variants.filter((v) => v.status === "SD_READY");
-    if (ready.length === 0) return 0;
-    return Math.max(...ready.map((v) => v.variantIndex));
-  });
+  // Falls back to the first slot so a page with nothing ready yet still renders
+  // its generating placeholder, matching the old local-state initialiser.
+  const activeVariantIndex = selectedVariantIndex ?? 0;
+  const setActiveVariantIndex = (variantIndex: number) =>
+    onVariantChange(page.pageNumber, variantIndex);
 
   const [showRegenerateSlide, setShowRegenerateSlide] = useState(false);
   const [isLoadingRegenerate, setIsLoadingRegenerate] = useState(false);
@@ -73,10 +81,10 @@ export default function PreviewPageCard({
     if (variant?.status !== "SD_READY") return;
 
     awaitedVariantRef.current = null;
-    setActiveVariantIndex(awaited);
+    onVariantChange(page.pageNumber, awaited);
     setShowRegenerateSlide(false);
     toast.success(`Page ${page.pageNumber}: your new version is ready`);
-  }, [page.variants, page.pageNumber]);
+  }, [page.variants, page.pageNumber, onVariantChange]);
 
   const handleRegenerate = async () => {
     if (isLoadingRegenerate) return;

@@ -1,13 +1,27 @@
 "use client";
 
-import { RegenerateResponse, SessionSnapshot } from "@/app/types/session";
+import { useCallback, useMemo, useState } from "react";
+import {
+  RegenerateResponse,
+  SendToPrintSelection,
+  SessionPage,
+  SessionSnapshot,
+} from "@/app/types/session";
 import { usePublicComic } from "@/hooks/usePublicComics";
 import PreviewProgress from "./PreviewProgress";
 import PreviewPageCard from "./PreviewPageCard";
 import PricingSection from "./PricingSection";
+import SendToPrintSection from "./SendToPrintSection";
 import Image from "next/image";
 import { ChevronDown, ImageIcon, ArrowLeftRight } from "lucide-react";
 import { chauPhilomeneOne } from "@/app/fonts";
+
+/** Highest variantIndex that has actually finished, or null if none have. */
+function newestReadyIndex(page: SessionPage): number | null {
+  const ready = page.variants.filter((v) => v.status === "SD_READY");
+  if (ready.length === 0) return null;
+  return Math.max(...ready.map((v) => v.variantIndex));
+}
 
 interface PreviewViewerProps {
   snapshot: SessionSnapshot;
@@ -38,6 +52,55 @@ export default function PreviewViewer({
   const isGeneratingPaid = status === "GENERATING_PAID";
 
   const coverUrl = snapshot.comic.coverThumbnailUrls?.[0];
+
+  // Only the pages the user has deliberately navigated. Everything else falls
+  // back to the newest finished variant, so variants arriving over the socket
+  // surface on their own without ever overwriting a deliberate pick.
+  const [overrides, setOverrides] = useState<Map<number, number>>(() => new Map());
+
+  // Stable — PreviewPageCard lists it in an effect's dependencies.
+  const handleVariantChange = useCallback((pageNumber: number, variantIndex: number) => {
+    setOverrides((prev) => new Map(prev).set(pageNumber, variantIndex));
+  }, []);
+
+  // What a card renders. Honours the override even when it points at a variant
+  // that is still generating — watching a regeneration land is the whole reason
+  // pending variants are navigable.
+  const displayIndex = (page: SessionPage): number | null =>
+    overrides.get(page.pageNumber) ?? newestReadyIndex(page);
+
+  const { selections, blockedPages, hasInFlight } = useMemo(() => {
+    const sel: SendToPrintSelection[] = [];
+    const blocked: number[] = [];
+    let inFlight = false;
+
+    for (const page of snapshot.pages) {
+      // Mirrors the backend's own in-flight rejection: anything not yet settled.
+      if (page.variants.some((v) => v.status !== "SD_READY" && v.status !== "FAILED")) {
+        inFlight = true;
+      }
+
+      // Unlike displayIndex, this never resolves to an unfinished variant — the
+      // backend rejects any selection that isn't SD_READY.
+      const override = overrides.get(page.pageNumber);
+      const index =
+        override !== undefined &&
+        page.variants.some((v) => v.variantIndex === override && v.status === "SD_READY")
+          ? override
+          : newestReadyIndex(page);
+
+      if (index === null) blocked.push(page.pageNumber);
+      else sel.push({ pageNumber: page.pageNumber, variantIndex: index });
+    }
+
+    return { selections: sel, blockedPages: blocked, hasInFlight: inFlight };
+  }, [snapshot.pages, overrides]);
+
+  // The backend requires exactly one selection per Comic.pageCount. If an admin
+  // created fewer Page rows than pageCount, send-to-print can never succeed and
+  // no amount of regenerating fixes it. Undefined while the comic is loading.
+  const pageCountMismatch =
+    comicDetail !== undefined && snapshot.pages.length !== comicDetail.pageCount;
 
   return (
     <div className="w-full flex flex-col items-center bg-[#F1E0CA] min-h-screen py-12">
@@ -97,6 +160,8 @@ export default function PreviewViewer({
                 onRegenerate={onRegenerate}
                 isGeneratingSession={isGeneratingSession || isGeneratingPaid}
                 isPaid={isPaid}
+                selectedVariantIndex={displayIndex(page)}
+                onVariantChange={handleVariantChange}
               />
               <ChevronDown size={32} className="text-gray-300 mt-4" />
             </div>
@@ -107,16 +172,14 @@ export default function PreviewViewer({
       {!isPaid ? (
         <PricingSection comicId={snapshot.comicId} sessionId={snapshot.id} snapshot={snapshot} />
       ) : status === "PAID_PAGES_READY" ? (
-        <div className="w-full max-w-4xl mx-auto py-16 px-4 flex flex-col items-center border-t border-gray-200 mt-12">
-          <button
-            onClick={() => {
-              import("sonner").then((mod) => mod.toast.info("Coming soon!"));
-            }}
-            className="px-12 py-4 bg-[#FFD54A] hover:bg-[#ffcd2b] text-[#3F3C95] rounded-full font-bold text-xl md:text-2xl uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 transition-all w-full max-w-md border-[3px] border-[#3F3C95]"
-          >
-            Send to Print
-          </button>
-        </div>
+        <SendToPrintSection
+          sessionId={snapshot.id}
+          comicId={snapshot.comicId}
+          selections={selections}
+          blockedPages={blockedPages}
+          hasInFlight={hasInFlight}
+          pageCountMismatch={pageCountMismatch}
+        />
       ) : null}
       
     </div>

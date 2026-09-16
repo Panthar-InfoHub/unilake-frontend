@@ -217,10 +217,10 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
           <h2 className="text-2xl font-bold text-[#3F3C95] mb-4">Your order is confirmed!</h2>
           <p className="text-gray-600 mb-8">We've received your order and are preparing it for print. You'll receive an email with shipping updates soon.</p>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/dashboard/orders")}
             className="px-8 py-3 bg-[#3F3C95] text-white rounded-full font-medium hover:bg-[#3F3C95]/90 transition-colors"
           >
-            Return Home
+            View My Orders
           </button>
         </div>
       );

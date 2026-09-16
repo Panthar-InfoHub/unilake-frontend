@@ -7,6 +7,8 @@ import {
   RegenerateResponse,
   SessionSnapshot,
   CheckoutResponse,
+  SendToPrintSelection,
+  SendToPrintResponse,
 } from "@/app/types/session";
 
 export async function createSession(comicId: string): Promise<CreateSessionResponse> {
@@ -69,5 +71,18 @@ export async function attachUser(sessionId: string): Promise<void> {
 
 export async function initiateCheckout(sessionId: string): Promise<CheckoutResponse> {
   const { data } = await api.post<CheckoutResponse>(`/api/public/sessions/${sessionId}/checkout`);
+  return data;
+}
+
+// Unlike everything else in this file, this one lives under /api/user — it needs
+// the logged-in user for the ownership check, so an expired cookie 401s here.
+export async function sendToPrint(
+  sessionId: string,
+  selections: SendToPrintSelection[]
+): Promise<SendToPrintResponse> {
+  const { data } = await api.post<SendToPrintResponse>(
+    `/api/user/sessions/${sessionId}/send-to-print`,
+    { selections }
+  );
   return data;
 }

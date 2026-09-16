@@ -116,6 +116,18 @@ export interface RegenerateResponse {
   hasPaid: boolean;
 }
 
+export interface SendToPrintSelection {
+  pageNumber: number;
+  variantIndex: number;
+}
+
+export interface SendToPrintResponse {
+  sessionId: string;
+  orderId: string;
+  status: "CONFIRMED";
+  pdfCompilationEnqueued: boolean;
+}
+
 export interface PhotoUploadUrlResponse {
   uploadUrl: string;
   key: string;

@@ -35,7 +35,7 @@ export default async function Home() {
 
       {/*Home Page */}
       <Hero />
-      <ChooseStory howItWorks={howItWorksData} />
+      < ChooseStory howItWorks={howItWorksData} />
       {reviews.length > 0 && <HappyCustomers reviews={reviews} />}
       <GoogleReviews />
       {members.length > 0 && <OurTeam members={members} />}

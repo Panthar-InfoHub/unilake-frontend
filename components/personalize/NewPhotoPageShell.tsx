@@ -14,8 +14,10 @@ export default function NewPhotoPageShell({ previousSession }: NewPhotoPageShell
     <div className="flex flex-col min-h-screen">
       <HomeHeaderSection />
       
-      <main className="flex-1 bg-[#F8E7D2] pt-[86px]">
-        <NewPhotoForm previousSession={previousSession} />
+      <main className="flex-1 bg-[#F8E7D2] pt-[86px] flex flex-col">
+        <div className="flex-1 flex flex-col justify-center">
+          <NewPhotoForm previousSession={previousSession} />
+        </div>
         
         <div className="flow-root bg-[#F8E7D2]">
           <Footer />

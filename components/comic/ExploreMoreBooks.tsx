@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { chauPhilomeneOne } from "@/app/fonts";
 import { useLatestPublicComics } from "@/hooks/usePublicComics";
 import StoryCard from "@/components/home/StoryCard";
@@ -10,7 +11,12 @@ interface ExploreMoreBooksProps {
 }
 
 export default function ExploreMoreBooks({ comicId }: ExploreMoreBooksProps) {
-  const { data: comics, isLoading } = useLatestPublicComics(comicId, 4);
+  // Three, not four — and it has to match the grid's column count below.
+  // StoryCard caps at max-w-[380px] but has no minimum, so it shrinks to fill
+  // whatever column it is given: four columns inside max-w-7xl work out to
+  // ~272px each, which is why these cards looked smaller than the homepage's.
+  // Three columns give ~373px, landing at the cap.
+  const { data: comics, isLoading } = useLatestPublicComics(comicId, 3);
 
   if (!isLoading && (!comics || comics.length === 0)) {
     return null;
@@ -53,7 +59,14 @@ export default function ExploreMoreBooks({ comicId }: ExploreMoreBooksProps) {
           </div>
         </div>
 
-        {/* Explorer Boy Image — Top-Right, overlapping the banner */}
+        {/* Explorer Boy Image — Top-Right, overlapping the banner.
+            `bottom-0` rests her on the banner's lower edge. The negative
+            offsets this replaced (-10px to -30px) pushed her below that edge
+            and out into the cream section underneath, which read as the image
+            sliding off the banner. Explore-boy.png is 1080x540, so at
+            xl:w-[480px] she renders 240px tall against a 200px banner — the
+            remaining 40px overhangs the TOP, which is the intended look, and
+            fits inside the 80px of padding the FAQ section above leaves. */}
         <Image
           src="/assets/home_page/Explore-boy.png"
           alt="Explorer Boy"
@@ -68,11 +81,7 @@ export default function ExploreMoreBooks({ comicId }: ExploreMoreBooksProps) {
             lg:right-32
             xl:right-48
 
-            bottom-[-10px]
-            sm:bottom-[-15px]
-            md:bottom-[-20px]
-            lg:bottom-[-25px]
-            xl:bottom-[-30px]
+            bottom-0
 
             w-[180px]
             sm:w-[260px]
@@ -97,11 +106,38 @@ export default function ExploreMoreBooks({ comicId }: ExploreMoreBooksProps) {
               <p className="text-[#555555] font-medium">Loading stories...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 pb-16">
-              {comics.map((comic) => (
-                <StoryCard key={comic.id} comic={comic} />
-              ))}
-            </div>
+            <>
+              {/* Same column counts as the homepage grid in ChooseStory, so a
+                  card renders at an identical size on both pages. */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 pb-12">
+                {comics.map((comic) => (
+                  <StoryCard key={comic.id} comic={comic} />
+                ))}
+              </div>
+
+              {/* Inside the loaded branch on purpose — a call to action under a
+                  set of skeletons invites a click on nothing. */}
+              <div className="flex justify-center">
+                <Link
+                  href="/comic"
+                  className="
+                    inline-flex items-center justify-center
+                    px-10 py-3
+                    bg-gradient-to-b from-[#3F3C95] to-[#2B2882]
+                    text-white text-xs md:text-sm font-extrabold
+                    uppercase tracking-wider
+                    rounded-full
+                    border-b-[4px] border-[#C8942A]
+                    shadow-[0_4px_10px_rgba(63,60,149,0.3)]
+                    hover:brightness-110
+                    active:translate-y-[2px] active:border-b-[2px]
+                    transition-all
+                  "
+                >
+                  Explore All Books
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </section>

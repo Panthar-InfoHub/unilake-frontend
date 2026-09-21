@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   ShoppingCart,
   BookOpen,
-  Users,
+  // Users,  ← kept alongside the commented-out nav entry below
   Megaphone,
   Star,
   UsersRound,
@@ -18,6 +18,9 @@ import {
   Play,
   HelpCircle,
   FileText,
+  ScrollText,
+  Settings,
+  MessageSquareQuote,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 
@@ -39,15 +42,22 @@ const NAV_ITEMS = [
   { label: "Comics", icon: BookOpen, href: "/admin/comics" },
   { label: "Countries", icon: Globe, href: "/admin/countries" },
   { label: "Themes", icon: Palette, href: "/admin/themes" },
-  { label: "Users", icon: Users, href: "/admin/users" },
+  // HIDDEN, not removed — the Users screen is still a stub and has no backend
+  // endpoints behind it yet, so linking to it from the sidebar only leads to an
+  // "under construction" page. Uncomment this line (and the `Users` icon import
+  // above) when the screen is built.
+  // { label: "Users", icon: Users, href: "/admin/users" },
   { label: "Announcement Bar", icon: Megaphone, href: "/admin/announcement-bar" },
   { label: "Customer Reviews", icon: Star, href: "/admin/customer-reviews" },
+  { label: "Google Reviews", icon: MessageSquareQuote, href: "/admin/google-reviews" },
   { label: "Team Members", icon: UsersRound, href: "/admin/team-members" },
   { label: "Feedback", icon: MessageSquare, href: "/admin/feedback" },
   { label: "Hero Slides", icon: ImageIcon, href: "/admin/hero-slides" },
   { label: "How It Works", icon: Play, href: "/admin/how-it-works" },
   { label: "FAQ", icon: HelpCircle, href: "/admin/faqs" },
   { label: "Blog", icon: FileText, href: "/admin/blogs" },
+  { label: "Pages", icon: ScrollText, href: "/admin/pages" },
+  { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 
 export function AdminSidebar() {

@@ -268,10 +268,10 @@ export function PageCreateModal({ open, onOpenChange, comic, nextPageNumber }: P
                     <Switch checked={mirrorFace} onCheckedChange={setMirrorFace} disabled={isWorking} />
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 min-w-0">
                     <Label className="text-sm font-semibold text-neutral-900">Face Direction</Label>
                     <Select value={faceDirection} onValueChange={(val) => setFaceDirection(val || "none")} disabled={isWorking}>
-                      <SelectTrigger className="rounded-xl h-10 bg-white border-neutral-200">
+                      <SelectTrigger className="w-full rounded-xl h-10 bg-white border-neutral-200">
                         <SelectValue placeholder="Select direction" />
                       </SelectTrigger>
                       <SelectContent>

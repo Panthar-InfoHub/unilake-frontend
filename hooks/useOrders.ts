@@ -6,8 +6,41 @@ import {
   retryShiprocket,
   fetchOrderLabel,
   refreshTracking,
+  fetchUserOrders,
+  fetchUserOrder,
+  fetchOrderTracking,
 } from "@/app/actions/order";
 import type { AdminOrdersFilters, ConfirmDimensionsInput } from "@/app/types/order";
+
+// Customer-facing. Query keys are namespaced away from the admin ones below so
+// the two caches can never collide on the same order id.
+
+export function useUserOrders() {
+  return useQuery({
+    queryKey: ["user-orders"],
+    queryFn: fetchUserOrders,
+  });
+}
+
+export function useUserOrder(orderId: string) {
+  return useQuery({
+    queryKey: ["user-order", orderId],
+    queryFn: () => fetchUserOrder(orderId),
+    enabled: !!orderId,
+  });
+}
+
+/**
+ * `enabled` lets the caller skip the request for orders with no shipment to
+ * track — awaiting payment or cancelled.
+ */
+export function useOrderTracking(orderId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["order-tracking", orderId],
+    queryFn: () => fetchOrderTracking(orderId),
+    enabled: !!orderId && enabled,
+  });
+}
 
 export function useAdminOrders(filters?: AdminOrdersFilters) {
   return useQuery({

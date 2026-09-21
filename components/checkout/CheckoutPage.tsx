@@ -84,7 +84,8 @@ export default function CheckoutPage({ sessionId, initialSnapshot }: CheckoutPag
             
             {paymentStatus === "AWAITING_PAYMENT" && (
               <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-sm font-medium">
-                Payment was not completed. You can try again when you're ready.
+                Payment was not completed. You can try again when you&apos;re
+                ready.
               </div>
             )}
           </div>

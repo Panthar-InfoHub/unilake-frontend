@@ -26,7 +26,17 @@ import { BubbleMapperCanvas } from "@/components/admin/comic/bubbles/BubbleMappe
 import {
   DEFAULT_FONT_SIZE,
   DEFAULT_FONT_COLOR,
+  DEFAULT_TEXT_ALIGN,
+  DEFAULT_TEXT_VERTICAL_ALIGN,
+  DEFAULT_TEXT_CASE,
 } from "@/components/admin/comic/bubbles/bubbleCoordinates";
+import type {
+  TextAlign,
+  TextVerticalAlign,
+  TextCase,
+  PreviewStampBubble,
+} from "@/app/types/comic";
+import { BubblePreviewModal } from "@/components/admin/comic/bubbles/BubblePreviewModal";
 import { SAMPLE_NAMES } from "@/lib/dialogueTokens";
 
 export default function BubbleMapperPage({
@@ -53,6 +63,18 @@ export default function BubbleMapperPage({
   // whole page one shade doesn't mean re-picking it every time. Resets to black
   // on a fresh page load — deliberately not persisted anywhere.
   const [lastUsedColor, setLastUsedColor] = useState<string>(DEFAULT_FONT_COLOR);
+
+  // Placement and casing stick the same way and for the same reason: a page is
+  // usually mapped with one treatment throughout, so re-picking it on every
+  // bubble is pure friction. Also session-only, never persisted.
+  const [lastUsedTextAlign, setLastUsedTextAlign] =
+    useState<TextAlign>(DEFAULT_TEXT_ALIGN);
+  const [lastUsedTextVerticalAlign, setLastUsedTextVerticalAlign] =
+    useState<TextVerticalAlign>(DEFAULT_TEXT_VERTICAL_ALIGN);
+  const [lastUsedTextCase, setLastUsedTextCase] =
+    useState<TextCase>(DEFAULT_TEXT_CASE);
+
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Which sample name previews use. Lives here rather than in the sidebar so the
   // canvas and the sidebar always agree. Defaults to the LONG name: sizing a
@@ -97,6 +119,42 @@ export default function BubbleMapperPage({
 
   const hasBlockingIssue = hasEmptyDialogue || hasMissingFont;
 
+  /**
+   * Preview is only allowed on a clean, complete page.
+   *
+   * The button stays clickable while blocked so this can say WHY — a disabled
+   * button would swallow the click and leave the admin guessing.
+   *
+   * Check order matters. A page can be both unsaved AND missing a font, and in
+   * that case "save your changes first" is a dead end: Save is itself disabled
+   * until the font is assigned. Naming the font problem first gives the admin
+   * something they can actually act on.
+   */
+  const handlePreview = () => {
+    if (hasMissingFont) {
+      toast.error(
+        "Cannot preview — some bubbles have no font assigned. Assign a font to every bubble first.",
+      );
+      return;
+    }
+
+    if (hasEmptyDialogue) {
+      toast.error(
+        "Cannot preview — some bubbles have no dialogue. Fill them in first.",
+      );
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      toast.error(
+        "Cannot preview this page due to unsaved changes. Save your changes first.",
+      );
+      return;
+    }
+
+    setIsPreviewOpen(true);
+  };
+
   const handleAddBubble = () => {
     const newBubble: LocalBubble = {
       id: `new-${Date.now()}`,
@@ -107,6 +165,9 @@ export default function BubbleMapperPage({
       height: 0.15,
       fontSize: DEFAULT_FONT_SIZE,
       fontColor: lastUsedColor,
+      textAlign: lastUsedTextAlign,
+      textVerticalAlign: lastUsedTextVerticalAlign,
+      textCase: lastUsedTextCase,
       sortOrder: bubbles.filter((b) => !b.isDeleted).length,
       fontId: fonts && fonts.length > 0 ? fonts[0].id : undefined,
       isNew: true,
@@ -117,9 +178,34 @@ export default function BubbleMapperPage({
     setSelectedBubbleId(newBubble.id);
   };
 
+  // What the preview renders: the bubbles exactly as they stand on screen,
+  // saved or not. Deleted ones are filtered out — a bubble removed but not yet
+  // saved must not appear. The `?? DEFAULT_` fallbacks mirror the save payload
+  // so preview and save always send the same values.
+  const previewBubbles: PreviewStampBubble[] = bubbles
+    .filter((bubble) => !bubble.isDeleted)
+    .map((bubble) => ({
+      id: bubble.id,
+      x: bubble.x ?? 0,
+      y: bubble.y ?? 0,
+      width: bubble.width ?? 0.1,
+      height: bubble.height ?? 0.1,
+      dialogue: bubble.dialogue ?? "",
+      fontId: bubble.fontId ?? null,
+      fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
+      fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
+      textAlign: bubble.textAlign ?? DEFAULT_TEXT_ALIGN,
+      textVerticalAlign: bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN,
+      textCase: bubble.textCase ?? DEFAULT_TEXT_CASE,
+    }));
+
   const handleUpdateBubble = (id: string, updates: Partial<LocalBubble>) => {
-    // Remember the most recent colour so the next new bubble starts there.
+    // Remember the most recent choices so the next new bubble starts there.
     if (updates.fontColor) setLastUsedColor(updates.fontColor);
+    if (updates.textAlign) setLastUsedTextAlign(updates.textAlign);
+    if (updates.textVerticalAlign)
+      setLastUsedTextVerticalAlign(updates.textVerticalAlign);
+    if (updates.textCase) setLastUsedTextCase(updates.textCase);
 
     setBubbles((prev) =>
       prev.map((b) => {
@@ -223,6 +309,10 @@ export default function BubbleMapperPage({
               height: bubble.height || 0,
               fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
               fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
+              textAlign: bubble.textAlign ?? DEFAULT_TEXT_ALIGN,
+              textVerticalAlign:
+                bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN,
+              textCase: bubble.textCase ?? DEFAULT_TEXT_CASE,
               fontId: bubble.fontId,
               sortOrder: index,
             }),
@@ -245,6 +335,10 @@ export default function BubbleMapperPage({
               height: bubble.height,
               fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
               fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
+              textAlign: bubble.textAlign ?? DEFAULT_TEXT_ALIGN,
+              textVerticalAlign:
+                bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN,
+              textCase: bubble.textCase ?? DEFAULT_TEXT_CASE,
               fontId: bubble.fontId,
               sortOrder: index,
             }),
@@ -303,6 +397,7 @@ export default function BubbleMapperPage({
           isSaving={isSaving}
           onSave={handleSave}
           onReset={handleReset}
+          onPreview={handlePreview}
         />
       </div>
 
@@ -333,6 +428,14 @@ export default function BubbleMapperPage({
           onPreviewLongNameChange={setPreviewLongName}
         />
       </div>
+
+      <BubblePreviewModal
+        open={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        pageId={pageId}
+        pageNumber={page.pageNumber}
+        bubbles={previewBubbles}
+      />
     </div>
   );
 }

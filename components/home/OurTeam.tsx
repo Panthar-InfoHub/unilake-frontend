@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { chauPhilomeneOne } from "@/app/fonts";
 
 import { TeamMember } from "@/app/types/teamMember";
-import { Briefcase, Camera, MessageCircle } from "lucide-react";
+import TeamMemberCard from "@/components/team/TeamMemberCard";
 
 interface OurTeamProps {
   members: TeamMember[];
@@ -106,78 +106,7 @@ export default function OurTeam({ members }: OurTeamProps) {
           {/* 3-Column Team Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10 lg:gap-x-12">
             {members.map((member) => (
-              <div key={member.id} className="flex justify-center">
-                {/* Card with Exact Custom Background Frame PNG */}
-                <div className="relative w-full max-w-[340px] aspect-[445/630] flex flex-col items-center text-center p-6 sm:p-8 transition-all duration-300 hover:scale-[1.02] group drop-shadow-[0_10px_25px_rgba(0,0,0,0.06)]">
-                  {/* Card Background Frame PNG */}
-                  <Image
-                    src="/assets/home_page/teamCardFrame.png"
-                    alt="Card Background"
-                    fill
-                    className="pointer-events-none select-none z-0 object-contain"
-                    priority
-                  />
-
-                  {/* Card Content Container */}
-                  <div className="relative z-10 flex flex-col items-center text-center w-full h-full pt-6">
-                    {/* Team Member Avatar */}
-                    <div className="relative w-full aspect-square max-w-[170px] sm:max-w-[190px] mb-4 rounded-full overflow-hidden flex items-center justify-center bg-[#914B8C]/10 border-2 border-white shadow-sm">
-                      {member.imageUrl ? (
-                        <Image
-                          src={member.imageUrl}
-                          alt={member.name}
-                          fill
-                          sizes="190px"
-                          className="object-cover"
-                          priority
-                        />
-                      ) : (
-                        <span className={`${chauPhilomeneOne.className} text-[#914B8C] text-5xl uppercase`}>
-                          {member.name.charAt(0)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Name */}
-                    <h4 className={`${hankenGrotesk.className} text-[#914B8C] font-extrabold text-xl sm:text-2xl mb-1`}>
-                      {member.name}
-                    </h4>
-
-                    {/* Role */}
-                    <span className={`${hankenGrotesk.className} text-[#000000] font-bold text-sm sm:text-base mb-3 block`}>
-                      ({member.role})
-                    </span>
-
-                    {/* Description */}
-                    {member.description && (
-                      <p className={`${hankenGrotesk.className} text-[#555555] text-xs sm:text-sm font-medium leading-relaxed mb-4 max-w-[250px]`}>
-                        {member.description}
-                      </p>
-                    )}
-
-                    {/* Social Links */}
-                    {(member.linkedinUrl || member.instagramUrl || member.twitterUrl) && (
-                      <div className="flex items-center justify-center gap-4 mt-auto pb-4">
-                        {member.linkedinUrl && (
-                          <a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#914B8C]/10 text-[#914B8C] hover:bg-[#914B8C] hover:text-white transition-colors cursor-pointer">
-                            <Briefcase className="w-4 h-4" />
-                          </a>
-                        )}
-                        {member.instagramUrl && (
-                          <a href={member.instagramUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#914B8C]/10 text-[#914B8C] hover:bg-[#914B8C] hover:text-white transition-colors cursor-pointer">
-                            <Camera className="w-4 h-4" />
-                          </a>
-                        )}
-                        {member.twitterUrl && (
-                          <a href={member.twitterUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-[#914B8C]/10 text-[#914B8C] hover:bg-[#914B8C] hover:text-white transition-colors cursor-pointer">
-                            <MessageCircle className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <TeamMemberCard key={member.id} member={member} />
             ))}
           </div>
         </div>

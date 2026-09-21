@@ -27,6 +27,9 @@ export function PricingEditor({ comic }: PricingEditorProps) {
       const initial: PricingGridValue[] = comic.pricingRules.map(pr => ({
         countryId: pr.countryId,
         coverType: pr.coverType,
+        // Rows predating the mrp column come back null. Render them as an empty
+        // input the admin can fill — never the string "null".
+        mrp: pr.mrp?.toString() ?? "",
         price: pr.price.toString()
       }));
       setValues(initial);
@@ -43,11 +46,26 @@ export function PricingEditor({ comic }: PricingEditorProps) {
   const handleSave = async () => {
     if (!countries || countries.length === 0) return;
 
+    // This endpoint replaces the whole pricing set, so every cell must be
+    // present — an omitted row is a deleted row, not an untouched one.
     const requiredCells = countries.length * 2;
-    const filledCells = values.filter(v => v.price && parseFloat(v.price) > 0).length;
-    
+    const filledCells = values.filter(
+      (v) =>
+        v.mrp && parseFloat(v.mrp) > 0 && v.price && parseFloat(v.price) > 0
+    ).length;
+
+    const invertedRows = values.filter(
+      (v) => v.mrp && v.price && parseFloat(v.mrp) < parseFloat(v.price)
+    );
+
     if (filledCells < requiredCells) {
-      setError("All pricing fields must be filled with a value > 0.");
+      setError("Every MRP and price must be filled with a value > 0.");
+      return;
+    }
+
+    if (invertedRows.length > 0) {
+      // Mirrors the Zod refine on the backend.
+      setError("MRP cannot be lower than the selling price.");
       return;
     }
 
@@ -57,6 +75,7 @@ export function PricingEditor({ comic }: PricingEditorProps) {
         pricing: values.map(v => ({
           countryId: v.countryId,
           coverType: v.coverType,
+          mrp: parseFloat(v.mrp),
           price: parseFloat(v.price)
         }))
       });

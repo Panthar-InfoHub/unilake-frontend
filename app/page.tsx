@@ -41,9 +41,8 @@ export default async function Home() {
       {members.length > 0 && <OurTeam members={members} />}
       
       <HomeFaq faqs={homeFaqs} />
-      <LatestBlogs blogs={blogs} />
       <FeedbackForm />
-
+      <LatestBlogs blogs={blogs} />
       <Footer />
 
     </main>

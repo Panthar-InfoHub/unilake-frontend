@@ -344,7 +344,7 @@ export default function AddressPicker({ sessionId, snapshot, onAddressApplied }:
                   control={form.control}
                   name="country"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="min-w-0">
                       <FormLabel>Country</FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -352,7 +352,10 @@ export default function AddressPicker({ sessionId, snapshot, onAddressApplied }:
                         disabled={!isHydrated}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          {/* w-full overrides SelectTrigger's base w-fit, which
+                              would otherwise size to the longest country name
+                              and overflow this grid column. */}
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select a country" />
                           </SelectTrigger>
                         </FormControl>

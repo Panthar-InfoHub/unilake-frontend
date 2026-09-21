@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { SegmentedControl } from "./SegmentedControl";
 import {
   DEFAULT_FONT_SIZE,
   MAX_FONT_SIZE,
@@ -20,6 +21,13 @@ import {
   isValidFontColor,
   normalizeFontColor,
   isLowContrast,
+  DEFAULT_TEXT_ALIGN,
+  DEFAULT_TEXT_VERTICAL_ALIGN,
+  DEFAULT_TEXT_CASE,
+  TEXT_ALIGN_OPTIONS,
+  TEXT_VERTICAL_ALIGN_OPTIONS,
+  TEXT_CASE_OPTIONS,
+  applyTextCase,
 } from "./bubbleCoordinates";
 import {
   DIALOGUE_TOKENS,
@@ -159,7 +167,14 @@ export function BubbleSidebar({
 
   const invalidTokens = selectedBubble ? findInvalidTokens(selectedBubble.dialogue || "") : [];
   const previewName = previewLongName ? SAMPLE_NAMES.long : SAMPLE_NAMES.short;
-  const previewText = selectedBubble ? substituteTokens(selectedBubble.dialogue || "", previewName, SAMPLE_PRONOUNS) : "";
+  // Casing is applied here too, not just at render: a preview that shows
+  // different capitalisation from the printed page is worse than no preview.
+  const previewText = selectedBubble
+    ? applyTextCase(
+        substituteTokens(selectedBubble.dialogue || "", previewName, SAMPLE_PRONOUNS),
+        selectedBubble.textCase ?? DEFAULT_TEXT_CASE,
+      )
+    : "";
 
   const insertTokenAtCursor = (token: string) => {
     if (!selectedBubble) return;
@@ -337,14 +352,20 @@ export function BubbleSidebar({
               </div>
             </div>
 
+            {/* min-w-0 on both columns is load-bearing: a grid item defaults to
+                min-width:auto, so without it the track refuses to shrink below
+                its content and a long font name pushes this column into the
+                next one. */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <Label className="text-xs font-semibold text-neutral-700">Font</Label>
-                <Select 
+                <Select
                   value={selectedBubble.fontId || ""}
                   onValueChange={(val) => onUpdateBubble(selectedBubble.id, { fontId: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs rounded-xl bg-neutral-50 border-neutral-200">
+                  {/* w-full overrides the trigger's base w-fit, which sizes it
+                      to the font name rather than to the column. */}
+                  <SelectTrigger className="w-full h-9 text-xs rounded-xl bg-neutral-50 border-neutral-200">
                     <SelectValue placeholder="Select...">
                       {fonts.find(f => f.id === selectedBubble.fontId)?.name}
                     </SelectValue>
@@ -357,9 +378,9 @@ export function BubbleSidebar({
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <Label className="text-xs font-semibold text-neutral-700">Font Size</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <Input
                     type="number"
                     min={Math.ceil(MIN_FONT_SIZE * artworkHeight)}
@@ -374,7 +395,7 @@ export function BubbleSidebar({
                     }}
                     className="h-9 text-xs rounded-xl bg-neutral-50 border-neutral-200"
                   />
-                  <span className="text-xs text-neutral-500 font-medium">px</span>
+                  <span className="text-xs text-neutral-500 font-medium shrink-0">px</span>
                 </div>
               </div>
             </div>
@@ -384,6 +405,49 @@ export function BubbleSidebar({
               value={selectedColor}
               onCommit={commitColor}
             />
+
+            <div className="space-y-3">
+              <SegmentedControl
+                label="Horizontal Align"
+                value={selectedBubble.textAlign ?? DEFAULT_TEXT_ALIGN}
+                options={TEXT_ALIGN_OPTIONS}
+                onChange={(textAlign) =>
+                  onUpdateBubble(selectedBubble.id, { textAlign })
+                }
+              />
+
+              <SegmentedControl
+                label="Vertical Align"
+                value={
+                  selectedBubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN
+                }
+                options={TEXT_VERTICAL_ALIGN_OPTIONS}
+                onChange={(textVerticalAlign) =>
+                  onUpdateBubble(selectedBubble.id, { textVerticalAlign })
+                }
+              />
+
+              <SegmentedControl
+                label="Text Case"
+                value={selectedBubble.textCase ?? DEFAULT_TEXT_CASE}
+                options={TEXT_CASE_OPTIONS}
+                onChange={(textCase) =>
+                  onUpdateBubble(selectedBubble.id, { textCase })
+                }
+              />
+
+              {/* Advisory, never enforced — same posture as the low-contrast
+                  colour warning. Capitals run wider than mixed case, and the
+                  renderer silently clips anything that overflows its box, so
+                  this is the one place an admin can be told to look. */}
+              {(selectedBubble.textCase ?? DEFAULT_TEXT_CASE) === "UPPERCASE" && (
+                <div className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                  ⚠ Capitals are wider than normal text. Check the preview still
+                  fits inside the bubble — text that overflows is cut off without
+                  a warning.
+                </div>
+              )}
+            </div>
 
             <div className="text-[10px] text-neutral-500 font-mono bg-neutral-50 p-2 rounded-lg border border-neutral-100 flex flex-wrap gap-2 justify-between">
                <span>x: {selectedBubble.x?.toFixed(4)}</span>

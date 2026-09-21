@@ -50,7 +50,7 @@ export function BlogTable({ blogs, togglingId, onToggleStatus, onDelete }: BlogT
                   src={blog.coverImageUrl}
                   alt={blog.title}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                 />
               ) : (
                 <FileText className="w-8 h-8 text-gray-400" />

@@ -58,13 +58,16 @@ function BlogCard({ blog }: { blog: BlogListItem }) {
         )}
 
         {/* Cover image — inset in the lower portion */}
-        <div className="mt-auto relative w-full aspect-[16/10] rounded-xl overflow-hidden">
+        {/* Fixed box keeps the row of cards aligned; object-contain inside it
+            means an odd-shaped cover letterboxes instead of being cropped.
+            Kept deliberately identical to the /blog list card. */}
+        <div className="mt-auto relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#F3E8FF]">
           {blog.coverImageUrl ? (
             <Image
               src={blog.coverImageUrl}
               alt={blog.title}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-contain transition-transform duration-500 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (

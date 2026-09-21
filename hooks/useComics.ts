@@ -7,6 +7,7 @@ import {
   deleteComic,
   updateComicStatus,
   setThumbnails,
+  setComicVideo,
 } from "@/app/actions/comic";
 import type { ComicStatus, CreateComicPayload } from "@/app/types/comic";
 
@@ -75,6 +76,24 @@ export function useSetThumbnails() {
   return useMutation({
     mutationFn: ({ comicId, desired }: { comicId: string; desired: string[] }) =>
       setThumbnails(comicId, desired),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["comics"] });
+      queryClient.invalidateQueries({ queryKey: ["comic", variables.comicId] });
+    },
+  });
+}
+
+/** Sets the comic's promo video (key) or removes it (null). */
+export function useSetComicVideo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      comicId,
+      videoKey,
+    }: {
+      comicId: string;
+      videoKey: string | null;
+    }) => setComicVideo(comicId, videoKey),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["comics"] });
       queryClient.invalidateQueries({ queryKey: ["comic", variables.comicId] });

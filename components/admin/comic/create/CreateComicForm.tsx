@@ -58,10 +58,31 @@ export function CreateComicForm() {
       setPricingError("No countries found. Cannot create pricing.");
       hasError = true;
     } else {
+      // One row per country per cover type, and each row needs BOTH money
+      // fields. updateComicPricing is a full delete-and-replace on the backend,
+      // so a partially-filled submission would wipe the rows it omits.
       const requiredCells = countries.length * 2;
-      const filledCells = pricing.filter(p => p.price && parseFloat(p.price) > 0).length;
+      const filledCells = pricing.filter(
+        (p) =>
+          p.mrp &&
+          parseFloat(p.mrp) > 0 &&
+          p.price &&
+          parseFloat(p.price) > 0
+      ).length;
+
+      const invertedRows = pricing.filter(
+        (p) =>
+          p.mrp &&
+          p.price &&
+          parseFloat(p.mrp) < parseFloat(p.price)
+      );
+
       if (filledCells < requiredCells) {
-        setPricingError("All pricing fields must be filled with a value > 0.");
+        setPricingError("Every MRP and price must be filled with a value > 0.");
+        hasError = true;
+      } else if (invertedRows.length > 0) {
+        // Mirrors the Zod refine so the admin never round-trips to learn this.
+        setPricingError("MRP cannot be lower than the selling price.");
         hasError = true;
       } else {
         setPricingError(undefined);
@@ -110,6 +131,7 @@ export function CreateComicForm() {
         pricing: pricing.map(p => ({
           countryId: p.countryId,
           coverType: p.coverType,
+          mrp: parseFloat(p.mrp),
           price: parseFloat(p.price),
         })),
       };

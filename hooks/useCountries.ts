@@ -41,6 +41,14 @@ export function useDeleteCountry() {
     mutationFn: deleteCountry,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["countries"] });
+
+      // Deleting a country cascades its pricing rules away, so anything
+      // holding pricing is now stale: the comics list renders
+      // _count.pricingRules per comic, and each comic detail carries its own
+      // pricingRules array plus a ["comic", id, "pricing"] child query.
+      // ["comic"] with no id matches all of them by key prefix.
+      queryClient.invalidateQueries({ queryKey: ["comics"] });
+      queryClient.invalidateQueries({ queryKey: ["comic"] });
     },
   });
 }

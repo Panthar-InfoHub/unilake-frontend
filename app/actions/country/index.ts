@@ -1,5 +1,10 @@
 import api from "@/app/lib/axios";
-import type { Country, CountryUploadUrlResponse, PublicCountry } from "@/app/types/country";
+import type {
+  Country,
+  CountryUploadUrlResponse,
+  DeleteCountryResult,
+  PublicCountry,
+} from "@/app/types/country";
 
 export async function fetchCountries(): Promise<Country[]> {
   const { data } = await api.get<Country[]>("/api/admin/countries");
@@ -45,6 +50,7 @@ export async function updateCountry(
   return data;
 }
 
-export async function deleteCountry(id: string): Promise<void> {
-  await api.delete(`/api/admin/countries/${id}`);
+export async function deleteCountry(id: string): Promise<DeleteCountryResult> {
+  const { data } = await api.delete<DeleteCountryResult>(`/api/admin/countries/${id}`);
+  return data;
 }

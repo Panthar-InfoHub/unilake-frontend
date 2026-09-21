@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Feedback, FeedbackStatus } from "@/app/types/feedback";
-import { MessageSquare, Trash2, Mail, Phone, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface FeedbackTableProps {
   feedbacks: Feedback[];
@@ -67,7 +67,9 @@ export function FeedbackTable({
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {/* mb-2 (not mb-1) picks up the spacing the contact-details
+                      row used to provide before it was removed. */}
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <h3 className="font-bold text-neutral-800 text-base truncate">
                       {item.name}
                     </h3>
@@ -75,17 +77,7 @@ export function FeedbackTable({
                       {date}
                     </span>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-neutral-500 font-medium mb-2">
-                    <span className="flex items-center gap-1 truncate">
-                      <Mail className="w-3.5 h-3.5" />
-                      {item.email}
-                    </span>
-                    <span className="flex items-center gap-1 shrink-0">
-                      <Phone className="w-3.5 h-3.5" />
-                      {item.phone}
-                    </span>
-                  </div>
-                  
+
                   {/* Truncated message unless expanded */}
                   {!isExpanded && (
                     <p className="text-sm text-neutral-600 line-clamp-1 pr-4">

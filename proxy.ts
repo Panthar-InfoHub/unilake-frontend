@@ -5,7 +5,14 @@ import { UserRole } from "@/app/types/auth";
 // ── Route config ───────────────────────────────────────────────────────────────
 const PROTECTED_USER_ROUTES = ["/dashboard"];
 const PROTECTED_ADMIN_ROUTES: string[] = [];
-const PUBLIC_ROUTES = ["/login", "/", "/terms", "/privacy"];
+const PUBLIC_ROUTES = [
+  "/login",
+  "/",
+  "/terms",
+  "/privacy",
+  "/refund",
+  "/contact",
+];
 
 // ── Session cookie name — must match what Better Auth sets on the backend ──────
 // Better Auth prefixes cookies with "__Secure-" whenever the base URL is https,

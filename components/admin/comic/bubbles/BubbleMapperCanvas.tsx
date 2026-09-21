@@ -12,6 +12,12 @@ import {
   fontSizeToPx,
   normalizedToPixel,
   pixelToNormalized,
+  DEFAULT_TEXT_ALIGN,
+  DEFAULT_TEXT_VERTICAL_ALIGN,
+  DEFAULT_TEXT_CASE,
+  applyTextCase,
+  toKonvaAlign,
+  toKonvaVerticalAlign,
 } from "./bubbleCoordinates";
 
 interface BubbleMapperCanvasProps {
@@ -232,7 +238,10 @@ export function BubbleMapperCanvas({
                       // placement rather than an exact proof of the final page.
                       text={
                         bubble.dialogue?.trim()
-                          ? substituteTokens(bubble.dialogue, previewName, SAMPLE_PRONOUNS)
+                          ? applyTextCase(
+                              substituteTokens(bubble.dialogue, previewName, SAMPLE_PRONOUNS),
+                              bubble.textCase ?? DEFAULT_TEXT_CASE
+                            )
                           : "Double click to edit..."
                       }
                       width={width - 10}
@@ -244,8 +253,10 @@ export function BubbleMapperCanvas({
                         dimensions.imageHeight
                       )}
                       fill={bubble.fontColor ?? DEFAULT_FONT_COLOR}
-                      align="center"
-                      verticalAlign="middle"
+                      align={toKonvaAlign(bubble.textAlign ?? DEFAULT_TEXT_ALIGN)}
+                      verticalAlign={toKonvaVerticalAlign(
+                        bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN
+                      )}
                       wrap="word"
                     />
                   </Group>

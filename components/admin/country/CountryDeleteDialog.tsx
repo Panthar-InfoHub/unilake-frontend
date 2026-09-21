@@ -31,6 +31,10 @@ export function CountryDeleteDialog({
 
   if (!country) return null;
 
+  // Only GET /api/admin/countries carries _count, so treat a missing one as 0
+  // and simply show no warning rather than guessing at a number.
+  const pricingRuleCount = country._count?.pricingRules ?? 0;
+
   const handleConfirm = async () => {
     setIsDeleting(true);
     setErrorMessage(null);
@@ -38,7 +42,8 @@ export function CountryDeleteDialog({
       await onConfirm(country.id);
       onOpenChange(false);
     } catch (err: any) {
-      // Show 409 conflict errors directly in the dialog (e.g. pricing rules reference it)
+      // Pricing rules no longer block the delete — they cascade. This is still
+      // here for genuine failures (network drop, 404 on an already-deleted row).
       setErrorMessage(err?.message || "Failed to delete country");
     } finally {
       setIsDeleting(false);
@@ -81,6 +86,20 @@ export function CountryDeleteDialog({
             </p>
           </div>
         </div>
+
+        {pricingRuleCount > 0 && (
+          <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 flex items-start gap-2.5">
+            <TriangleAlert className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+            <p className="text-xs font-semibold leading-relaxed">
+              This will also permanently delete{" "}
+              <span className="font-bold">
+                {pricingRuleCount} pricing rule{pricingRuleCount === 1 ? "" : "s"}
+              </span>{" "}
+              across every comic priced in {country.name}. Those comics will have
+              no price in this country until you set one up again.
+            </p>
+          </div>
+        )}
 
         {errorMessage && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs font-semibold">

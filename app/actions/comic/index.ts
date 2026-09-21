@@ -5,6 +5,7 @@ import type {
   ComicDetail,
   CreateComicPayload,
   ThumbnailUploadResponse,
+  UploadUrlResponse,
   PricingRuleWithCountry,
   ComicStatus,
   PublicComicListItem,
@@ -33,7 +34,13 @@ export async function createComic(payload: CreateComicPayload): Promise<Comic> {
   return data;
 }
 
-export async function updateComic(id: string, payload: Partial<Comic> & { thumbnailKeys?: string[] }): Promise<Comic> {
+// `thumbnailKeys` and `videoKey` are REQUEST-only fields — neither exists on the
+// Comic response (the backend returns `coverThumbnailUrls` and
+// `previewVideoUrl`), so Partial<Comic> alone will not admit them.
+export async function updateComic(
+  id: string,
+  payload: Partial<Comic> & { thumbnailKeys?: string[]; videoKey?: string | null }
+): Promise<Comic> {
   const { data } = await api.patch<Comic>(`/api/admin/comics/${id}`, payload);
   return data;
 }
@@ -62,12 +69,37 @@ export async function setThumbnails(comicId: string, desired: string[]): Promise
   return updateComic(comicId, { thumbnailKeys: desired });
 }
 
+export async function getComicVideoUploadUrl(
+  fileName: string,
+  contentType: string
+): Promise<UploadUrlResponse> {
+  const { data } = await api.post<UploadUrlResponse>(
+    "/api/admin/comics/video/upload-url",
+    { fileName, contentType }
+  );
+  return data;
+}
+
+/**
+ * Sets or clears the comic's carousel promo video.
+ *
+ * Pass a freshly-uploaded R2 key to set/replace it, or null to remove it —
+ * the backend deletes the previous file from R2 in both cases. Omitting the
+ * field entirely (i.e. not calling this) leaves the video untouched.
+ */
+export async function setComicVideo(
+  comicId: string,
+  videoKey: string | null
+): Promise<Comic> {
+  return updateComic(comicId, { videoKey });
+}
+
 export async function fetchPricing(id: string): Promise<PricingRuleWithCountry[]> {
   const { data } = await api.get<PricingRuleWithCountry[]>(`/api/admin/comics/${id}/pricing`);
   return data;
 }
 
-export async function updatePricing(id: string, pricing: { countryId: string; coverType: string; price: number }[]): Promise<Comic> {
+export async function updatePricing(id: string, pricing: { countryId: string; coverType: string; mrp: number; price: number }[]): Promise<Comic> {
   const { data } = await api.put<Comic>(`/api/admin/comics/${id}/pricing`, { pricing });
   return data;
 }

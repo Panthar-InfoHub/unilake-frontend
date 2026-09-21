@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * First-time personalization form on the comic detail page.
+ *
+ * ── DUPLICATION NOTICE ──────────────────────────────────────────────────────
+ * `components/personalize/NewPhotoForm.tsx` deliberately duplicates this
+ * component's submit flow for the "upload another photo" journey. Two separate
+ * forms was a deliberate decision.
+ *
+ * The consequence: any change to photo validation, the field set, or the
+ * create -> update -> upload -> confirm sequence must be made in BOTH files.
+ * If you are editing this one, open the other.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
 import { useState, useCallback } from "react";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import { PublicComicDetail } from "@/app/types/comic";

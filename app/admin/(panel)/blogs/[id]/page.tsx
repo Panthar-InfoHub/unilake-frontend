@@ -13,6 +13,11 @@ import { BlogEditor } from "@/components/admin/blog/BlogEditor";
 import { BlogTagInput } from "@/components/admin/blog/BlogTagInput";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CharCounter,
+  SEO_TITLE_LIMIT,
+  SEO_DESCRIPTION_LIMIT,
+} from "@/components/admin/shared/CharCounter";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB for cover image
 
@@ -28,6 +33,8 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
   // Form State
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   
@@ -47,6 +54,8 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
     if (blog) {
       setTitle(blog.title);
       setExcerpt(blog.excerpt || "");
+      setMetaTitle(blog.metaTitle || "");
+      setMetaDescription(blog.metaDescription || "");
       setBody(blog.body);
       setTags(blog.tags || []);
       setCoverUrl(blog.coverImageUrl);
@@ -115,8 +124,16 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
       const payload: any = {
         title,
         body,
-        excerpt: excerpt.trim() || "",
+        // null, not "": the API rejects an empty string (updateBlogSchema has
+        // excerpt as .min(1).nullable()), so sending "" made clearing an
+        // excerpt fail validation and silently keep the old text. null is the
+        // documented way to clear a nullable column.
+        excerpt: excerpt.trim() || null,
         tags,
+        // Same rule — null clears the override so the post falls back to its
+        // own title/excerpt in search results.
+        metaTitle: metaTitle.trim() || null,
+        metaDescription: metaDescription.trim() || null,
       };
 
       if (coverKey !== undefined) {
@@ -248,6 +265,49 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
               {excerpt.length}/300
             </div>
           </div>
+
+          {/* SEO — both optional, blank falls back to title/excerpt */}
+          <div className="pt-6 border-t border-gray-100 space-y-6">
+            <div>
+              <h3 className="text-sm font-bold text-gray-700">Search &amp; Sharing (SEO)</h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">
+                What Google shows and what appears when this post is shared. Both
+                optional — blank uses the title and excerpt above.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">SEO Title</label>
+              <input
+                type="text"
+                value={metaTitle}
+                onChange={(e) => setMetaTitle(e.target.value)}
+                disabled={isSaving}
+                placeholder={title || "Same as the post title"}
+                maxLength={120}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#914A8C] focus:ring-2 focus:ring-[#914A8C]/20 focus:bg-white transition-all disabled:opacity-50"
+              />
+              <div className="flex justify-end">
+                <CharCounter value={metaTitle} limit={SEO_TITLE_LIMIT} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">SEO Description</label>
+              <textarea
+                value={metaDescription}
+                onChange={(e) => setMetaDescription(e.target.value)}
+                disabled={isSaving}
+                placeholder={excerpt || "Same as the excerpt"}
+                maxLength={320}
+                rows={3}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#914A8C] focus:ring-2 focus:ring-[#914A8C]/20 focus:bg-white transition-all resize-none disabled:opacity-50"
+              />
+              <div className="flex justify-end">
+                <CharCounter value={metaDescription} limit={SEO_DESCRIPTION_LIMIT} />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Cover Image & Tags */}
@@ -260,7 +320,9 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
             
             {coverUrl ? (
               <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 aspect-video w-full group">
-                <Image src={coverUrl} alt="Cover Preview" fill className="object-cover" />
+                {/* contain, not cover: a preview that crops would misrepresent
+                    what the storefront actually publishes. */}
+                <Image src={coverUrl} alt="Cover Preview" fill className="object-contain" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                   <button
                     onClick={() => !isSaving && fileInputRef.current?.click()}
@@ -324,7 +386,12 @@ export default function EditBlogPage({ params }: { params: Promise<{ id: string 
         {/* Editor */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 space-y-4">
           <label className="text-sm font-bold text-gray-700 block">Post Content <span className="text-red-500">*</span></label>
-          <BlogEditor content={body} onChange={setBody} disabled={isSaving} />
+          <BlogEditor
+            content={body}
+            onChange={setBody}
+            disabled={isSaving}
+            allowImages={false}
+          />
         </div>
       </div>
 

@@ -4,8 +4,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { hankenGrotesk } from "@/app/fonts";
+import { usePublicSiteSetting } from "@/hooks/useSiteSettings";
+
+// Used until an admin saves settings, and whenever a field is left blank.
+// The footer is on every page, so it must render something sensible even if
+// the settings request fails outright.
+const FALLBACK_DESCRIPTION =
+  "Creating magical personalized stories that spark imagination and create lasting memories for children and families.";
+const FALLBACK_INSTAGRAM = "https://instagram.com";
+const FALLBACK_EMAIL = "contact@unilake.com";
 
 export default function Footer() {
+  // Deliberately no loading state: the fallbacks render immediately and are
+  // swapped once the query resolves. A skeleton in the footer would be more
+  // distracting than a brief default.
+  const { data: setting } = usePublicSiteSetting();
+
+  const brandDescription = setting?.brandDescription || FALLBACK_DESCRIPTION;
+  const instagramUrl = setting?.instagramUrl || FALLBACK_INSTAGRAM;
+  const email = setting?.email || FALLBACK_EMAIL;
+
   return (
     <footer className="relative w-full overflow-visible mt-20 lg:mt-32">
       {/* ===== Symmetrical/Organic Double Wave Cloud Border ===== */}
@@ -92,13 +110,13 @@ export default function Footer() {
 
               {/* Description */}
               <p className={`${hankenGrotesk.className} text-white/90 text-base sm:text-lg leading-relaxed max-w-[320px] mb-6`}>
-                Creating magical personalized stories that spark imagination and create lasting memories for children and families.
+                {brandDescription}
               </p>
 
               {/* Social Buttons */}
               <div className="flex items-center gap-4">
                 <a
-                  href="https://instagram.com"
+                  href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="
@@ -135,7 +153,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="mailto:contact@unilake.com"
+                  href={`mailto:${email}`}
                   className="
                     w-10
                     h-10
@@ -209,17 +227,22 @@ export default function Footer() {
                 <ul className={`${hankenGrotesk.className} flex flex-col gap-3 text-[15px] uppercase text-white/90`}>
                   <li>
                     <Link href="/privacy" className="hover:text-white transition-colors duration-200">
-                      PRIVACY
+                      PRIVACY PLOICY
                     </Link>
                   </li>
                   <li>
                     <Link href="/terms" className="hover:text-white transition-colors duration-200">
-                      TERMS
+                      TERMS AND CONDITION
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/refund" className="hover:text-white transition-colors duration-200">
+                      REFUND PLOICY
                     </Link>
                   </li>
                   <li>
                     <Link href="/contact" className="hover:text-white transition-colors duration-200">
-                      CONTACT
+                      CONTACT US
                     </Link>
                   </li>
                 </ul>

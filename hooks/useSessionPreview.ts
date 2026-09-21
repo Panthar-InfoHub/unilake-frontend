@@ -166,12 +166,30 @@ export function useSessionPreview(sessionId: string | null) {
         })
       );
     } else if (event.type === "page:error") {
-      // Optimistic update for page:error (mark as FAILED, though it might retry)
+      // The backend emits this on EVERY failed attempt, not just the last, and
+      // `isFinal` is what separates the two. A non-final failure means a retry
+      // is already queued — flipping the card to an error state there would show
+      // a false alarm for the ~2min the next attempt takes, and would invite the
+      // user to burn one of only three free variant slots on a page that was
+      // about to recover on its own. So record the cause and leave the status be.
+      if (!event.isFinal) {
+        console.error(
+          `Page ${event.pageNumber} variant ${event.variantIndex} failed an attempt (retrying):`,
+          event.errorMessage
+        );
+        return;
+      }
+
+      console.error(
+        `Page ${event.pageNumber} variant ${event.variantIndex} failed permanently:`,
+        event.errorMessage
+      );
+
       queryClient.setQueryData(["session", sessionId], (oldData: SessionSnapshot | undefined) =>
         patchPage(oldData, event.pageNumber, (variants) =>
           // This event carries no pageVersionId, so variantIndex is all we can match on.
-          // If the variant isn't known yet we leave it alone — the failure isn't final
-          // (§8.1) and the next GET reconciles it.
+          // If the variant isn't known yet we leave it alone — the next GET reconciles
+          // it, and the backend now only writes FAILED when it is genuinely terminal.
           variants.map((v) =>
             v.variantIndex === event.variantIndex
               ? { ...v, status: "FAILED" as const, errorMessage: event.errorMessage }

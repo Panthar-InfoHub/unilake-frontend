@@ -3,57 +3,28 @@
 import { useState } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
-
-/* ── Dummy Google Reviews data ── */
-const allReviews = [
-  {
-    id: 1,
-    author: "Kamlesh Patel",
-    text: "Great Experience. Print Quality came out much better than expected. Kids loved it. Highly recommended!!",
-    avatar: "/assets/home_page/babyCustomerReviewImg.png",
-  },
-  {
-    id: 2,
-    author: "Kamlesh Patel",
-    text: "Great Experience. Print Quality came out much better than expected. Kids loved it. Highly recommended!!",
-    avatar: "/assets/home_page/babyCustomerReviewImg.png",
-  },
-  {
-    id: 3,
-    author: "Kamlesh Patel",
-    text: "Great Experience. Print Quality came out much better than expected. Kids loved it. Highly recommended!!",
-    avatar: "/assets/home_page/babyCustomerReviewImg.png",
-  },
-  {
-    id: 4,
-    author: "Kamlesh Patel",
-    text: "Great Experience. Print Quality came out much better than expected. Kids loved it. Highly recommended!!",
-    avatar: "/assets/home_page/babyCustomerReviewImg.png",
-  },
-  {
-    id: 5,
-    author: "Kamlesh Patel",
-    text: "Great Experience. Print Quality came out much better than expected. Kids loved it. Highly recommended!!",
-    avatar: "/assets/home_page/babyCustomerReviewImg.png",
-  },
-  {
-    id: 6,
-    author: "Kamlesh Patel",
-    text: "Great Experience. Print Quality came out much better than expected. Kids loved it. Highly recommended!!",
-    avatar: "/assets/home_page/babyCustomerReviewImg.png",
-  },
-];
+import { usePublicGoogleReviews } from "@/hooks/usePublicContent";
+import { MAX_RATING } from "@/app/types/googleReview";
 
 const INITIAL_VISIBLE_COUNT = 3;
 
 export default function GoogleReviews() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const { data: allReviews = [], isLoading } = usePublicGoogleReviews();
 
   const handleLoadMore = () => {
     setVisibleCount(allReviews.length);
   };
 
   const visibleReviews = allReviews.slice(0, visibleCount);
+
+  // Nothing to show — render nothing at all rather than the purple
+  // "Excellent On Google" banner sitting above an empty grid. The banner is
+  // part of this component, so hiding the section hides both.
+  //
+  // The same branch covers the loading pass: this section is well below the
+  // fold, so appearing once loaded beats reserving space with a skeleton.
+  if (isLoading || allReviews.length === 0) return null;
 
   return (
     <>
@@ -112,8 +83,8 @@ export default function GoogleReviews() {
           
           {/* 3-Column Reviews Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10 lg:gap-x-12 pb-16">
-            {visibleReviews.map((review, index) => (
-              <div key={index} className="flex justify-center">
+            {visibleReviews.map((review) => (
+              <div key={review.id} className="flex justify-center">
                 {/* Wobbly outline bubble card */}
                 <div
                   className="
@@ -148,35 +119,46 @@ export default function GoogleReviews() {
                     "
                   >
                     <Image
-                      src={review.avatar}
-                      alt={review.author}
+                      src={review.imageUrl}
+                      alt={review.customerName}
                       fill
                       sizes="64px"
                       className="object-cover"
                     />
                   </div>
 
-                  {/* Stars Row */}
-                  <div className="flex items-center gap-0.5 mb-4 pl-6">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className="w-6 h-6 text-yellow-400 fill-current"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                      </svg>
-                    ))}
+                  {/* Stars Row — fills `rating` stars and greys out the rest.
+                      Previously hardcoded to five filled stars, which would
+                      have shown every review as 5/5 regardless of its rating. */}
+                  <div
+                    className="flex items-center gap-0.5 mb-4 pl-6"
+                    aria-label={`${review.rating} out of ${MAX_RATING} stars`}
+                  >
+                    {Array.from({ length: MAX_RATING }, (_, i) => i + 1).map(
+                      (star) => (
+                        <svg
+                          key={star}
+                          className={`w-6 h-6 fill-current ${
+                            star <= review.rating
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                      )
+                    )}
                   </div>
 
                   {/* Review Text */}
                   <p className={`${hankenGrotesk.className} text-[#333333] text-sm sm:text-base font-medium leading-relaxed mb-5`}>
-                    {review.text}
+                    {review.reviewText}
                   </p>
 
                   {/* Author Name */}
                   <h4 className={`${hankenGrotesk.className} text-[#000000] font-extrabold text-base sm:text-lg`}>
-                    {review.author}
+                    {review.customerName}
                   </h4>
 
                   {/* Solid Black Quotation Mark in bottom-right */}

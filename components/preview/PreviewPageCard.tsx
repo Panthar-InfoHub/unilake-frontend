@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { RegenerateResponse, SessionPage } from "@/app/types/session";
 import GeneratingPlaceholder from "./GeneratingPlaceholder";
+import PageErrorPlaceholder from "./PageErrorPlaceholder";
 import LockedPageOverlay from "./LockedPageOverlay";
 import RegenerateSlide from "./RegenerateSlide";
 import { PublicComicDetailPage } from "@/app/types/comic";
@@ -23,6 +24,11 @@ interface PreviewPageCardProps {
    */
   selectedVariantIndex: number | null;
   onVariantChange: (pageNumber: number, variantIndex: number) => void;
+  /**
+   * The rotating fact to show while this page generates. Owned by the parent so
+   * every card on screen displays the same one at the same time.
+   */
+  generatingFact?: string;
 }
 
 export default function PreviewPageCard({
@@ -33,6 +39,7 @@ export default function PreviewPageCard({
   isPaid,
   selectedVariantIndex,
   onVariantChange,
+  generatingFact,
 }: PreviewPageCardProps) {
   // Falls back to the first slot so a page with nothing ready yet still renders
   // its generating placeholder, matching the old local-state initialiser.
@@ -64,7 +71,12 @@ export default function PreviewPageCard({
   const canGoNext = !showRegenerateSlide && (canGoNextNormal || canGoNextToRegenerate);
 
   const currentVariant = variants.find((v) => v.variantIndex === activeVariantIndex);
-  const isGenerating = !isLocked && currentVariant?.status !== "SD_READY";
+  // FAILED is terminal: the backend only writes it once every BullMQ retry is
+  // spent. Until this split existed, every non-SD_READY status read as
+  // "generating" and a dead page spun forever.
+  const hasFailed = !isLocked && currentVariant?.status === "FAILED";
+  const isGenerating =
+    !isLocked && !hasFailed && currentVariant?.status !== "SD_READY";
   // Prefer the web derivative; fall back to the print master for variants that
   // predate it or whose derivative failed to build.
   const imageUrl =
@@ -124,8 +136,13 @@ export default function PreviewPageCard({
     }
   };
 
-  const width = comicPageMetadata?.artworkWidth || 1024;
-  const height = comicPageMetadata?.artworkHeight || 1024;
+  // The session snapshot carries dimensions for EVERY page; comicDetail only
+  // covers preview pages, which is why a locked card used to fall through to a
+  // 1024-square box and render the wrong shape. Snapshot first, comicDetail
+  // kept as a fallback so nothing regresses if the frontend ships ahead of the
+  // backend that added these fields.
+  const width = page.artworkWidth ?? comicPageMetadata?.artworkWidth ?? 1024;
+  const height = page.artworkHeight ?? comicPageMetadata?.artworkHeight ?? 1024;
   const aspectRatio = width / height;
 
   const arrowClass =
@@ -145,7 +162,12 @@ export default function PreviewPageCard({
                 : { aspectRatio }
             }
           >
-            {isLocked && <LockedPageOverlay />}
+            {isLocked && (
+              <LockedPageOverlay
+                artworkUrl={page.artworkUrl}
+                pageNumber={page.pageNumber}
+              />
+            )}
 
             {!isLocked && showRegenerateSlide && (
               <RegenerateSlide
@@ -156,7 +178,16 @@ export default function PreviewPageCard({
               />
             )}
 
-            {!isLocked && !showRegenerateSlide && isGenerating && <GeneratingPlaceholder />}
+            {!isLocked && !showRegenerateSlide && isGenerating && (
+              <GeneratingPlaceholder fact={generatingFact} />
+            )}
+
+            {/* After showRegenerateSlide, so navigating to the regenerate slide
+                still works from a failed page — which is what the copy tells
+                the user to do. */}
+            {!isLocked && !showRegenerateSlide && hasFailed && (
+              <PageErrorPlaceholder />
+            )}
 
             {!isLocked && !showRegenerateSlide && !isGenerating && imageUrl && (
               <img
@@ -206,6 +237,7 @@ export default function PreviewPageCard({
         <div className="flex flex-row lg:flex-col items-center gap-3 mt-4 lg:mt-0 overflow-x-auto lg:absolute lg:top-12 lg:right-4 w-full lg:w-auto p-2">
           {variants.map((variant) => {
             const isReady = variant.status === "SD_READY";
+            const variantFailed = variant.status === "FAILED";
             const thumbUrl = variant.displayImageUrl ?? variant.finalImageUrl;
             const isActive = !showRegenerateSlide && activeVariantIndex === variant.variantIndex;
             return (
@@ -215,7 +247,13 @@ export default function PreviewPageCard({
                   setActiveVariantIndex(variant.variantIndex);
                   setShowRegenerateSlide(false);
                 }}
-                title={isReady ? `Version ${variant.variantIndex + 1}` : "Still generating..."}
+                title={
+                  isReady
+                    ? `Version ${variant.variantIndex + 1}`
+                    : variantFailed
+                      ? "This version couldn't be created"
+                      : "Still generating..."
+                }
                 className={`relative w-16 h-16 shrink-0 rounded-md overflow-hidden border-2 transition-all ${
                   isActive
                     ? "border-[#3F3C95] shadow-sm scale-110 z-10"
@@ -236,6 +274,12 @@ export default function PreviewPageCard({
                       V{variant.variantIndex + 1}
                     </div>
                   </>
+                ) : variantFailed ? (
+                  // Without this branch a dead variant spins here forever, the
+                  // same bug the main card had.
+                  <span className="absolute inset-0 flex items-center justify-center bg-amber-50 text-amber-600">
+                    <AlertTriangle size={18} />
+                  </span>
                 ) : (
                   <span className="absolute inset-0 flex items-center justify-center bg-gray-100 text-[#3F3C95]">
                     <Loader2 size={18} className="animate-spin" />

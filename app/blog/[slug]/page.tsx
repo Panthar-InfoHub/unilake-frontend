@@ -7,11 +7,78 @@ import Link from "next/link";
 import Image from "next/image";
 import { MoveLeft } from "lucide-react";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import {
+  absoluteUrl,
+  clampDescription,
+  firstNonEmpty,
+  htmlToPlainText,
+  DEFAULT_DESCRIPTION,
+} from "@/lib/seo";
 
 interface BlogDetailPageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+/**
+ * Per-post title, description and share card.
+ *
+ * Fallback chain: the admin's SEO override, then the post's excerpt, then the
+ * opening of the body with its HTML stripped — a post with neither an excerpt
+ * nor an SEO description still gets something meaningful rather than the
+ * generic site blurb.
+ *
+ * Never throws: an unpublished slug returns generic metadata, and the page
+ * body below still calls notFound() for the actual 404.
+ */
+export async function generateMetadata({
+  params,
+}: BlogDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const canonical = absoluteUrl(`/blog/${slug}`);
+
+  try {
+    const blog = await fetchPublicBlogBySlug(slug);
+
+    const title = firstNonEmpty(blog.metaTitle, blog.title) ?? "Blog";
+    const description =
+      firstNonEmpty(
+        blog.metaDescription,
+        blog.excerpt,
+        blog.body ? htmlToPlainText(blog.body) : null
+      ) ?? DEFAULT_DESCRIPTION;
+
+    return {
+      title,
+      description: clampDescription(description),
+      alternates: { canonical },
+      openGraph: {
+        type: "article",
+        title,
+        description: clampDescription(description),
+        url: canonical,
+        publishedTime: blog.createdAt,
+        modifiedTime: blog.updatedAt,
+        ...(blog.coverImageUrl && {
+          images: [{ url: blog.coverImageUrl, alt: blog.title }],
+        }),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description: clampDescription(description),
+        ...(blog.coverImageUrl && { images: [blog.coverImageUrl] }),
+      },
+    };
+  } catch {
+    return {
+      title: "Blog",
+      description: DEFAULT_DESCRIPTION,
+      alternates: { canonical },
+    };
+  }
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
@@ -36,7 +103,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   });
 
   return (
-    <main className="min-h-screen bg-[#F8E7D2] flex flex-col">
+    <main className="min-h-screen bg-[#F9E7D3] flex flex-col">
       <HomeHeaderSection />
 
       <article className="flex-1 max-w-4xl mx-auto px-6 sm:px-8 lg:px-12 py-32 w-full">
@@ -65,14 +132,19 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           </p>
         </header>
 
-        {/* Cover Image */}
+        {/* Cover Image — no fixed ratio and no object-fit: it renders at its
+            own proportions, full column width. A tall image is tall, a wide one
+            is wide, and nothing is ever cropped. width/height 0 + h-auto is the
+            next/image pattern for an image whose real dimensions we do not
+            store — the tradeoff is a small layout shift as it loads. */}
         {blog.coverImageUrl && (
-          <div className="relative w-full aspect-video rounded-3xl overflow-hidden mb-12 shadow-lg border-4 border-white">
+          <div className="w-full rounded-3xl overflow-hidden mb-12 shadow-lg border-4 border-white">
             <Image
               src={blog.coverImageUrl}
               alt={blog.title}
-              fill
-              className="object-cover"
+              width={0}
+              height={0}
+              className="block w-full h-auto"
               priority
               sizes="(max-width: 1024px) 100vw, 900px"
             />
@@ -80,7 +152,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         )}
 
         {/* Content */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-[#E5E7EB]">
+        <div className="bg-[#F9E7D3] rounded-3xl p-8 md:p-12 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-[#E5E7EB]">
           <BlogBodyRenderer html={blog.body} />
         </div>
       </article>

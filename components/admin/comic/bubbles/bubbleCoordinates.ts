@@ -1,5 +1,7 @@
 // Utilities to convert between normalized API coordinates (0-1) and Konva canvas coordinates (pixels)
 
+import type { TextAlign, TextVerticalAlign, TextCase } from "@/app/types/comic";
+
 /**
  * Converts normalized API values (0.0 to 1.0) to actual canvas pixels
  */
@@ -74,6 +76,62 @@ export function isValidFontColor(value: string): boolean {
 /** Normalise to the single canonical form the API stores. */
 export function normalizeFontColor(value: string): string {
   return value.trim().toLowerCase();
+}
+
+// ── Bubble text placement and casing ──────────────────────────────────────────
+// Mirrors DEFAULT_TEXT_ALIGN / DEFAULT_TEXT_VERTICAL_ALIGN / DEFAULT_TEXT_CASE
+// in the backend's src/config/generation.ts. The defaults are what the renderer
+// did unconditionally before these fields existed, so an untouched bubble looks
+// exactly as it always has.
+export const DEFAULT_TEXT_ALIGN: TextAlign = "CENTER";
+export const DEFAULT_TEXT_VERTICAL_ALIGN: TextVerticalAlign = "MIDDLE";
+export const DEFAULT_TEXT_CASE: TextCase = "AS_TYPED";
+
+// Option lists drive the sidebar's segmented controls. Kept here rather than
+// inline in JSX so the labels have one home and the values cannot drift from
+// the Prisma enums.
+export const TEXT_ALIGN_OPTIONS: { value: TextAlign; label: string }[] = [
+  { value: "LEFT", label: "Left" },
+  { value: "CENTER", label: "Center" },
+  { value: "RIGHT", label: "Right" },
+];
+
+export const TEXT_VERTICAL_ALIGN_OPTIONS: {
+  value: TextVerticalAlign;
+  label: string;
+}[] = [
+  { value: "TOP", label: "Top" },
+  { value: "MIDDLE", label: "Middle" },
+  { value: "BOTTOM", label: "Bottom" },
+];
+
+export const TEXT_CASE_OPTIONS: { value: TextCase; label: string }[] = [
+  { value: "AS_TYPED", label: "As typed" },
+  { value: "UPPERCASE", label: "AA" },
+  { value: "LOWERCASE", label: "aa" },
+];
+
+/**
+ * Apply a bubble's casing for preview purposes.
+ *
+ * Must stay in step with applyTextCase() in the backend's textStamp.ts — this
+ * is what makes the sidebar preview and the canvas agree with the printed page.
+ */
+export function applyTextCase(text: string, textCase: TextCase): string {
+  if (textCase === "UPPERCASE") return text.toUpperCase();
+  if (textCase === "LOWERCASE") return text.toLowerCase();
+  return text;
+}
+
+/** Konva's Text takes lowercase align values; the API stores uppercase enums. */
+export function toKonvaAlign(align: TextAlign): "left" | "center" | "right" {
+  return align.toLowerCase() as "left" | "center" | "right";
+}
+
+export function toKonvaVerticalAlign(
+  verticalAlign: TextVerticalAlign,
+): "top" | "middle" | "bottom" {
+  return verticalAlign.toLowerCase() as "top" | "middle" | "bottom";
 }
 
 /**

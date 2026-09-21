@@ -277,7 +277,7 @@ export function AddressFormModal({
                   control={form.control}
                   name="country"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="min-w-0">
                       <FormLabel className="text-gray-700 font-semibold text-sm">Country *</FormLabel>
                       <Select
                         disabled={isCountriesLoading}
@@ -286,7 +286,10 @@ export function AddressFormModal({
                         value={field.value}
                       >
                         <FormControl>
-                           <SelectTrigger className="h-11 rounded-xl bg-gray-50 border-gray-200 focus:ring-[#914A8C]">
+                           {/* w-full overrides SelectTrigger's base w-fit — the
+                               label here is "Name (CODE)", so it is the longest
+                               country string anywhere in the app. */}
+                           <SelectTrigger className="w-full h-11 rounded-xl bg-gray-50 border-gray-200 focus:ring-[#914A8C]">
                              <SelectValue placeholder={isCountriesLoading ? "Loading..." : "Select Country"} />
                            </SelectTrigger>
                         </FormControl>

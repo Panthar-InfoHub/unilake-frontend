@@ -1,12 +1,13 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useSessionPreview } from "@/hooks/useSessionPreview";
 import PreviewViewer from "@/components/preview/PreviewViewer";
 import ComicPreloader from "@/components/comic/ComicPreloader";
+import { usePublicComic } from "@/hooks/usePublicComics";
 import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { clearSession, isValidSessionId, consumeShowPreloader, getSessionBySessionId } from "@/app/lib/session-storage";
@@ -49,9 +50,11 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
     return sessionIdIsValid ? consumeShowPreloader(resolvedParams.sessionId) : false;
   });
 
-  const childNameFromStorage = sessionIdIsValid
-    ? getSessionBySessionId(resolvedParams.sessionId)?.childName ?? ""
-    : "";
+  const storedSession = sessionIdIsValid
+    ? getSessionBySessionId(resolvedParams.sessionId)
+    : null;
+
+  const childNameFromStorage = storedSession?.childName ?? "";
 
   const {
     snapshot,
@@ -68,6 +71,24 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
     triggerGeneration,
     regeneratePage,
   } = useSessionPreview(sessionId);
+
+  // The preloader renders before the session snapshot lands, so the comic id is
+  // taken from localStorage first and only falls back to the snapshot. On a
+  // revisit link opened in a different browser there is no stored session, in
+  // which case facts simply arrive a moment later with the snapshot.
+  //
+  // This is the SAME query key PreviewViewer uses, so TanStack serves both from
+  // one request rather than two.
+  const comicIdForFacts = storedSession?.comicId ?? snapshot?.comicId ?? "";
+  const { data: comicForFacts } = usePublicComic(comicIdForFacts);
+
+  const preloaderFacts = useMemo(
+    () =>
+      (comicForFacts?.facts ?? [])
+        .filter((fact) => fact.placement === "PRELOADER")
+        .map((fact) => fact.text),
+    [comicForFacts?.facts]
+  );
 
   // The preloader is a deliberate stall, and it renders ahead of every error
   // branch below — so without this, someone whose session is already dead would
@@ -129,6 +150,7 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
         <ComicPreloader
           childName={childNameFromStorage}
           onComplete={() => setShowPreloader(false)}
+          facts={preloaderFacts}
         />
       );
     }
@@ -215,7 +237,7 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-[#3F3C95] mb-4">Your order is confirmed!</h2>
-          <p className="text-gray-600 mb-8">We've received your order and are preparing it for print. You'll receive an email with shipping updates soon.</p>
+          <p className="text-gray-600 mb-8">We&apos;ve received your order and are preparing it for print. You&apos;ll receive an email with shipping updates soon.</p>
           <button
             onClick={() => router.push("/dashboard/orders")}
             className="px-8 py-3 bg-[#3F3C95] text-white rounded-full font-medium hover:bg-[#3F3C95]/90 transition-colors"
@@ -226,19 +248,27 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
       );
     }
     
-    if (status === "FAILED" && !isExpired) {
-      return (
-        <PreviewErrorState
-          title="Something went wrong"
-          message="There was an issue with your payment. Please contact support."
-          actionLabel="Contact Support"
-          onAction={() => window.location.href = "mailto:support@unilake.com"}
-        />
-      );
-    }
-
+    // A session-level FAILED that is not an expiry means every preview page
+    // exhausted its retries. This used to replace the whole viewer with
+    // "There was an issue with your payment" — wrong on both counts: it is not
+    // a payment problem, and FAILED is in the backend's REGENERATABLE_STATUSES,
+    // so blocking the viewer removed the one route out. Keep the viewer mounted
+    // and say what actually happened.
     return (
       <>
+        {status === "FAILED" && !isExpired && (
+          <div className="w-full max-w-2xl mx-auto mt-4 px-4">
+            <div className="flex items-start gap-2 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+              <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+              <span>
+                Our AI server had trouble creating your pages. Hit{" "}
+                <strong>Regenerate</strong> on any page that didn&apos;t come
+                out — your photo and details are still saved.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Data is still good — we just couldn't reach the server on the last
             refresh. Say so quietly rather than replacing the whole preview. */}
         {error && (

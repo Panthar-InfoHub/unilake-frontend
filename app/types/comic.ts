@@ -55,6 +55,19 @@ export interface Comic {
   pageCount: number;
   freePreviewPages: number;
   coverThumbnailUrls: string[];
+  /**
+   * Optional promo video for the comic-detail carousel. Full R2 public URL, or
+   * null when the comic has none (most of them). Written via the unified comic
+   * PATCH as `videoKey` — the request field and the response field differ on
+   * purpose: you send a key, you get back a URL.
+   */
+  previewVideoUrl: string | null;
+  /**
+   * SEO overrides for search results and link previews. Null on most comics,
+   * in which case the page falls back to `title` / `description`.
+   */
+  metaTitle: string | null;
+  metaDescription: string | null;
   loraFileUrl: string | null;
   loraStrength: number;
   status: ComicStatus;
@@ -122,10 +135,15 @@ export interface PageWithBubblesAndFont extends Page {
 }
 
 
+export type TextAlign = "LEFT" | "CENTER" | "RIGHT";
+export type TextVerticalAlign = "TOP" | "MIDDLE" | "BOTTOM";
+export type TextCase = "AS_TYPED" | "UPPERCASE" | "LOWERCASE";
+
 // NOTE: There is intentionally no `rotation` field. The backend `Bubble` model
-// stores 9 fields only (x, y, width, height, dialogue, fontId, fontSize,
-// fontColor, sortOrder) and validateBody strips anything else silently — a
-// rotation sent here would save with a 200 and vanish on reload.
+// stores 12 fields only (x, y, width, height, dialogue, fontId, fontSize,
+// fontColor, textAlign, textVerticalAlign, textCase, sortOrder) and
+// validateBody strips anything else silently — a rotation sent here would save
+// with a 200 and vanish on reload.
 // Removed 2026-08-01. To add it later: rotation column + migration, both Zod
 // schemas, rotation support in the Sharp text stamper, and a decision on whether
 // the x+width<=1 bound applies to the rotated bounding box or the unrotated one.
@@ -143,6 +161,12 @@ export interface Bubble {
   fontSize: number;
   /** Canonical "#rrggbb". Never null — the column defaults to #000000. */
   fontColor: string;
+  /** Horizontal placement of each line inside the bubble box. */
+  textAlign: TextAlign;
+  /** Placement of the whole block of lines inside the bubble box. */
+  textVerticalAlign: TextVerticalAlign;
+  /** Casing applied to the dialogue at render time, child's name included. */
+  textCase: TextCase;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -152,11 +176,49 @@ export interface BubbleWithFont extends Bubble {
   font: { id: string; name: string } | null;
 }
 
+/** Pronoun set used to resolve {pronoun_*} tokens in a preview render. */
+export type PreviewPronounKey = "HE" | "SHE" | "THEY";
+
+/**
+ * One bubble as sent to the preview endpoint. Not a stored Bubble: `id` may be
+ * a client-side draft id, and pageId/timestamps are irrelevant to a render.
+ */
+export interface PreviewStampBubble {
+  id?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  dialogue: string;
+  fontId?: string | null;
+  fontSize: number;
+  fontColor: string;
+  textAlign: TextAlign;
+  textVerticalAlign: TextVerticalAlign;
+  textCase: TextCase;
+}
+
+export interface PreviewStampRequest {
+  childName: string;
+  pronounKey: PreviewPronounKey;
+  bubbles: PreviewStampBubble[];
+}
+
+export interface PreviewStampResponse {
+  /** A `data:image/webp;base64,...` URI, renderable straight into an <img>. */
+  image: string;
+  artworkWidth: number;
+  artworkHeight: number;
+}
+
 export interface PricingRule {
   id: string;
   comicId: string;
   countryId: string;
   coverType: CoverType;
+  // Strike-through price. Null on rows created before this field existed —
+  // the column is nullable purely to tolerate those. Every new write supplies it.
+  mrp: string | null;    // comes as STRING from API
   price: string;         // comes as STRING from API
   createdAt: string;
   updatedAt: string;
@@ -189,7 +251,12 @@ export interface CreateComicPayload {
   pageCount: number;
   freePreviewPages: number;
   thumbnailKeys: string[];
-  pricing: { countryId: string; coverType: CoverType; price: number }[];
+  pricing: {
+    countryId: string;
+    coverType: CoverType;
+    mrp: number;
+    price: number;
+  }[];
   description?: string;
   themeId?: string;
   ageGroup?: AgeGroup;
@@ -197,6 +264,7 @@ export interface CreateComicPayload {
 }
 
 export interface PublicPricingRule {
+  mrp: string | null;
   price: string;
   coverType: CoverType;
   country: {
@@ -220,6 +288,31 @@ export interface PublicComicListItem {
   pricingRules: PublicPricingRule[];
 }
 
+/** Which generation screen a fact rotates on. */
+export type ComicFactPlacement = "PRELOADER" | "GENERATING";
+
+/**
+ * A fact as the public site sees it. The API only ever sends active ones, and
+ * only these three fields — there is no isActive here because an inactive fact
+ * never reaches the browser at all.
+ */
+export interface ComicFact {
+  id: string;
+  placement: ComicFactPlacement;
+  text: string;
+}
+
+/** The admin view, which also sees switched-off facts. */
+export interface AdminComicFact {
+  id: string;
+  comicId: string;
+  placement: ComicFactPlacement;
+  text: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PublicComicDetailPage {
   id: string;
   pageNumber: number;
@@ -238,6 +331,20 @@ export interface PublicComicDetail {
   pageCount: number;
   freePreviewPages: number;
   coverThumbnailUrls: string[];
+  /**
+   * Null for most comics. Returned by the detail endpoint only — the catalogue
+   * list (PublicComicListItem) deliberately does not carry it.
+   */
+  previewVideoUrl: string | null;
+  /** Null falls back to `title` / `description` — see generateMetadata. */
+  metaTitle: string | null;
+  metaDescription: string | null;
+  /**
+   * Active facts for both generation screens, in one flat list — the consumer
+   * filters by placement. Empty for most comics; both screens fall back to a
+   * default line when there is nothing here.
+   */
+  facts: ComicFact[];
   theme: { id: string; name: string } | null;
   pricingRules: PublicPricingRule[];
   pages: PublicComicDetailPage[];

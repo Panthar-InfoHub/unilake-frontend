@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Type, FileImage, DollarSign, CheckCircle } from "lucide-react";
+import { LayoutDashboard, Type, FileImage, DollarSign, CheckCircle, Lightbulb } from "lucide-react";
 
-export type TabValue = "overview" | "fonts" | "pages" | "pricing" | "review";
+export type TabValue = "overview" | "fonts" | "pages" | "pricing" | "facts" | "review";
 
 interface ComicTabBarProps {
   activeTab: TabValue;
@@ -13,6 +13,7 @@ const TABS = [
   { value: "fonts", label: "Fonts", icon: Type },
   { value: "pages", label: "Pages & Bubbles", icon: FileImage },
   { value: "pricing", label: "Pricing", icon: DollarSign },
+  { value: "facts", label: "Facts", icon: Lightbulb },
   { value: "review", label: "Publish Review", icon: CheckCircle },
 ] as const;
 

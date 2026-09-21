@@ -8,7 +8,33 @@ import type {
   LabelResponse,
   RefreshTrackingResponse,
   RetryShiprocketResponse,
+  UserOrderDetail,
+  UserOrderRow,
+  UserOrderTracking,
 } from "@/app/types/order";
+
+// ============================================================
+// CUSTOMER (/api/user/orders)
+// ============================================================
+
+export async function fetchUserOrders(): Promise<UserOrderRow[]> {
+  const { data } = await api.get<UserOrderRow[]>("/api/user/orders");
+  return data;
+}
+
+export async function fetchUserOrder(orderId: string): Promise<UserOrderDetail> {
+  const { data } = await api.get<UserOrderDetail>(`/api/user/orders/${orderId}`);
+  return data;
+}
+
+export async function fetchOrderTracking(orderId: string): Promise<UserOrderTracking> {
+  const { data } = await api.get<UserOrderTracking>(`/api/user/orders/${orderId}/tracking`);
+  return data;
+}
+
+// ============================================================
+// ADMIN (/api/admin/orders)
+// ============================================================
 
 export async function fetchAdminOrders(
   filters?: AdminOrdersFilters

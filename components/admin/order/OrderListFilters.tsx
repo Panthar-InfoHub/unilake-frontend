@@ -20,6 +20,16 @@ interface OrderListFiltersProps {
     sortBy: OrderSortBy;
     sortOrder: SortOrder;
   }) => void;
+  /**
+   * Seeds the status dropdown on first render, so a link like
+   * `/admin/orders?status=SHIPROCKET_FAILED` arrives with the filter already
+   * applied AND visibly selected.
+   *
+   * Read once as initial state, never synced afterwards: once the admin is on
+   * the page the dropdown owns the value, and re-syncing from the URL would
+   * fight them every time they changed it.
+   */
+  initialStatus?: OrderStatus;
 }
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -34,9 +44,12 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
-export function OrderListFilters({ onFiltersChange }: OrderListFiltersProps) {
+export function OrderListFilters({
+  onFiltersChange,
+  initialStatus,
+}: OrderListFiltersProps) {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>("ALL");
+  const [status, setStatus] = useState<string>(initialStatus ?? "ALL");
   const [sortBy, setSortBy] = useState<OrderSortBy>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 

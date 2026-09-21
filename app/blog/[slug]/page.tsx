@@ -2,11 +2,11 @@ import { fetchPublicBlogBySlug } from "@/app/actions/public";
 import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
 import BlogBodyRenderer from "@/components/blog/BlogBodyRenderer";
+import { loadBlog } from "@/components/blog/loadBlog";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import Link from "next/link";
 import Image from "next/image";
 import { MoveLeft } from "lucide-react";
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
   absoluteUrl,
@@ -84,17 +84,10 @@ export async function generateMetadata({
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   // Unwrap params
   const { slug } = await params;
-  
-  let blog;
-  try {
-    blog = await fetchPublicBlogBySlug(slug);
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
-      notFound();
-    }
-    // For other errors, we can just throw to let the nearest error.tsx handle it, or show a fallback.
-    throw error;
-  }
+
+  // 404 handling lives in loadBlog — see the note there on why the previous
+  // `error?.response?.status === 404` check could never match.
+  const blog = await loadBlog(slug);
 
   const dateStr = new Date(blog.createdAt).toLocaleDateString("en-US", {
     month: "long",

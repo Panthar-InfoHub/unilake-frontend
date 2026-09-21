@@ -9,6 +9,7 @@ import { clearSession, getSession as getStoredSession, setShowPreloader } from "
 import { getSession as fetchSession } from "@/app/actions/session";
 import { useRouter } from "next/navigation";
 import { Play } from "lucide-react";
+import { OrdersPausedBanner } from "@/components/shared/OrdersPausedBanner";
 
 interface ComicDetailContentProps {
   comic: PublicComicDetail;
@@ -58,6 +59,10 @@ export default function ComicDetailContent({ comic }: ComicDetailContentProps) {
     <div className="bg-[#F8E7D2] min-h-screen py-10 lg:py-16 flex flex-col justify-center">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full">
         <>
+          {/* Renders nothing while the store is open. Sits above the resume
+              banner so it is the first thing read when orders are paused. */}
+          <OrdersPausedBanner className="mb-8" />
+
           {/* Resume Banner */}
             {resumeSessionId && (
               <div className="mb-8 w-full bg-[#3F3C95] text-white p-6 rounded-2xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#2B2882]">
@@ -80,7 +85,10 @@ export default function ComicDetailContent({ comic }: ComicDetailContentProps) {
             <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
               {/* Left Column: Carousel + Info Cards */}
               <div className="w-full lg:w-[45%] flex flex-col items-center lg:items-start lg:sticky lg:top-24">
-                <ComicThumbnailCarousel images={comic.coverThumbnailUrls} />
+                <ComicThumbnailCarousel
+                  images={comic.coverThumbnailUrls}
+                  videoUrl={comic.previewVideoUrl}
+                />
                 <ComicInfoCards />
               </div>
 

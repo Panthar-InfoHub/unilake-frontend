@@ -5,6 +5,22 @@ import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
 import { HowItWorksVideo } from "@/components/home/HowItWorksVideo";
 import { fetchPublicHowItWorks } from "@/app/actions/public";
+import type { Metadata } from "next";
+import { absoluteUrl } from "@/lib/seo";
+
+const HOW_IT_WORKS_DESCRIPTION =
+  "See how it works — upload a photo, pick a story, and we turn your child into the hero of their own printed comic book.";
+
+export const metadata: Metadata = {
+  title: "How It Works",
+  description: HOW_IT_WORKS_DESCRIPTION,
+  alternates: { canonical: absoluteUrl("/how_it_work") },
+  openGraph: {
+    title: "How It Works",
+    description: HOW_IT_WORKS_DESCRIPTION,
+    url: absoluteUrl("/how_it_work"),
+  },
+};
 
 export default async function HowItWorksPage() {
   const howItWorks = await fetchPublicHowItWorks();

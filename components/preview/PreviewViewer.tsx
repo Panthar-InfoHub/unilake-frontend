@@ -8,10 +8,12 @@ import {
   SessionSnapshot,
 } from "@/app/types/session";
 import { usePublicComic } from "@/hooks/usePublicComics";
+import { useRotatingFact } from "@/hooks/useRotatingFact";
 import PreviewProgress from "./PreviewProgress";
 import PreviewPageCard from "./PreviewPageCard";
 import PricingSection from "./PricingSection";
 import SendToPrintSection from "./SendToPrintSection";
+import UploadAnotherPhotoBanner from "./UploadAnotherPhotoBanner";
 import Image from "next/image";
 import { ChevronDown, ImageIcon, ArrowLeftRight } from "lucide-react";
 import { chauPhilomeneOne } from "@/app/fonts";
@@ -48,6 +50,18 @@ export default function PreviewViewer({
 }: PreviewViewerProps) {
   const { data: comicDetail } = usePublicComic(snapshot.comicId);
 
+  // Rotated ONCE here and handed to every card, so all the "GENERATING…" boxes
+  // on the page show the same fact and change together. Running the hook inside
+  // each card would leave them drifting out of step within seconds.
+  const generatingFacts = useMemo(
+    () =>
+      (comicDetail?.facts ?? [])
+        .filter((fact) => fact.placement === "GENERATING")
+        .map((fact) => fact.text),
+    [comicDetail?.facts]
+  );
+  const generatingFact = useRotatingFact(generatingFacts);
+
   const isGeneratingSession = status === "GENERATING_PREVIEW";
   const isGeneratingPaid = status === "GENERATING_PAID";
 
@@ -68,6 +82,25 @@ export default function PreviewViewer({
   // pending variants are navigable.
   const displayIndex = (page: SessionPage): number | null =>
     overrides.get(page.pageNumber) ?? newestReadyIndex(page);
+
+  // Pages that have given up: no finished variant, and at least one variant that
+  // exhausted its retries. A page merely still generating has neither, so it is
+  // correctly not counted here.
+  //
+  // Scoped to preview pages because this gates the pre-payment checkout — locked
+  // pages have not been generated yet and must not block the sale.
+  const failedPreviewPages = useMemo(
+    () =>
+      snapshot.pages
+        .filter(
+          (page) =>
+            page.isPreviewPage &&
+            newestReadyIndex(page) === null &&
+            page.variants.some((v) => v.status === "FAILED")
+        )
+        .map((page) => page.pageNumber),
+    [snapshot.pages]
+  );
 
   const { selections, blockedPages, hasInFlight } = useMemo(() => {
     const sel: SendToPrintSelection[] = [];
@@ -149,6 +182,59 @@ export default function PreviewViewer({
           </div>
         )} */}
 
+        {/* Sits above the first page and stays visible through every unpaid
+            state, including while generation is running — in that case the
+            button explains itself with a toast rather than navigating.
+            Hidden once paid: starting a new session then would abandon the
+            order the customer has already bought. */}
+        {/* Desktop: a card beside the first comic page that follows the scroll.
+
+            It lives HERE, after the heading, on purpose — a sticky element
+            starts at its normal flow position, so sitting at this point in the
+            column is what makes it begin level with the first page rather than
+            up beside the title.
+
+            The zero-height wrapper keeps it out of the layout: it takes no
+            vertical space, so the centred page column is unmoved and the card
+            floats over the background beside it. `-mb-4` cancels the flex gap
+            the extra child would otherwise introduce.
+
+            `left-[calc(50%-50vw+1.5rem)]` reaches the viewport's left edge from
+            inside this centred column: 50% is half the column, 50vw is half the
+            viewport, and the difference is exactly the gutter beside it. Plain
+            `left-6` would put the card on top of the comic page, since offsets
+            here resolve against the column, not the page.
+
+            pointer-events are disabled on the full-width strip and re-enabled
+            on the card itself, so the invisible wrapper never eats a click
+            meant for a comic page underneath it.
+
+            No JS is needed to stop at the footer: a sticky element is bound by
+            its parent's box, and this column ends before the Footer. */}
+        {!isPaid && (
+          <div className="hidden lg:block sticky top-24 z-20 h-0 w-full -mb-4 pointer-events-none">
+            <div className="absolute left-[calc(50%-50vw+1.5rem)] xl:left-[calc(50%-50vw+2.5rem)] top-0 pointer-events-auto">
+              <UploadAnotherPhotoBanner
+                sessionId={snapshot.id}
+                status={snapshot.status}
+                variant="floating"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Mobile fallback. There is no room for a side rail at phone widths,
+            so below lg it is a normal block above the first page. */}
+        {!isPaid && (
+          <div className="lg:hidden w-full">
+            <UploadAnotherPhotoBanner
+              sessionId={snapshot.id}
+              status={snapshot.status}
+              variant="inline"
+            />
+          </div>
+        )}
+
         {/* All Pages */}
         {snapshot.pages.map((page) => {
           const comicPageMetadata = comicDetail?.pages.find(p => p.pageNumber === page.pageNumber);
@@ -162,6 +248,7 @@ export default function PreviewViewer({
                 isPaid={isPaid}
                 selectedVariantIndex={displayIndex(page)}
                 onVariantChange={handleVariantChange}
+                generatingFact={generatingFact}
               />
               <ChevronDown size={32} className="text-gray-300 mt-4" />
             </div>
@@ -170,7 +257,12 @@ export default function PreviewViewer({
       </div>
 
       {!isPaid ? (
-        <PricingSection comicId={snapshot.comicId} sessionId={snapshot.id} snapshot={snapshot} />
+        <PricingSection
+          comicId={snapshot.comicId}
+          sessionId={snapshot.id}
+          snapshot={snapshot}
+          failedPageNumbers={failedPreviewPages}
+        />
       ) : status === "PAID_PAGES_READY" ? (
         <SendToPrintSection
           sessionId={snapshot.id}

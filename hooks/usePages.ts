@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchPages, createPage, updatePage, deletePage, reorderPages } from "@/app/actions/page";
-import type { Page } from "@/app/types/comic";
+import { fetchPages, createPage, updatePage, deletePage, reorderPages, previewPageStamp } from "@/app/actions/page";
+import type { Page, PreviewStampRequest } from "@/app/types/comic";
 
 export function usePages(comicId: string) {
   return useQuery({
@@ -57,5 +57,19 @@ export function useReorderPages() {
       queryClient.invalidateQueries({ queryKey: ["comic", variables.comicId] });
       queryClient.invalidateQueries({ queryKey: ["comics"] });
     },
+  });
+}
+
+/**
+ * Renders a bubble-mapping preview.
+ *
+ * A mutation rather than a query on purpose: it POSTs the current bubbles, and
+ * it should only fire when the admin asks for it, never on mount or refocus.
+ * Nothing is invalidated afterwards because the endpoint changes no state.
+ */
+export function usePreviewPageStamp() {
+  return useMutation({
+    mutationFn: ({ pageId, data }: { pageId: string; data: PreviewStampRequest }) =>
+      previewPageStamp(pageId, data),
   });
 }

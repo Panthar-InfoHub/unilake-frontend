@@ -13,7 +13,7 @@ export function usePricing(comicId: string) {
 export function useUpdatePricing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ comicId, pricing }: { comicId: string; pricing: { countryId: string; coverType: CoverType; price: number }[] }) =>
+    mutationFn: ({ comicId, pricing }: { comicId: string; pricing: { countryId: string; coverType: CoverType; mrp: number; price: number }[] }) =>
       updatePricing(comicId, pricing),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["comic", variables.comicId, "pricing"] });

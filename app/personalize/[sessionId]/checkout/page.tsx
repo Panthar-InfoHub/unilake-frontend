@@ -1,12 +1,17 @@
 import { Metadata } from "next";
-import { getSession } from "@/app/actions/session";
+import { loadSessionWithRetry } from "@/app/lib/load-session";
 import CheckoutPage from "@/components/checkout/CheckoutPage";
 import { redirect } from "next/navigation";
 import { isValidSessionId } from "@/app/lib/session-storage";
+import SessionLoadError from "@/components/personalize/SessionLoadError";
 
 export const metadata: Metadata = {
-  title: "Checkout | UniLake",
+  title: "Checkout",
   description: "Complete your order to unlock the full story",
+  // A customer's in-progress order is private and session-specific — it must
+  // never end up in a search index. robots.ts also disallows /personalize; this
+  // is the belt-and-braces page-level version.
+  robots: { index: false, follow: false },
 };
 
 export default async function CheckoutRoute({
@@ -23,16 +28,23 @@ export default async function CheckoutRoute({
 
   // `redirect()` works by THROWING a NEXT_REDIRECT error, so it must never sit
   // inside a try/catch that swallows errors — the catch would eat the redirect
-  // and send everyone to the fallback instead. Scope the error handling tightly
-  // to the fetch via .catch(), and keep every redirect() outside it.
-  const snapshot = await getSession(sessionId).catch((error) => {
-    console.error("Failed to load session for checkout:", error);
-    return null;
-  });
+  // and send everyone to the fallback instead. The fetch's own error handling
+  // lives inside the helper, and every redirect() stays outside it.
+  //
+  // Retries matter most on this page of all of them: a one-second backend blip
+  // used to throw a customer out of the payment flow onto the homepage.
+  const result = await loadSessionWithRetry(sessionId, "checkout");
 
-  if (!snapshot) {
+  // No such session — a real answer, not a blip.
+  if (!result.ok && result.reason === "not-found") {
     redirect("/");
   }
+
+  if (!result.ok) {
+    return <SessionLoadError message={result.message} />;
+  }
+
+  const snapshot = result.snapshot;
 
   // Already past checkout — send them to the preview page to see the full book.
   // AWAITING_PAYMENT is deliberately allowed through: that is the resume case,

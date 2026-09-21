@@ -11,6 +11,11 @@ import { requestBlogUploadUrl } from "@/app/actions/blog";
 import { uploadToR2 } from "@/app/lib/r2-upload";
 import { BlogEditor } from "@/components/admin/blog/BlogEditor";
 import { BlogTagInput } from "@/components/admin/blog/BlogTagInput";
+import {
+  CharCounter,
+  SEO_TITLE_LIMIT,
+  SEO_DESCRIPTION_LIMIT,
+} from "@/components/admin/shared/CharCounter";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB for cover image
 
@@ -21,6 +26,8 @@ export default function CreateBlogPage() {
   // Form State
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   
@@ -94,6 +101,10 @@ export default function CreateBlogPage() {
         excerpt: excerpt.trim() || undefined,
         coverImageKey: coverKey,
         tags: tags.length > 0 ? tags : undefined,
+        // undefined (not null) on create — the column simply stays unset, and
+        // the post falls back to its own title/excerpt in search results.
+        metaTitle: metaTitle.trim() || undefined,
+        metaDescription: metaDescription.trim() || undefined,
       });
 
       toast.success("Blog post created successfully! (Saved as draft)");
@@ -159,6 +170,49 @@ export default function CreateBlogPage() {
               {excerpt.length}/300
             </div>
           </div>
+
+          {/* SEO — both optional, blank falls back to title/excerpt */}
+          <div className="pt-6 border-t border-gray-100 space-y-6">
+            <div>
+              <h3 className="text-sm font-bold text-gray-700">Search &amp; Sharing (SEO)</h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">
+                What Google shows and what appears when this post is shared. Both
+                optional — blank uses the title and excerpt above.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">SEO Title</label>
+              <input
+                type="text"
+                value={metaTitle}
+                onChange={(e) => setMetaTitle(e.target.value)}
+                disabled={isSaving}
+                placeholder={title || "Same as the post title"}
+                maxLength={120}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#914A8C] focus:ring-2 focus:ring-[#914A8C]/20 focus:bg-white transition-all disabled:opacity-50"
+              />
+              <div className="flex justify-end">
+                <CharCounter value={metaTitle} limit={SEO_TITLE_LIMIT} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">SEO Description</label>
+              <textarea
+                value={metaDescription}
+                onChange={(e) => setMetaDescription(e.target.value)}
+                disabled={isSaving}
+                placeholder={excerpt || "Same as the excerpt"}
+                maxLength={320}
+                rows={3}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#914A8C] focus:ring-2 focus:ring-[#914A8C]/20 focus:bg-white transition-all resize-none disabled:opacity-50"
+              />
+              <div className="flex justify-end">
+                <CharCounter value={metaDescription} limit={SEO_DESCRIPTION_LIMIT} />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Cover Image & Tags */}
@@ -171,7 +225,9 @@ export default function CreateBlogPage() {
             
             {coverUrl ? (
               <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 aspect-video w-full group">
-                <Image src={coverUrl} alt="Cover Preview" fill className="object-cover" />
+                {/* contain, not cover: a preview that crops would misrepresent
+                    what the storefront actually publishes. */}
+                <Image src={coverUrl} alt="Cover Preview" fill className="object-contain" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                   <button
                     onClick={() => !isSaving && fileInputRef.current?.click()}
@@ -235,7 +291,12 @@ export default function CreateBlogPage() {
         {/* Editor */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 space-y-4">
           <label className="text-sm font-bold text-gray-700 block">Post Content <span className="text-red-500">*</span></label>
-          <BlogEditor content={body} onChange={setBody} disabled={isSaving} />
+          <BlogEditor
+            content={body}
+            onChange={setBody}
+            disabled={isSaving}
+            allowImages={false}
+          />
         </div>
       </div>
 

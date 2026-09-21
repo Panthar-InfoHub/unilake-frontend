@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, Save, Loader2, RotateCcw, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface BubbleMapperHeaderProps {
   comicId: string;
@@ -10,6 +11,7 @@ interface BubbleMapperHeaderProps {
   isSaving: boolean;
   onSave: () => void;
   onReset: () => void;
+  onPreview: () => void;
 }
 
 export function BubbleMapperHeader({
@@ -19,9 +21,15 @@ export function BubbleMapperHeader({
   hasBlockingIssue,
   isSaving,
   onSave,
-  onReset
+  onReset,
+  onPreview
 }: BubbleMapperHeaderProps) {
   const router = useRouter();
+
+  // Appearance only. The page owns the actual decision and the message, since
+  // that is where both flags are derived and where every other toast on this
+  // screen is raised.
+  const isPreviewBlocked = hasUnsavedChanges || hasBlockingIssue;
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/70 backdrop-blur-sm p-4 rounded-3xl border border-[#914A8C]/15 shadow-sm">
@@ -48,6 +56,31 @@ export function BubbleMapperHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Deliberately NOT `disabled` when preview is blocked: a disabled
+            button swallows the click, and the page needs that click to raise a
+            toast explaining why nothing happened. It is muted instead, so it
+            still reads as unavailable, and the page decides what to do with the
+            click. `isSaving` IS a real disable — that state is transient and
+            the Save spinner already explains itself. */}
+        <Button
+          variant="outline"
+          onClick={onPreview}
+          disabled={isSaving}
+          title={
+            hasBlockingIssue
+              ? "Some bubbles are missing dialogue or a font"
+              : hasUnsavedChanges
+                ? "Save your changes before previewing"
+                : "See the real text render with a name of your choice"
+          }
+          className={cn(
+            "rounded-xl border-neutral-300 font-semibold cursor-pointer",
+            isPreviewBlocked && "opacity-50 hover:opacity-60"
+          )}
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          Preview
+        </Button>
         <Button
           variant="outline"
           onClick={onReset}

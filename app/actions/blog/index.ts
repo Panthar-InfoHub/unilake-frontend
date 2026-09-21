@@ -29,6 +29,8 @@ export async function createBlog(payload: {
   excerpt?: string;
   coverImageKey?: string;
   tags?: string[];
+  metaTitle?: string | null;
+  metaDescription?: string | null;
 }): Promise<Blog> {
   const { data } = await api.post<Blog>("/api/admin/blogs", payload);
   return data;
@@ -39,9 +41,13 @@ export async function updateBlog(
   payload: Partial<{
     title: string;
     body: string;
-    excerpt: string;
+    // Nullable: null is how the API clears the column. It was typed as a plain
+    // string, which quietly endorsed sending "" — and "" fails validation.
+    excerpt: string | null;
     coverImageKey: string | null;
     tags: string[];
+    metaTitle: string | null;
+    metaDescription: string | null;
   }>
 ): Promise<Blog> {
   const { data } = await api.patch<Blog>(`/api/admin/blogs/${id}`, payload);

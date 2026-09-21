@@ -18,6 +18,11 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Every FormItem holding a Select carries min-w-0, and every SelectTrigger
+          carries w-full. Both are needed: SelectTrigger's base class is w-fit, so
+          it sizes to its longest value, and a grid item defaults to
+          min-width:auto, so the column will not shrink to contain it. Without
+          the pair, a long theme name spills over the field beside it. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={form.control}
@@ -37,11 +42,18 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
           control={form.control}
           name="genderTag"
           render={({ field }: { field: any }) => (
-            <FormItem>
+            <FormItem className="min-w-0">
               <FormLabel className="text-neutral-900 font-semibold">Gender *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              {/* `?? ""` keeps this controlled from the very first render. This
+                  field has no entry in the form's defaultValues, so field.value
+                  starts as undefined — and Base UI decides controlled vs
+                  uncontrolled once, on mount, by testing for exactly that. Left
+                  bare, picking a value flips it to controlled and logs a switch
+                  error. An empty string reads as "nothing selected", so the
+                  placeholder still shows and Zod still fails it on submit. */}
+              <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-neutral-200">
+                  <SelectTrigger className="w-full h-11 rounded-xl bg-white border-neutral-200">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                 </FormControl>
@@ -60,11 +72,13 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
           control={form.control}
           name="ageGroup"
           render={({ field }: { field: any }) => (
-            <FormItem>
+            <FormItem className="min-w-0">
               <FormLabel className="text-neutral-900 font-semibold">Age Group *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value || undefined}>
+              {/* Was `|| undefined`, which kept it uncontrolled on mount and so
+                  hit the same switch error as Gender — see the note above. */}
+              <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-neutral-200">
+                  <SelectTrigger className="w-full h-11 rounded-xl bg-white border-neutral-200">
                     <SelectValue placeholder="Select age group" />
                   </SelectTrigger>
                 </FormControl>
@@ -114,14 +128,14 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
           control={form.control}
           name="themeId"
           render={({ field }: { field: any }) => (
-            <FormItem className="md:col-span-2">
+            <FormItem className="md:col-span-2 min-w-0">
               <FormLabel className="text-neutral-900 font-semibold">Theme *</FormLabel>
               {isLoadingThemes ? (
                 <Skeleton className="h-11 w-full rounded-xl bg-neutral-100" />
               ) : (
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
                   <FormControl>
-                    <SelectTrigger className="h-11 rounded-xl bg-white border-neutral-200">
+                    <SelectTrigger className="w-full h-11 rounded-xl bg-white border-neutral-200">
                       <SelectValue placeholder="Select a theme">
                         {field.value ? themes?.find((t) => t.id === field.value)?.name : undefined}
                       </SelectValue>

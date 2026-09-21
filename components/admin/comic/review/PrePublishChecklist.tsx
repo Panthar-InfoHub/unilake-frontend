@@ -21,11 +21,22 @@ export function PrePublishChecklist({ comic }: PrePublishChecklistProps) {
   //
   // Grouped by country — a plain count of pricing rules can be satisfied by
   // four rules that all belong to one country while another has no price.
+  //
+  // A rule also has to carry an MRP. Rows created before that column existed
+  // have none, and the storefront silently drops the strike-through for them —
+  // so publishing one would ship a comic that quietly looks undiscounted.
+  const isRuleComplete = (r: { mrp: string | null }) =>
+    r.mrp !== null && parseFloat(r.mrp) > 0;
+
   const countriesMissingPricing = (countries ?? []).filter((c) => {
     const rules = comic.pricingRules.filter((r) => r.countryId === c.id);
     return (
-      !rules.some((r) => r.coverType === CoverType.HARDCOVER) ||
-      !rules.some((r) => r.coverType === CoverType.SOFTCOVER)
+      !rules.some(
+        (r) => r.coverType === CoverType.HARDCOVER && isRuleComplete(r)
+      ) ||
+      !rules.some(
+        (r) => r.coverType === CoverType.SOFTCOVER && isRuleComplete(r)
+      )
     );
   });
 
@@ -62,10 +73,10 @@ export function PrePublishChecklist({ comic }: PrePublishChecklistProps) {
       id: "pricing",
       title: "Pricing",
       ok: !!countries && countriesMissingPricing.length === 0,
-      okText: `All ${countries?.length ?? 0} countries priced for both cover types.`,
+      okText: `All ${countries?.length ?? 0} countries have an MRP and price for both cover types.`,
       failText: !countries
         ? "Loading countries…"
-        : `Missing prices for: ${countriesMissingPricing
+        : `Missing MRP or price for: ${countriesMissingPricing
             .map((c) => c.name)
             .join(", ")}. Fix on the Pricing tab.`,
       blocking: true,

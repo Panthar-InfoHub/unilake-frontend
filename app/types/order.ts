@@ -64,8 +64,21 @@ export interface AdminOrdersResponse {
   pagination: AdminOrdersPagination;
 }
 
+export type PublicOrderStatusCode =
+  | "AWAITING_PAYMENT"
+  | "PREPARING"
+  /**
+   * Paid, every page generated, waiting on the customer to pick variants and
+   * send to print. Nothing is happening server-side — the UI must prompt them.
+   */
+  | "AWAITING_SELECTION"
+  | "PROCESSING"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "CANCELLED";
+
 export interface PublicOrderStatus {
-  code: string;
+  code: PublicOrderStatusCode;
   label: string;
 }
 
@@ -157,6 +170,73 @@ export interface WebhookEvent {
   eventType: string;
   processedAt: string;
   payloadJson: unknown;
+}
+
+// ============================================================
+// CUSTOMER-FACING ORDERS (/api/user/orders)
+// ============================================================
+//
+// The API also sends `trackingStatus` (raw Shiprocket text) on the list and
+// detail responses, and `awbNumber` on the detail response. The backend
+// designates both admin-only — getTrackingForUser says so explicitly and omits
+// them, while these two endpoints send them anyway. They are deliberately
+// absent from the types below so rendering one is a compile error rather than
+// a judgement call.
+
+export interface OrderComicSummary {
+  id: string;
+  title: string;
+  coverThumbnailUrls: string[];
+}
+
+export interface UserOrderRow {
+  id: string;
+  /**
+   * Links back into the personalize flow: resuming payment on an unpaid order,
+   * and reaching the preview to finish an order awaiting selection.
+   */
+  sessionId: string;
+  comic: OrderComicSummary;
+  coverType: "HARDCOVER" | "SOFTCOVER";
+  amount: string;
+  currency: string;
+  publicStatus: PublicOrderStatus;
+  createdAt: string;
+}
+
+export interface UserOrderDetail {
+  id: string;
+  sessionId: string;
+  comic: OrderComicSummary;
+  coverType: "HARDCOVER" | "SOFTCOVER";
+  amount: string;
+  currency: string;
+  publicStatus: PublicOrderStatus;
+  shipping: {
+    name: string | null;
+    line1: string | null;
+    line2: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+    country: string | null;
+    phone: string | null;
+  };
+  pdfDownloadUrl: string | null;
+  pdfDownloadExpiry: string | null;
+  courierName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserOrderTracking {
+  status: PublicOrderStatus;
+  courierName: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  pickupScheduledDate: string | null;
+  /** Internal bookkeeping — fetched but never shown to the customer. */
+  trackingUpdatedAt: string | null;
 }
 
 export interface ConfirmDimensionsInput {

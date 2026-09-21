@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { useRotatingFact } from "@/hooks/useRotatingFact";
 
 /**
  * How long the preloader holds the user before handing over to the preview.
@@ -18,9 +19,18 @@ const PRELOADER_DURATION_MS = 55_000;
 interface ComicPreloaderProps {
   childName: string;
   onComplete: () => void;
+  /**
+   * Rotating lines for this comic. Optional and often empty — the hook falls
+   * back to a default line, so the caller never has to special-case it.
+   */
+  facts?: string[];
 }
 
-export default function ComicPreloader({ childName, onComplete }: ComicPreloaderProps) {
+export default function ComicPreloader({ childName, onComplete, facts = [] }: ComicPreloaderProps) {
+  // One fact every 3 seconds, shuffled per visit. See the hook for why the
+  // shuffle deliberately happens after mount rather than during render.
+  const currentFact = useRotatingFact(facts);
+
   // The parent passes `onComplete` as an inline arrow, so it is a new function
   // on every one of its renders — and the preview page re-renders constantly
   // (TanStack polls every 10s while the socket is down, plus every WS event).
@@ -49,8 +59,14 @@ export default function ComicPreloader({ childName, onComplete }: ComicPreloader
        <h1 className={`${chauPhilomeneOne.className} text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#1a1a1a] text-center mb-3`}>
           Generating {childName}&apos;s Book
        </h1>
-       <p className={`${hankenGrotesk.className} text-sm md:text-base text-gray-700 text-center mb-6`}>
-          UniLake stands for an Univeral Lake of Ideas
+       {/* Fixed height + a key on the text so a longer fact replacing a shorter
+           one fades in place instead of shunting the progress bar down the page
+           every three seconds. */}
+       <p
+          key={currentFact}
+          className={`${hankenGrotesk.className} text-sm md:text-base text-gray-700 text-center mb-6 min-h-12 flex items-center justify-center max-w-xl px-4 animate-in fade-in duration-500`}
+       >
+          {currentFact}
        </p>
        
        <div className="w-full max-w-lg bg-gray-200 rounded-full h-2 mb-6 overflow-hidden">

@@ -1,5 +1,11 @@
 import api from "@/app/lib/axios";
-import type { Page, PageWithBubblesAndFont, UploadUrlResponse } from "@/app/types/comic";
+import type {
+  Page,
+  PageWithBubblesAndFont,
+  PreviewStampRequest,
+  PreviewStampResponse,
+  UploadUrlResponse,
+} from "@/app/types/comic";
 
 export async function fetchPages(comicId: string): Promise<PageWithBubblesAndFont[]> {
   const { data } = await api.get<PageWithBubblesAndFont[]>(`/api/admin/comics/${comicId}/pages`);
@@ -23,6 +29,24 @@ export async function updatePage(pageId: string, payload: Partial<Page>): Promis
 
 export async function deletePage(pageId: string): Promise<void> {
   await api.delete(`/api/admin/pages/${pageId}`);
+}
+
+/**
+ * Renders this page's text stamping with the given name and pronoun, using the
+ * bubbles passed in rather than whatever is stored. That is what lets the
+ * mapper preview unsaved edits.
+ *
+ * Text only — no face swap. Nothing is saved; the response is a data URI.
+ */
+export async function previewPageStamp(
+  pageId: string,
+  payload: PreviewStampRequest
+): Promise<PreviewStampResponse> {
+  const { data } = await api.post<PreviewStampResponse>(
+    `/api/admin/pages/${pageId}/preview-stamp`,
+    payload
+  );
+  return data;
 }
 
 /**

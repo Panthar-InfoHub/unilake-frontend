@@ -6,11 +6,14 @@ import { ComicSummaryCard } from "./ComicSummaryCard";
 import { ComicTabBar, TabValue } from "./ComicTabBar";
 import { ComicInfoEditor } from "./ComicInfoEditor";
 import { ThumbnailManager } from "./ThumbnailManager";
+import { VideoManager } from "./VideoManager";
+import { ComicSeoEditor } from "./ComicSeoEditor";
 // Placeholder imports for next phases
 import { PricingEditor } from "@/components/admin/comic/pricing/PricingEditor";
 import { FontList } from "@/components/admin/comic/fonts/FontList";
 import { PageList } from "@/components/admin/comic/pages/PageList";
 import { PrePublishChecklist } from "@/components/admin/comic/review/PrePublishChecklist";
+import { ComicFactsManager } from "@/components/admin/comic/facts/ComicFactsManager";
 
 interface ComicDetailHubProps {
   comic: ComicDetail;
@@ -30,6 +33,8 @@ export function ComicDetailHub({ comic }: ComicDetailHubProps) {
           <div className="space-y-6">
             <ComicInfoEditor comic={comic} />
             <ThumbnailManager comic={comic} />
+            <VideoManager comic={comic} />
+            <ComicSeoEditor comic={comic} />
           </div>
         )}
         
@@ -45,6 +50,10 @@ export function ComicDetailHub({ comic }: ComicDetailHubProps) {
           <PricingEditor comic={comic} />
         )}
         
+        {activeTab === "facts" && (
+          <ComicFactsManager comic={comic} />
+        )}
+
         {activeTab === "review" && (
           <PrePublishChecklist comic={comic} />
         )}

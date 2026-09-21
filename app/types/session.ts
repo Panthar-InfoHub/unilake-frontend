@@ -49,6 +49,15 @@ export interface SessionPage {
   pageNumber: number;
   isPreviewPage: boolean;
   hasFace: boolean;
+  /**
+   * The admin's uploaded page artwork — blank speech bubbles, no face swap.
+   * Rendered blurred behind the paywall on locked pages. Null until the admin
+   * attaches artwork to the page.
+   */
+  artworkUrl: string | null;
+  /** Sharp-probed server-side. Null until artwork is attached. */
+  artworkWidth: number | null;
+  artworkHeight: number | null;
   variants: Variant[];
 }
 
@@ -158,6 +167,16 @@ export interface PageErrorEvent {
   variantIndex: number;
   // Raw backend text, truncated to 500 chars. Log it, never show it to a parent (§8.1).
   errorMessage: string;
+  /**
+   * False means the backend still has retries queued for this page — it is NOT
+   * terminal, and the UI must keep showing "generating". Only `true` means every
+   * attempt is spent.
+   *
+   * Optional because a frontend deployed ahead of the backend that added it will
+   * receive events without the field; `undefined` is falsy, so those are treated
+   * as non-final and the error simply surfaces via the next GET instead.
+   */
+  isFinal?: boolean;
 }
 
 export interface PreviewReadyEvent {

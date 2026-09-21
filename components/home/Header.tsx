@@ -277,7 +277,7 @@ export default function Header({ topOffset = 0, hideBulbForced = false, flatBack
       )}
 
       {/* Hanging Bulb */}
-      <Image
+      {/* <Image
         src="/assets/home_page/bulbImg.png"
         alt="Bulb"
         width={110}
@@ -315,7 +315,7 @@ export default function Header({ topOffset = 0, hideBulbForced = false, flatBack
             : "opacity-100 -translate-y-5"
           }
         `}
-      />
+      /> */}
     </nav>
 
     {/* Mobile Sidebar Overlay */}

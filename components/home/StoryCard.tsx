@@ -7,6 +7,7 @@ import { PublicComicListItem } from "@/app/types/comic";
 import { CoverType } from "@/app/types/comic";
 import { useCountryStore } from "@/stores/useCountryStore";
 import { hankenGrotesk, poppins, protestStrike } from "@/app/fonts";
+import { resolveMrp } from "@/lib/utils";
 
 interface StoryCardProps {
   comic: PublicComicListItem;
@@ -52,8 +53,11 @@ export default function StoryCard({ comic }: StoryCardProps) {
     (p) => p.country.code === selectedCountry?.code && p.coverType === CoverType.SOFTCOVER
   );
   
-  const basePrice = pricing ? parseFloat(pricing.price) : 0;
-  const originalPrice = basePrice * 1.3;
+  // MRP is admin-entered per country and cover type. It used to be faked here
+  // as price * 1.3; it is now a real column on the pricing rule.
+  const { price: basePrice, mrp, showMrp } = pricing
+    ? resolveMrp(pricing)
+    : { price: 0, mrp: NaN, showMrp: false };
   const currencySymbol = getCurrencySymbol();
 
   return (
@@ -156,9 +160,14 @@ export default function StoryCard({ comic }: StoryCardProps) {
             <span className={`${protestStrike.className} text-[18px] sm:text-[20px] md:text-[24px] font-normal text-[#000000] leading-none md:leading-[16px] uppercase`}>
               {currencySymbol} {basePrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
             </span>
-            <span className={`${protestStrike.className} text-[12px] sm:text-[14px] md:text-[18px] text-[#6B7280] line-through uppercase mt-0.5`}>
-              {currencySymbol} {originalPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-            </span>
+            {/* Hidden when the comic has no MRP set, or is sold at full price.
+                The wrapper keeps its fixed height either way, so a card without
+                a discount doesn't shift the grid. */}
+            {showMrp && (
+              <span className={`${protestStrike.className} text-[12px] sm:text-[14px] md:text-[18px] text-[#6B7280] line-through uppercase mt-0.5`}>
+                {currencySymbol} {mrp.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+              </span>
+            )}
           </div>
         ) : (
           <div className="flex flex-col justify-center gap-0 md:gap-0.5 mb-2 md:mb-3 h-[36px] md:h-[50px]">

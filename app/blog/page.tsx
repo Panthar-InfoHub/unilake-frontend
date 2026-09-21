@@ -6,6 +6,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { MoveLeft } from "lucide-react";
 import { BlogListItem } from "@/app/types/blog";
+import type { Metadata } from "next";
+import { absoluteUrl } from "@/lib/seo";
+
+const BLOG_INDEX_DESCRIPTION =
+  "Stories, tips and ideas about reading, imagination and personalized books for children.";
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description: BLOG_INDEX_DESCRIPTION,
+  alternates: { canonical: absoluteUrl("/blog") },
+  openGraph: {
+    title: "Blog",
+    description: BLOG_INDEX_DESCRIPTION,
+    url: absoluteUrl("/blog"),
+  },
+};
 
 function BlogCard({ blog }: { blog: BlogListItem }) {
   return (
@@ -55,13 +71,17 @@ function BlogCard({ blog }: { blog: BlogListItem }) {
         )}
 
         {/* Cover image — inset in the lower portion */}
-        <div className="mt-auto relative w-full aspect-[16/10] rounded-xl overflow-hidden">
+        {/* Fixed box so every card in the grid stays the same height, but
+            object-contain inside it — the admin can upload any shape and none
+            of it is ever cut off. Mismatched ratios letterbox against the
+            placeholder colour, which reads as deliberate. */}
+        <div className="mt-auto relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#F3E8FF]">
           {blog.coverImageUrl ? (
             <Image
               src={blog.coverImageUrl}
               alt={blog.title}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-contain transition-transform duration-500 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (

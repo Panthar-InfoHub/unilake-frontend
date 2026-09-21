@@ -18,9 +18,22 @@ interface BlogEditorProps {
   content: string;
   onChange: (content: string) => void;
   disabled?: boolean;
+  /**
+   * Whether the toolbar offers image insertion.
+   *
+   * Every current caller passes false. Legal pages (privacy, terms, refund) are
+   * prose only and have no site-page upload endpoint to call; blog posts were
+   * switched off deliberately — a post's imagery is its cover, and in-body
+   * images were dropped rather than maintained.
+   *
+   * Note the ImageExtension stays registered either way, so existing content
+   * containing images still renders correctly in a read-only editor.
+   */
+  allowImages?: boolean;
+  placeholder?: string;
 }
 
-const MenuBar = ({ editor, disabled, onImageClick }: { editor: any, disabled: boolean, onImageClick: () => void }) => {
+const MenuBar = ({ editor, disabled, onImageClick, allowImages }: { editor: any, disabled: boolean, onImageClick: () => void, allowImages: boolean }) => {
   if (!editor) return null;
 
   const toggleLink = useCallback(() => {
@@ -82,9 +95,11 @@ const MenuBar = ({ editor, disabled, onImageClick }: { editor: any, disabled: bo
       <button onClick={toggleLink} disabled={disabled} className={btnClass(editor.isActive('link'))} type="button" title="Link">
         <LinkIcon className="w-4 h-4" />
       </button>
-      <button onClick={onImageClick} disabled={disabled} className={btnClass(false)} type="button" title="Insert Image">
-        <ImageIcon className="w-4 h-4" />
-      </button>
+      {allowImages && (
+        <button onClick={onImageClick} disabled={disabled} className={btnClass(false)} type="button" title="Insert Image">
+          <ImageIcon className="w-4 h-4" />
+        </button>
+      )}
 
       <div className="w-px h-6 bg-gray-300 mx-1" />
 
@@ -98,9 +113,15 @@ const MenuBar = ({ editor, disabled, onImageClick }: { editor: any, disabled: bo
   );
 };
 
-export function BlogEditor({ content, onChange, disabled = false }: BlogEditorProps) {
+export function BlogEditor({
+  content,
+  onChange,
+  disabled = false,
+  allowImages = true,
+  placeholder = 'Write your blog post here...',
+}: BlogEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -120,7 +141,7 @@ export function BlogEditor({ content, onChange, disabled = false }: BlogEditorPr
         },
       }),
       Placeholder.configure({
-        placeholder: 'Write your blog post here...',
+        placeholder,
         emptyEditorClass: 'is-editor-empty',
       }),
     ],
@@ -148,8 +169,12 @@ export function BlogEditor({ content, onChange, disabled = false }: BlogEditorPr
     const toastId = toast.loading("Uploading image...");
 
     try {
-      // Get presigned URL
-      const { uploadUrl, key } = await requestBlogUploadUrl(file.name, file.type);
+      // Get presigned URL. publicUrl is the resolved absolute R2 URL for this
+      // key — it goes straight into the stored HTML, so it must be absolute.
+      const { uploadUrl, publicUrl } = await requestBlogUploadUrl(
+        file.name,
+        file.type
+      );
 
       // Upload directly to R2
       await uploadToR2({
@@ -157,9 +182,6 @@ export function BlogEditor({ content, onChange, disabled = false }: BlogEditorPr
         file,
         contentType: file.type,
       });
-
-      // The URL pattern matches our Next.js rewrite rule for R2 assets
-      const publicUrl = `/cdn/${key}`;
 
       // Insert image at cursor
       editor.chain().focus().setImage({ src: publicUrl }).run();
@@ -174,17 +196,20 @@ export function BlogEditor({ content, onChange, disabled = false }: BlogEditorPr
 
   return (
     <div className={`border border-gray-200 rounded-xl bg-white overflow-hidden ${disabled ? 'opacity-70' : 'focus-within:border-[#914A8C] focus-within:ring-2 focus-within:ring-[#914A8C]/20'} transition-all`}>
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleImageUpload}
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        className="hidden"
-      />
-      <MenuBar 
-        editor={editor} 
-        disabled={disabled} 
-        onImageClick={() => !disabled && fileInputRef.current?.click()} 
+      {allowImages && (
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImageUpload}
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+        />
+      )}
+      <MenuBar
+        editor={editor}
+        disabled={disabled}
+        allowImages={allowImages}
+        onImageClick={() => !disabled && fileInputRef.current?.click()}
       />
       <EditorContent editor={editor} />
       

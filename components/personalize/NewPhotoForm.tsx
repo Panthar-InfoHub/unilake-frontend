@@ -48,16 +48,15 @@ const MONTHS = [
 ];
 
 /**
- * Example shots for the guidance panel. Real images drop into
- * /public/photo-examples/ under these exact filenames — no code change needed.
+ * Example shots for the guidance panel.
  */
 const PHOTO_EXAMPLES: { file: string; label: string; good: boolean }[] = [
-  { file: "smiling.jpg", label: "Smiling", good: true },
-  { file: "happy.jpg", label: "Happy", good: true },
-  { file: "detailed.jpg", label: "Detailed", good: true },
-  { file: "hats.jpg", label: "Hats", good: false },
-  { file: "expressions.jpg", label: "Expressions", good: false },
-  { file: "distant.jpg", label: "Distant", good: false },
+  { file: "smiling.png", label: "Smiling", good: true },
+  { file: "happy.png", label: "Happy", good: true },
+  { file: "detailed.png", label: "Detailed", good: true },
+  { file: "hats.png", label: "Hats", good: false },
+  { file: "expressions.png", label: "Expressions", good: false },
+  { file: "Distant.png", label: "Distant", good: false },
 ];
 
 interface NewPhotoFormProps {
@@ -275,23 +274,23 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
   const childLabel = formData.name.trim() || "your child";
 
   return (
-    <div className={`${hankenGrotesk.className} w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 lg:min-h-[calc(100vh-86px)] lg:overflow-visible flex flex-col justify-center`}>
-      <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-6 lg:gap-8 items-start lg:max-h-[calc(100vh-86px-5rem)]">
+    <div className={`${hankenGrotesk.className} w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-2 lg:py-4`}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-4 lg:gap-6 items-start lg:h-full lg:max-h-full">
 
         {/* ── Left: static guidance ─────────────────────────────────────── */}
-        <section className="bg-white rounded-[20px] border-[3px] border-[#914A8C] shadow-xl p-6 sm:p-8 outline-2 outline-dashed outline-offset-[-8px] outline-[#914A8C]/40 lg:overflow-y-auto lg:max-h-full">
-          <h1 className={`${chauPhilomeneOne.className} text-2xl sm:text-3xl text-[#222] mb-1`}>
+        <section className="bg-white rounded-[20px] border-[3px] border-[#914A8C] shadow-xl p-3 sm:p-4 lg:p-5 outline-2 outline-dashed outline-offset-[-8px] outline-[#914A8C]/40 flex flex-col h-full justify-start">
+          <h1 className={`${chauPhilomeneOne.className} text-xl sm:text-2xl lg:text-3xl text-[#222] mb-1`}>
             Upload a photo of {childLabel}
           </h1>
-          <p className="text-sm text-[#666] mb-6">
+          <p className="text-[11px] lg:text-xs text-[#666] mb-2 lg:mb-3">
             One clear photo gives the best graphic novel results.
           </p>
 
-          <div className="relative border-2 border-[#914A8C] rounded-lg p-4 mb-6">
-            <h2 className="text-[11px] font-bold tracking-wider text-[#914A8C] uppercase mb-2">
+          <div className="relative border-2 border-[#914A8C] rounded-lg p-2.5 lg:p-3 mb-3 lg:mb-4">
+            <h2 className="text-[10px] font-bold tracking-wider text-[#914A8C] uppercase mb-1">
               Photo guidelines:
             </h2>
-            <ul className="list-disc list-inside space-y-1 text-sm text-[#333]">
+            <ul className="list-disc list-inside space-y-0.5 text-[11px] lg:text-xs text-[#333]">
               <li>No one else should be in the picture</li>
               <li>Child should be facing the camera</li>
               <li>Face &amp; hair should not touch the edges</li>
@@ -299,13 +298,11 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
             </ul>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {PHOTO_EXAMPLES.map((example) => (
               <figure key={example.file} className="relative">
-                <div className="relative aspect-square sm:aspect-[4/3] lg:aspect-square rounded-lg overflow-hidden border border-[#914A8C]/30 bg-neutral-100">
-                  {/* The real files drop into /public/photo-examples/ under these
-                      exact names, with no code change. Until they do, the image
-                      404s — so failures fall back to a neutral box rather than
+                <div className="relative aspect-square rounded-lg overflow-hidden border border-[#914A8C]/30 bg-neutral-100">
+                  {/* Failures fall back to a neutral box rather than
                       showing a broken-image icon. */}
                   {missingExamples.has(example.file) ? (
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -313,7 +310,7 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                     </div>
                   ) : (
                     <Image
-                      src={`/photo-examples/${example.file}`}
+                      src={`/assets/Reupload/${example.file}`}
                       alt={example.label}
                       fill
                       sizes="(max-width: 1024px) 30vw, 180px"
@@ -338,22 +335,22 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
             ))}
           </div>
 
-          <p className="text-[11px] text-[#777] mt-5">
+          <p className="text-[10px] text-[#777] mt-2 lg:mt-3">
             * All photos are kept confidential and used only for creating your
             personalized book panels.
           </p>
         </section>
 
         {/* ── Right: the form ───────────────────────────────────────────── */}
-        <section className="bg-white rounded-[20px] border-[3px] border-[#914A8C] shadow-xl p-6 sm:p-8 outline-2 outline-dashed outline-offset-[-8px] outline-[#914A8C]/40 lg:overflow-y-auto lg:max-h-full">
-          <h2 className={`${chauPhilomeneOne.className} text-xl sm:text-2xl text-[#222] mb-5`}>
+        <section className="bg-white rounded-[20px] border-[3px] border-[#914A8C] shadow-xl p-3 sm:p-4 lg:p-5 outline-2 outline-dashed outline-offset-[-8px] outline-[#914A8C]/40 flex flex-col h-full justify-start">
+          <h2 className={`${chauPhilomeneOne.className} text-lg sm:text-xl lg:text-2xl text-[#222] mb-2 lg:mb-3`}>
             Your Photo
           </h2>
 
           {/* Dropzone */}
           <div
             {...getRootProps()}
-            className={`relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-colors ${
+            className={`relative border-2 border-dashed rounded-xl p-2.5 text-center cursor-pointer transition-colors ${
               isDragActive
                 ? "border-[#914A8C] bg-[#914A8C]/5"
                 : "border-[#914A8C]/50 hover:border-[#914A8C]"
@@ -362,7 +359,7 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
             <input {...getInputProps()} />
 
             {photoPreview ? (
-              <div className="relative w-32 h-32 mx-auto">
+              <div className="relative w-20 h-20 lg:w-24 lg:h-24 mx-auto">
                 <Image
                   src={photoPreview}
                   alt="Selected photo"
@@ -374,16 +371,16 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                   type="button"
                   onClick={clearPhoto}
                   aria-label="Remove photo"
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow cursor-pointer"
+                  className="absolute -top-2 -right-2 w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow cursor-pointer"
                 >
-                  <X size={14} />
+                  <X size={12} className="lg:w-3.5 lg:h-3.5" />
                 </button>
               </div>
             ) : (
               <>
-                <CloudUpload className="w-8 h-8 mx-auto text-neutral-400 mb-2" />
-                <p className="font-bold text-[#333]">Click or drag a photo here</p>
-                <p className="text-xs text-neutral-500 mt-1">
+                <CloudUpload className="w-6 h-6 lg:w-8 lg:h-8 mx-auto text-neutral-400 mb-1" />
+                <p className="text-[13px] lg:text-sm font-bold text-[#333]">Click or drag a photo here</p>
+                <p className="text-[9px] lg:text-[10px] text-neutral-500 mt-0.5">
                   One photo • Max 10MB
                 </p>
               </>
@@ -410,12 +407,12 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
             </div>
           )}
 
-          <hr className="border-t border-neutral-200 my-6" />
+          <hr className="border-t border-neutral-200 my-3" />
 
           {/* Details */}
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-[#333]">
+          <div className="space-y-2">
+            <div className="space-y-0.5">
+              <label className="text-[11px] lg:text-xs font-semibold text-[#333]">
                 Child&apos;s name
               </label>
               <input
@@ -425,33 +422,33 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full h-11 rounded-xl border border-neutral-300 px-3 text-sm focus:outline-none focus:border-[#914A8C]"
+                className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs focus:outline-none focus:border-[#914A8C]"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5 min-w-0">
-                <label className="text-sm font-semibold text-[#333]">Gender</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-0.5 min-w-0">
+                <label className="text-[11px] lg:text-xs font-semibold text-[#333]">Gender</label>
                 <select
                   value={formData.gender}
                   onChange={(e) =>
                     setFormData({ ...formData, gender: e.target.value })
                   }
-                  className="w-full h-11 rounded-xl border border-neutral-300 px-3 text-sm bg-white focus:outline-none focus:border-[#914A8C]"
+                  className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs bg-white focus:outline-none focus:border-[#914A8C]"
                 >
                   <option value="Boy">Boy</option>
                   <option value="Girl">Girl</option>
                 </select>
               </div>
 
-              <div className="space-y-1.5 min-w-0">
-                <label className="text-sm font-semibold text-[#333]">Age</label>
+              <div className="space-y-0.5 min-w-0">
+                <label className="text-[11px] lg:text-xs font-semibold text-[#333]">Age</label>
                 <select
                   value={formData.age}
                   onChange={(e) =>
                     setFormData({ ...formData, age: e.target.value })
                   }
-                  className="w-full h-11 rounded-xl border border-neutral-300 px-3 text-sm bg-white focus:outline-none focus:border-[#914A8C]"
+                  className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs bg-white focus:outline-none focus:border-[#914A8C]"
                 >
                   {Array.from({ length: 19 }, (_, i) => (
                     <option key={i} value={String(i)}>
@@ -462,8 +459,8 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-[#333]">
+            <div className="space-y-0.5">
+              <label className="text-[11px] lg:text-xs font-semibold text-[#333]">
                 Birth month
               </label>
               <select
@@ -471,7 +468,7 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, birthMonth: e.target.value })
                 }
-                className="w-full h-11 rounded-xl border border-neutral-300 px-3 text-sm bg-white focus:outline-none focus:border-[#914A8C]"
+                className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs bg-white focus:outline-none focus:border-[#914A8C]"
               >
                 {MONTHS.map((month) => (
                   <option key={month} value={month}>
@@ -481,8 +478,8 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-[#333]">
+            <div className="space-y-0.5">
+              <label className="text-[11px] lg:text-xs font-semibold text-[#333]">
                 Parent&apos;s email
               </label>
               <input
@@ -491,20 +488,20 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full h-11 rounded-xl border border-neutral-300 px-3 text-sm focus:outline-none focus:border-[#914A8C]"
+                className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs focus:outline-none focus:border-[#914A8C]"
               />
             </div>
 
-            <label className="flex items-start gap-2 cursor-pointer">
+            <label className="flex items-start gap-2 cursor-pointer pt-1 lg:pt-0">
               <input
                 type="checkbox"
                 checked={formData.consent}
                 onChange={(e) =>
                   setFormData({ ...formData, consent: e.target.checked })
                 }
-                className="mt-0.5 w-4 h-4 accent-[#914A8C] cursor-pointer"
+                className="mt-0.5 w-3.5 h-3.5 lg:w-4 lg:h-4 accent-[#914A8C] cursor-pointer"
               />
-              <span className="text-xs text-[#555] leading-relaxed">
+              <span className="text-[10px] lg:text-[11px] text-[#555] leading-relaxed">
                 I agree to the{" "}
                 <Link href="/privacy" className="text-[#914A8C] underline">
                   privacy policy
@@ -518,7 +515,7 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
             type="button"
             onClick={handleSubmit}
             disabled={isLoading}
-            className="mt-6 w-full px-8 py-3 bg-gradient-to-b from-[#5c58c2] to-[#403A8B] hover:from-[#6a66d0] hover:to-[#4a449d] text-white rounded-full font-bold text-sm uppercase tracking-wider transition-all border-2 border-[#1e1c4a] shadow-[0px_4px_0px_#FFD54A] active:translate-y-[4px] active:shadow-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+            className="mt-2.5 lg:mt-3 w-full px-8 py-2 lg:py-2.5 bg-gradient-to-b from-[#5c58c2] to-[#403A8B] hover:from-[#6a66d0] hover:to-[#4a449d] text-white rounded-full font-bold text-xs uppercase tracking-wider transition-all border-2 border-[#1e1c4a] shadow-[0px_4px_0px_#FFD54A] active:translate-y-[4px] active:shadow-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           >
             {isLoading ? (
               <>

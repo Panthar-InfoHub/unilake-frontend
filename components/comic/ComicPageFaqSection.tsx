@@ -22,8 +22,17 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
 
   return (
     <>
-      {/* ===== Symmetrical Flared Purple Banner ===== */}
-      <div className="relative w-full overflow-visible">
+      {/* ===== Symmetrical Flared Purple Banner =====
+          `mt-20 lg:mt-32` is load-bearing, not decoration. The girl below is
+          taller than the banner and deliberately overhangs its top edge, so
+          this margin is the space she overhangs INTO. Without it she sits on
+          top of whatever section precedes this one — on this page, the comic's
+          info cards.
+          ⚠️ This block is a near-copy of components/home/HomeFaq.tsx. The two
+          drifted once — this margin was missing here and the girl was sized
+          ~30% larger — and the result was her covering the content above. Keep
+          the margin and the widths below in step with that file. */}
+      <div className="relative w-full overflow-visible mt-20 lg:mt-32">
         {/* Flared wave SVG */}
         <svg
           viewBox="0 0 1728 311"
@@ -63,7 +72,7 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
                   relative
                 `}
               >
-                FAQ'S
+                FAQ&apos;S &amp; FEEDBACK
               </h2>
             </div>
           </div>
@@ -93,12 +102,20 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
             width={280}
             height={280}
             priority
+            // Widths mirrored from HomeFaq.tsx. They were ~30% larger here,
+            // which is what put her over the content above: faq-girl.png is
+            // 741x867, so at 330px wide she rendered 386px tall against a
+            // 200px banner and overhung its top by 208px — more than the
+            // margin above could ever absorb. At 250px she renders 290px,
+            // overhanging by 112px, which fits inside lg:mt-32 (128px).
+            // The homepage image has a near-identical aspect ratio (1.162 vs
+            // 1.170), so these widths carry over directly.
             className="
-              w-[110px]
-              sm:w-[170px]
-              md:w-[220px]
-              lg:w-[280px]
-              xl:w-[330px]
+              w-[90px]
+              sm:w-[150px]
+              md:w-[160px]
+              lg:w-[200px]
+              xl:w-[250px]
               h-auto
               object-contain
             "

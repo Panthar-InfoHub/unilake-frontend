@@ -126,20 +126,31 @@ export default function StoryCard({ comic }: StoryCardProps) {
           gap-0
         "
       >
-        {/* Tags */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-1 md:mb-2">
+        {/* Tags — one line, never wrapped.
+            `flex-nowrap` because a wrapped second row would add height here and
+            push everything below it down, which is the same class of bug the
+            description's fixed height exists to prevent.
+            Age and pages are short and fixed, so they never give way. The theme
+            name is admin-entered and unbounded, so it is the one that truncates:
+            `min-w-0` is what actually lets it shrink — a flex item will not go
+            below its content width without it, and `truncate` alone would do
+            nothing here. */}
+        <div className="flex items-center gap-1.5 flex-nowrap mb-1 md:mb-2">
           {/* Age Pill */}
-          <span className="text-[8px] font-extrabold text-[#5C53C6] bg-[#EBE7FF] border border-[#D6CFFF]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
+          <span className="shrink-0 whitespace-nowrap text-[8px] font-extrabold text-[#5C53C6] bg-[#EBE7FF] border border-[#D6CFFF]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
             AGE: {ageLabel}
           </span>
 
-          {/* Category Pill */}
-          <span className="text-[8px] font-extrabold text-[#1F8A60] bg-[#E3F8EE] border border-[#CCEFE2]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
+          {/* Category Pill — the only one allowed to shrink. */}
+          <span
+            title={category}
+            className="min-w-0 truncate text-[8px] font-extrabold text-[#1F8A60] bg-[#E3F8EE] border border-[#CCEFE2]/50 rounded-full px-2 py-0.5 uppercase tracking-wide"
+          >
             {category}
           </span>
 
           {/* Pages Pill */}
-          <span className="text-[8px] font-extrabold text-[#B04C1C] bg-[#FFF0E6] border border-[#FFE1D1]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
+          <span className="shrink-0 whitespace-nowrap text-[8px] font-extrabold text-[#B04C1C] bg-[#FFF0E6] border border-[#FFE1D1]/50 rounded-full px-2 py-0.5 uppercase tracking-wide">
             {pages} PAGES
           </span>
         </div>
@@ -149,8 +160,17 @@ export default function StoryCard({ comic }: StoryCardProps) {
           {comic.title}
         </h3>
 
-        {/* Description */}
-        <p className={`${poppins.className} text-[10px] sm:text-xs md:text-[14px] font-normal text-[#000000]/[0.74] leading-snug md:leading-[18px] line-clamp-2 mb-1 md:mb-3 overflow-hidden`}>
+        {/* Description — exactly one line, always.
+            `line-clamp-1` is only a ceiling: it cuts a long description at one
+            line with an ellipsis, but a short one would still collapse to
+            whatever height it needs, pulling the price and button up with it and
+            leaving cards misaligned across the grid. The min-height supplies the
+            floor, so the block is a fixed size whether the description is long,
+            short, or missing entirely.
+            Same reasoning as the fixed-height price wrapper below. The px values
+            are one rendered line at each breakpoint (10px/12px at leading-snug,
+            then the explicit 18px), rounded up. */}
+        <p className={`${poppins.className} text-[10px] sm:text-xs md:text-[14px] font-normal text-[#000000]/[0.74] leading-snug md:leading-[18px] line-clamp-1 min-h-[14px] sm:min-h-[17px] md:min-h-[18px] mb-1 md:mb-3 overflow-hidden`}>
           {comic.description || "A personalized storybook adventure for your child."}
         </p>
 
@@ -177,7 +197,17 @@ export default function StoryCard({ comic }: StoryCardProps) {
           </div>
         )}
 
-        {/* Personalise Button */}
+        {/* Personalise Button.
+            ⚠️ Do NOT add `mt-auto` here. It looks like the right way to stop the
+            button moving, but this flex container is `top-[46%] h-[52%]` — it
+            runs to 98% of the card, while the shield shape in card.svg tapers
+            and ends well above that. Pushing the button to the container's
+            bottom drops it into the empty space BELOW the visible card.
+            The button does not need pinning: everything above it is already a
+            fixed height — the tag row cannot wrap, the title and description are
+            both clamped to one line with a min-height, and the price wrapper has
+            an explicit height in both of its branches. So the button lands at
+            the same place on every card by simply flowing after them. */}
         <div className="flex justify-center w-full">
           <button
             onClick={() => router.push(`/comic/${comic.id}`)}

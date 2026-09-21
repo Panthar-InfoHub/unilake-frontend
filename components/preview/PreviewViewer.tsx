@@ -212,8 +212,8 @@ export default function PreviewViewer({
             No JS is needed to stop at the footer: a sticky element is bound by
             its parent's box, and this column ends before the Footer. */}
         {!isPaid && (
-          <div className="hidden lg:block sticky top-24 z-20 h-0 w-full -mb-4 pointer-events-none">
-            <div className="absolute left-[calc(50%-50vw+1.5rem)] xl:left-[calc(50%-50vw+2.5rem)] top-0 pointer-events-auto">
+          <div className="hidden lg:block sticky top-24 z-20 h-0 w-full -mb-4 pointer-events-none relative">
+            <div className="absolute right-[calc(100%+1.5rem)] xl:right-[calc(100%+2.5rem)] top-0 pointer-events-auto">
               <UploadAnotherPhotoBanner
                 sessionId={snapshot.id}
                 status={snapshot.status}

@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { hankenGrotesk } from "@/app/fonts";
-import { submitPublicFeedback } from "@/app/actions/public";
+import { submitContactEnquiry } from "@/app/actions/public";
 import { getErrorMessage } from "@/lib/utils";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
-interface FeedbackFormProps {
-  /** Copy for the textarea. Differs between the home FAQ block and /contact. */
+interface ContactFormProps {
+  /** Copy for the textarea. */
   messagePlaceholder?: string;
   submitLabel?: string;
   /** Extra classes on the white card wrapper, for per-page spacing. */
@@ -23,27 +23,28 @@ const inputClass = `
 `;
 
 /**
- * The homepage "Feedback & Suggestion" form.
+ * The /contact enquiry form.
  *
- * Collects name and message only. Email and phone are deliberately absent —
- * feedback has no reply channel by design, which is why the success copy below
- * promises nothing back.
+ * A separate component from FeedbackForm rather than the same one behind a
+ * flag. The two look alike but are opposites: feedback is an anonymous
+ * suggestion that nobody replies to, an enquiry is a question that someone has
+ * to answer. Branching one component on which it is today is precisely how the
+ * two ended up sharing an inbox — so they stay apart, and can diverge freely.
  *
- * /contact no longer renders this. It has its own ContactForm writing to its
- * own table, because an enquiry expects an answer and a suggestion does not.
- * Do not re-merge the two: sharing one form is exactly how both ended up in a
- * single untriagable inbox.
+ * Collects name, email, phone and message, all required. The success copy
+ * promises a reply because, unlike feedback, this one actually has a channel
+ * to reply on.
  */
-export default function FeedbackForm({
-  messagePlaceholder = "Write your feedback & Suggestions for our books *",
-  submitLabel = "Submit Feedback",
+export default function ContactForm({
+  messagePlaceholder = "How can we help? *",
+  submitLabel = "Send Message",
   className = "",
-}: FeedbackFormProps) {
+}: ContactFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFeedbackSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isSubmitting) return;
 
@@ -54,28 +55,31 @@ export default function FeedbackForm({
 
     // Honeypot check. Stays indistinguishable from success so a bot learns
     // nothing — but it is logged, because a false positive here silently
-    // destroys a real person's message. If this ever shows up in a genuine
-    // user's console, the honeypot is misfiring and must be fixed, not tuned.
+    // destroys a real customer's enquiry. If this ever shows up in a genuine
+    // user's console, the honeypot is misfiring again and must be fixed, not
+    // tuned.
     if (formData.get("confirm_ref")) {
       console.warn(
-        "Feedback form: honeypot tripped — submission was NOT sent. If you are a real user, this is a bug."
+        "Contact form: honeypot tripped — submission was NOT sent. If you are a real user, this is a bug."
       );
       setIsSuccess(true);
       return;
     }
 
     const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
     const message = formData.get("message") as string;
 
     try {
       setIsSubmitting(true);
       setError(null);
-      await submitPublicFeedback({ name, message });
+      await submitContactEnquiry({ name, email, phone, message });
       setIsSuccess(true);
       form.reset();
     } catch (err: unknown) {
       setError(
-        getErrorMessage(err, "Failed to submit feedback. Please try again.")
+        getErrorMessage(err, "Failed to send your message. Please try again.")
       );
     } finally {
       setIsSubmitting(false);
@@ -102,11 +106,11 @@ export default function FeedbackForm({
           <h4
             className={`${hankenGrotesk.className} font-bold text-xl text-neutral-800 mb-2`}
           >
-            Thank you for your feedback!
+            Message sent!
           </h4>
           <p className={`${hankenGrotesk.className} text-neutral-600`}>
-            We read every message that comes in and use it to make our books
-            better.
+            Thanks for reaching out — we&apos;ll get back to you on the email or
+            number you provided.
           </p>
           <button
             onClick={() => setIsSuccess(false)}
@@ -116,29 +120,28 @@ export default function FeedbackForm({
           </button>
         </div>
       ) : (
-        <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/*
             Honeypot. `display: none` on the wrapper, NOT `left: -9999px` —
             that distinction is load-bearing.
 
-            An off-screen field is still rendered, so browser profile autofill
-            treats it as a real input and can fill it, which trips the check
-            above and silently discards a genuine message. `autocomplete="off"`
-            does not prevent that; browsers ignore it for profile autofill.
+            An off-screen field is still rendered, so Chrome's profile autofill
+            treats it as a real input. This form asks for name, email and phone,
+            which makes the browser read it as an address form and fill every
+            field it recognises — including one named "website_url". That
+            tripped the check below and silently threw away genuine enquiries.
+            `autocomplete="off"` does not prevent this; browsers ignore it for
+            profile autofill.
 
             A display:none field is not rendered at all, so autofill skips it,
             while naive bots that fill every input in the DOM still walk in.
             The name is neutral for the same reason: "website_url" is a token
             autofill actively looks for.
-
-            This form asks only for name and message, so it is less likely to
-            be classified as an address form than /contact was — but the
-            failure mode is identical, and it is silent.
           */}
           <div style={{ display: "none" }} aria-hidden="true">
-            <label htmlFor="feedback-confirm-ref">Leave this field empty</label>
+            <label htmlFor="contact-confirm-ref">Leave this field empty</label>
             <input
-              id="feedback-confirm-ref"
+              id="contact-confirm-ref"
               type="text"
               name="confirm_ref"
               tabIndex={-1}
@@ -154,25 +157,61 @@ export default function FeedbackForm({
           )}
 
           <div>
-            <label htmlFor="name" className="sr-only">
+            <label htmlFor="contact-name" className="sr-only">
               Name
             </label>
             <input
-              id="name"
+              id="contact-name"
               name="name"
               type="text"
               required
+              autoComplete="name"
               placeholder="Your Name *"
               className={inputClass}
             />
           </div>
 
+          {/* Email and phone share a row from sm: up — they are both short
+              fields, and stacking all four makes the form look longer than it
+              is, which costs completions. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="contact-email" className="sr-only">
+                Email
+              </label>
+              <input
+                id="contact-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="Your Email *"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="contact-phone" className="sr-only">
+                Contact number
+              </label>
+              <input
+                id="contact-phone"
+                name="phone"
+                type="tel"
+                required
+                autoComplete="tel"
+                placeholder="Contact Number *"
+                className={inputClass}
+              />
+            </div>
+          </div>
+
           <div>
-            <label htmlFor="message" className="sr-only">
+            <label htmlFor="contact-message" className="sr-only">
               Message
             </label>
             <textarea
-              id="message"
+              id="contact-message"
               name="message"
               required
               maxLength={2000}

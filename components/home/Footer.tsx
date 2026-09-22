@@ -152,8 +152,8 @@ export default function Footer() {
                   </svg>
                 </a>
 
-                <a
-                  href={`mailto:${email}`}
+                <Link
+                  href="/contact"
                   className="
                     w-10
                     h-10
@@ -170,10 +170,10 @@ export default function Footer() {
                     hover:bg-[#FFCB05]
                     hover:text-black
                   "
-                  aria-label="Email"
+                  aria-label="Contact Us"
                 >
                   <Mail className="w-5 h-5 fill-none stroke-current stroke-[2]" />
-                </a>
+                </Link>
               </div>
             </div>
 

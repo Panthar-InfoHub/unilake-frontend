@@ -82,15 +82,14 @@ export default function TeamMemberCard({ member }: TeamMemberCardProps) {
             overflow-hidden + min-h-0 are a backstop: the clamp is the real fix,
             but this guarantees nothing can escape the fixed-aspect frame again
             if another field is added later without a height bound. */}
-        {/* justify-center balances the leftover height above and below the
-            stack instead of letting it all pool at one end, now that the
-            social row no longer pushes itself to the bottom. */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center w-full h-full py-5 overflow-hidden min-h-0">
+        {/* justify-start pins the top of the content so the avatar doesn't jump
+            around based on the description length. */}
+        <div className="relative z-10 flex flex-col items-center justify-start text-center w-full h-full pt-6 sm:pt-8 pb-2 overflow-hidden min-h-0">
           {/* Team Member Avatar.
               Sized down from 170/190 to make room for the "Read more" button:
               the frame is a fixed aspect ratio, so every pixel this row adds is
               a pixel taken off the social icons at the bottom. */}
-          <div className="relative w-full aspect-square max-w-[140px] sm:max-w-[155px] mb-3 rounded-full overflow-hidden flex items-center justify-center bg-[#914B8C]/10 border-2 border-white shadow-sm shrink-0">
+          <div className="relative w-full aspect-square max-w-[120px] sm:max-w-[135px] mb-3 rounded-full overflow-hidden flex items-center justify-center bg-[#914B8C]/10 border-2 border-white shadow-sm shrink-0">
             {member.imageUrl ? (
               <Image
                 src={member.imageUrl}
@@ -146,11 +145,10 @@ export default function TeamMemberCard({ member }: TeamMemberCardProps) {
           )}
 
           {/* Social Links — renders nothing when the member has none.
-              A fixed mt-4 rather than mt-auto: mt-auto pinned this row to the
-              bottom of the frame, so every pixel of spare height collected into
-              one gap under "Read more". shrink-0 keeps the row from being
+              A fixed mt-auto so it pins to the bottom of the container, preventing it from 
+              being pushed off-screen. shrink-0 keeps the row from being
               compressed away when a long name or role pushes the stack. */}
-          <TeamMemberSocials member={member} className="mt-4 pb-1 shrink-0" />
+          <TeamMemberSocials member={member} className="mt-auto pb-1 shrink-0" />
         </div>
       </div>
 

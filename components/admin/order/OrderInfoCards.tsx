@@ -36,7 +36,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function OrderInfoCards({ order }: { order: AdminOrderDetail }) {
-  const { shipping, customer, payment, pdf, session } = order;
+  const { shipping, customer, payment, pdf, session, generatedCover } = order;
 
   const addressLines = [
     shipping.line1,
@@ -110,14 +110,46 @@ export function OrderInfoCards({ order }: { order: AdminOrderDetail }) {
 
       <Card title="Book & child" icon={<Sparkles className="w-4 h-4" />}>
         <div className="flex gap-4 items-start">
-          <div className="w-14 h-20 rounded-lg overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200">
-            {session.comic.coverThumbnailUrls?.[0] ? (
-              <img
-                src={session.comic.coverThumbnailUrls[0]}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            ) : null}
+          {/*
+            The generated page-1 cover — the personalised page this child's book
+            opens on. Deliberately NOT falling back to comic.coverThumbnailUrls:
+            the template thumbnail is identical for every customer, so showing it
+            here would look like a generated cover and mislead whoever is
+            checking what actually shipped.
+
+            No fixed height, and object-contain, because page artwork has no
+            fixed aspect ratio — the image defines its own height rather than
+            being cropped into a guessed box.
+          */}
+          <div className="w-36 shrink-0">
+            {generatedCover ? (
+              <>
+                <a
+                  href={generatedCover.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open full size"
+                  className="block rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200 hover:border-[#914A8C]/50 hover:opacity-90 transition-all"
+                >
+                  <img
+                    src={generatedCover.imageUrl}
+                    alt={`Generated cover for ${session.childName ?? "this order"}`}
+                    className="w-full h-auto object-contain"
+                  />
+                </a>
+                <p className="text-[11px] text-neutral-400 mt-1.5 text-center">
+                  Variant {generatedCover.variantIndex} ·{" "}
+                  {generatedCover.isSelected ? "printed" : "not yet confirmed"}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-full h-48 rounded-lg bg-neutral-100 border border-neutral-200" />
+                <p className="text-[11px] text-neutral-400 mt-1.5 text-center">
+                  Cover not generated yet.
+                </p>
+              </>
+            )}
           </div>
           <div className="flex-1 space-y-2.5 min-w-0">
             <Field label="Comic" value={session.comic.title} />

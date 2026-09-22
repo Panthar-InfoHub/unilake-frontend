@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Mail, Phone, MapPin, Clock, MessageCircle } from "lucide-react";
 import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
-import FeedbackForm from "@/components/shared/FeedbackForm";
+import ContactForm from "@/components/shared/ContactForm";
 import { fetchPublicSiteSetting } from "@/app/actions/public";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 
@@ -151,12 +151,13 @@ export default async function ContactPage() {
           )}
 
           {/* Form — always rendered. On a fresh install with no details saved,
-              this is the only way for a visitor to reach anyone. */}
+              this is the only way for a visitor to reach anyone.
+
+              Writes to contact_enquiries, NOT feedbacks: an enquiry here is a
+              question expecting an answer, which is a different inbox from the
+              homepage's anonymous book suggestions. */}
           <div className={hasAnyDetail ? "lg:col-span-3" : "lg:col-span-5"}>
-            <FeedbackForm
-              messagePlaceholder="How can we help? *"
-              submitLabel="Send Message"
-            />
+            <ContactForm />
           </div>
         </div>
       </section>

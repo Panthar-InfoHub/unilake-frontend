@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/app/hooks/useAuth";
+import Header from "@/components/home/Header";
 
 type OAuthProvider = "Google" | "Facebook";
 
@@ -169,58 +170,10 @@ export default function LoginPage() {
 
     return (
         <main
-            className="min-h-screen flex flex-col bg-[#F8E7D2] relative overflow-hidden font-poppins select-none"
+            className="min-h-screen flex flex-col bg-[#F8E7D2] relative overflow-hidden font-poppins select-none pt-[86px]"
             role="main"
         >
-            {/* Top Banner */}
-            <div
-                className="w-full bg-[#914A8C] pt-6 pb-2 text-center text-xs sm:text-sm md:text-base font-extrabold text-white tracking-wide px-4 z-10 uppercase"
-                aria-label="Promotional banner"
-            >
-                Turn your child&apos;s photo into a personalized storybook
-            </div>
-
-            {/* SVG Wave Divider */}
-            <div className="w-full h-8 relative z-10 bg-[#F8E7D2]">
-                <div
-                    className="absolute top-0 left-0 w-full h-8"
-                    aria-hidden="true"
-                    style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' width='60' height='20'%3E%3Cpath d='M 0 0 L 60 0 C 45 20, 15 20, 0 0 Z' fill='%23914A8C'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: "repeat-x",
-                        backgroundSize: "60px 100%",
-                    }}
-                />
-            </div>
-
-            {/* Comic Decorations */}
-            <div
-                className="absolute left-0 top-[40%] -translate-y-1/2 w-[80px] sm:w-[120px] md:w-[150px] lg:w-[190px] z-0 pointer-events-none"
-                aria-hidden="true"
-            >
-                <Image
-                    src="/assets/login_page/loginAnimation.png"
-                    alt=""
-                    width={200}
-                    height={200}
-                    style={{ width: "100%", height: "auto" }}
-                    priority
-                />
-            </div>
-
-            <div
-                className="absolute right-0 bottom-0 w-[100px] sm:w-[140px] md:w-[180px] lg:w-[250px] z-0 pointer-events-none"
-                aria-hidden="true"
-            >
-                <Image
-                    src="/assets/login_page/loginAnimation2.png"
-                    alt=""
-                    width={250}
-                    height={250}
-                    style={{ width: "100%", height: "auto" }}
-                    priority
-                />
-            </div>
+            <Header hideBulbForced />
 
             {/* Main Content */}
             <div className="flex-1 flex items-center justify-center p-6 z-10">

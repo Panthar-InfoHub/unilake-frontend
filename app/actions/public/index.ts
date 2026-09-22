@@ -2,6 +2,7 @@ import api from "@/app/lib/axios";
 import { CustomerReview } from "@/app/types/customerReview";
 import { TeamMember } from "@/app/types/teamMember";
 import { SubmitFeedbackPayload } from "@/app/types/publicFeedback";
+import { SubmitContactEnquiryPayload } from "@/app/types/contactEnquiry";
 import { HowItWorks } from "@/app/types/howItWorks";
 import { Faq, FaqPlacement } from "@/app/types/faq";
 import { Blog, BlogListItem } from "@/app/types/blog";
@@ -45,6 +46,20 @@ export async function fetchPublicTeamMembers(): Promise<TeamMember[]> {
 
 export async function submitPublicFeedback(payload: SubmitFeedbackPayload): Promise<void> {
   await api.post("/api/public/feedbacks", payload);
+}
+
+/**
+ * A /contact form submission. Deliberately a different endpoint from
+ * submitPublicFeedback — enquiries carry a reply channel and land in their own
+ * admin inbox, so the two must never share a destination.
+ *
+ * Unlike the fetches above, this one lets errors through: a visitor whose
+ * message failed to send needs to know it failed.
+ */
+export async function submitContactEnquiry(
+  payload: SubmitContactEnquiryPayload
+): Promise<void> {
+  await api.post("/api/public/contact-enquiries", payload);
 }
 
 export async function fetchPublicHowItWorks(): Promise<HowItWorks | null> {

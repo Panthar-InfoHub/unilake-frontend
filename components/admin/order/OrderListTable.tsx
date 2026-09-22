@@ -45,12 +45,34 @@ export function OrderListTable({ orders }: { orders: AdminOrderRow[] }) {
                 className="hover:bg-white/60 transition-colors cursor-pointer"
               >
                 <td className="px-6 py-3">
-                  <div className="font-bold text-neutral-900 truncate max-w-[220px]">
-                    {order.comicTitle}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-0.5">
-                    {order.childName ? `for ${order.childName} · ` : ""}
-                    <span className="font-mono">{order.id.slice(0, 8)}</span>
+                  <div className="flex items-center gap-3">
+                    {/*
+                      The generated page-1 cover. object-contain rather than
+                      object-cover because page artwork has no fixed aspect
+                      ratio — cropping a landscape cover to a portrait box would
+                      cut the child's face out of the one image that exists to
+                      show it. pointer-events-none keeps the whole row clickable.
+                    */}
+                    <div className="w-10 h-14 rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0 flex items-center justify-center">
+                      {order.coverImageUrl ? (
+                        <img
+                          src={order.coverImageUrl}
+                          alt=""
+                          // 20 rows × ~250KB is 5MB if every one loads eagerly.
+                          loading="lazy"
+                          className="w-full h-full object-contain pointer-events-none"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-neutral-900 truncate max-w-[220px]">
+                        {order.comicTitle}
+                      </div>
+                      <div className="text-xs text-neutral-500 mt-0.5">
+                        {order.childName ? `for ${order.childName} · ` : ""}
+                        <span className="font-mono">{order.id.slice(0, 8)}</span>
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td className="px-6 py-3 hidden md:table-cell">

@@ -110,7 +110,7 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
       </div>
 
       {/* ===== Content Section ===== */}
-      <section className="bg-[#F8E7D2] pb-6 pt-14 md:pt-20 relative">
+      <section id="faq" className="bg-[#F8E7D2] pb-6 pt-14 md:pt-20 relative">
         <div className="max-w-4xl mx-auto px-6 sm:px-8">
 
           {/* FAQ Accordion List */}

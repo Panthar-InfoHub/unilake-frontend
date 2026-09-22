@@ -268,7 +268,7 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
           <label className="text-sm text-[#333333] font-medium">Child&apos;s Name *</label>
           <input
             type="text"
-            placeholder="Aham"
+            placeholder="Enter name..."
             required
             className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:border-[#3F3C95] transition-colors"
             value={formData.name}
@@ -340,11 +340,11 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
 
         {/* Parent's Email (Full width) */}
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <label className="text-sm text-[#333333] font-medium">Parent&apos;s Email *</label>
+          <label className="text-sm text-[#333333] font-medium">Email *</label>
           <input
             type="email"
             required
-            placeholder="ankitbose042@gmail.com"
+            placeholder="someone@gmail.com"
             className="w-full px-4 py-2.5 rounded-xl border border-[#3F3C95] bg-[#EBE7FF] text-[#3F3C95] placeholder-[#3F3C95]/60 focus:outline-none focus:ring-1 focus:ring-[#3F3C95] transition-colors"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}

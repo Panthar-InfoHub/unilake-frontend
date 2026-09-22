@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PublicComicDetail } from "@/app/types/comic";
 import ComicThumbnailCarousel from "./ComicThumbnailCarousel";
 import ComicInfoCards from "./ComicInfoCards";
+import PhotoGuidelines from "./PhotoGuidelines";
 import ComicPersonalizeForm from "./ComicPersonalizeForm";
 import { clearSession, getSession as getStoredSession, setShowPreloader } from "@/app/lib/session-storage";
 import { getSession as fetchSession } from "@/app/actions/session";
@@ -90,6 +91,7 @@ export default function ComicDetailContent({ comic }: ComicDetailContentProps) {
                   videoUrl={comic.previewVideoUrl}
                 />
                 <ComicInfoCards />
+                <PhotoGuidelines />
               </div>
 
               {/* Right Column: Form */}

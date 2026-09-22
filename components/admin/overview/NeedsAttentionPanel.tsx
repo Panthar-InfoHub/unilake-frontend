@@ -5,6 +5,7 @@ import {
   AlertOctagon,
   CheckCircle2,
   Clock,
+  Mail,
   MessageSquare,
   PackageCheck,
   Ruler,
@@ -52,7 +53,8 @@ type AttentionItem = {
 };
 
 // Ordered by urgency — a failed shipment is a paid customer whose book is
-// stuck, an open feedback message is not.
+// stuck, an open feedback message is not. Enquiries sit above feedback for the
+// same reason: someone is waiting on a reply, where feedback expects none.
 const ITEMS: AttentionItem[] = [
   {
     key: "shiprocketFailed",
@@ -88,6 +90,13 @@ const ITEMS: AttentionItem[] = [
     icon: Clock,
     tone: "neutral",
     href: "/admin/orders?status=CREATED",
+  },
+  {
+    key: "openEnquiries",
+    label: "Open enquiries",
+    icon: Mail,
+    tone: "neutral",
+    href: "/admin/contact-enquiries",
   },
   {
     key: "openFeedback",

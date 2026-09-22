@@ -24,10 +24,8 @@ import {
 } from "@/components/ui/sidebar";
 
 const NAV_ITEMS = [
-  { label: "Overview", icon: LayoutDashboard, href: "/dashboard/overview" },
   { label: "Orders", icon: ShoppingCart, href: "/dashboard/orders" },
   { label: "Addresses", icon: MapPin, href: "/dashboard/addresses" },
-  { label: "Wishlist", icon: Heart, href: "/dashboard/wishlist" },
 ];
 
 export function DashboardSidebar() {

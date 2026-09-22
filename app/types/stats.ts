@@ -55,6 +55,8 @@ export interface NeedsAttention {
   abandonedCheckouts: number;
   staleTracking: number;
   openFeedback: number;
+  /** Unanswered /contact submissions. Counted apart from feedback — a waiting customer. */
+  openEnquiries: number;
 }
 
 export interface TopComic {

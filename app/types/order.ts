@@ -33,6 +33,23 @@ export interface AdminOrdersFilters {
   sortOrder?: SortOrder;
 }
 
+/**
+ * The personalised page-1 image for one order — the cover this child's book
+ * actually opens on, as opposed to `comic.coverThumbnailUrls`, which is the
+ * marketing thumbnail of the template and is identical for every customer.
+ */
+export interface GeneratedCover {
+  /** Web derivative (webp, 1600px). Falls back to the print master when absent. */
+  imageUrl: string;
+  variantIndex: number;
+  /**
+   * True once the customer sent the book to print — then this is literally the
+   * cover that was printed. False means generation finished but the customer
+   * has not confirmed their pick yet, so it can still change.
+   */
+  isSelected: boolean;
+}
+
 export interface AdminOrderRow {
   id: string;
   createdAt: string;
@@ -50,6 +67,8 @@ export interface AdminOrderRow {
   deliveredAt: string | null;
   childName: string | null;
   comicTitle: string;
+  /** Null when page 1 has not generated yet — render a placeholder, not the template art. */
+  coverImageUrl: string | null;
 }
 
 export interface AdminOrdersPagination {
@@ -159,6 +178,9 @@ export interface AdminOrderDetail {
     age: number | null;
     comic: { id: string; title: string; coverThumbnailUrls: string[] };
   };
+
+  /** Null when page 1 has not generated yet — an order at CREATED, or a failed page 1. */
+  generatedCover: GeneratedCover | null;
 
   webhookEvents: WebhookEvent[];
 }

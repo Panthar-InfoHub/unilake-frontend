@@ -1,14 +1,14 @@
 "use client";
 
-import { MessageSquare } from "lucide-react";
-import { FeedbackStatus } from "@/app/types/feedback";
+import { Mail } from "lucide-react";
+import { ContactEnquiryStatus } from "@/app/types/contactEnquiry";
 
-interface FeedbackPageHeaderProps {
-  activeFilter: FeedbackStatus | undefined;
-  onFilterChange: (filter: FeedbackStatus | undefined) => void;
+interface ContactEnquiryPageHeaderProps {
+  activeFilter: ContactEnquiryStatus | undefined;
+  onFilterChange: (filter: ContactEnquiryStatus | undefined) => void;
 }
 
-const TABS: { label: string; value: FeedbackStatus | undefined }[] = [
+const TABS: { label: string; value: ContactEnquiryStatus | undefined }[] = [
   { label: "All", value: undefined },
   { label: "Open", value: "OPEN" },
   { label: "Viewed", value: "VIEWED" },
@@ -16,23 +16,22 @@ const TABS: { label: string; value: FeedbackStatus | undefined }[] = [
   { label: "Dismissed", value: "DISMISSED" },
 ];
 
-export function FeedbackPageHeader({
+export function ContactEnquiryPageHeader({
   activeFilter,
   onFilterChange,
-}: FeedbackPageHeaderProps) {
+}: ContactEnquiryPageHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#914A8C]/15 mb-6">
       <div className="flex items-center gap-3.5">
         <div className="w-12 h-12 rounded-2xl bg-[#914A8C] text-[#FFD54A] flex items-center justify-center shadow-md shadow-[#914A8C]/20 shrink-0">
-          <MessageSquare className="w-6 h-6" />
+          <Mail className="w-6 h-6" />
         </div>
         <div>
           <h1 className="text-2xl font-black text-[#914A8C] uppercase tracking-wide">
-            Feedback
+            Contact Enquiries
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-[#914A8C]/75">
-            Book suggestions from the homepage. Contact enquiries live on their
-            own page.
+            Messages from the contact page. Each one is waiting on a reply.
           </p>
         </div>
       </div>

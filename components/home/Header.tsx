@@ -137,6 +137,7 @@ export default function Header({ topOffset = 0, hideBulbForced = false, flatBack
             { name: "Home", href: "/" },
             { name: "Our Books", href: "/comic" },
             { name: "How its works", href: "/how_it_work" },
+            { name: "Faq's", href: "/#faq" },
             { name: "Blogs", href: "/blog" },
             { name: "Team", href: "/team" }
           ].map((item) => (
@@ -360,6 +361,7 @@ export default function Header({ topOffset = 0, hideBulbForced = false, flatBack
             { name: "Home", href: "/" },
             { name: "Our Books", href: "/comic" },
             { name: "How its works", href: "/how_it_work" },
+            { name: "Faq's", href: "/#faq" },
             { name: "Blogs", href: "/blog" },
             { name: "Team", href: "/team" }
           ].map((item) => (

@@ -7,7 +7,8 @@ import FeedbackForm from "@/components/shared/FeedbackForm";
  * The homepage "Feedback & Suggestion" block.
  *
  * Owns only the section chrome — heading and spacing. The form itself lives in
- * components/shared/FeedbackForm so /contact can render the same one.
+ * components/shared/FeedbackForm. This is its only caller; /contact has its own
+ * ContactForm writing to a separate table.
  */
 export default function FaqFeedback() {
   return (

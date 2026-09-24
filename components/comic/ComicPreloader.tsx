@@ -55,7 +55,14 @@ export default function ComicPreloader({ childName, onComplete, facts = [] }: Co
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-[calc(100vh-100px)] pt-32 lg:pt-40 pb-12 px-4 overflow-hidden relative z-10 bg-[#F9E3C8]">
+    // `h-full` removed deliberately. It pinned this section to the viewport
+    // height, so the artwork below could only ever have the space left over
+    // after the heading, fact and bar — which is why raising its max-height
+    // alone did nothing. With min-height only, the section still fills the
+    // screen but is free to grow, and the artwork can be sized on its own
+    // terms. Top padding trimmed from pt-32/40 to pt-24/28 to hand a further
+    // ~50px back to it.
+    <div className="flex flex-col items-center justify-center w-full min-h-[calc(100vh-100px)] pt-24 lg:pt-28 pb-12 px-4 overflow-hidden relative z-10 bg-[#F9E3C8]">
        <h1 className={`${chauPhilomeneOne.className} text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#1a1a1a] text-center mb-3`}>
           Generating {childName}&apos;s Book
        </h1>
@@ -87,7 +94,15 @@ export default function ComicPreloader({ childName, onComplete, facts = [] }: Co
           ></div>
        </div>
 
-       <div className="relative w-full max-w-4xl flex-1 min-h-[250px] max-h-[500px]">
+       {/* Explicit height, NOT flex-1.
+
+           flex-1 meant "take what is left over", which capped the artwork at
+           roughly 470px however high the max-height was set — the max simply
+           never came into play. A declared height is what actually sizes it,
+           and object-contain keeps the aspect ratio, so height is the only
+           dimension worth setting. The width cap is just a ceiling for very
+           wide viewports. */}
+       <div className="relative w-full max-w-5xl h-[340px] sm:h-[460px] lg:h-[600px]">
           <Image
             src="/assets/bb6bfa052a589a79ee6faa505134d5646df98202.png"
             alt="Generating Book"

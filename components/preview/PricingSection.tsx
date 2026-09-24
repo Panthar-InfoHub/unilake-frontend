@@ -2,51 +2,49 @@
 
 import { usePublicComic } from "@/hooks/usePublicComics";
 import { useCountryStore } from "@/stores/useCountryStore";
-import { useState } from "react";
-import { toast } from "sonner";
-import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { hankenGrotesk } from "@/app/fonts";
 import Image from "next/image";
 
-import { SessionSnapshot } from "@/app/types/session";
-import { updateSession, attachUser } from "@/app/actions/session";
-import { useRouter } from "next/navigation";
-import LoginModal from "../checkout/LoginModal";
-import { useAuth } from "@/app/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { resolveMrp } from "@/lib/utils";
-import { useOrdersPaused } from "@/hooks/useSiteSettings";
-import { ORDERS_PAUSED_MESSAGE } from "@/lib/storeStatus";
+import type { CoverFormat } from "@/hooks/useCheckoutFlow";
 
+/**
+ * The cover-format selector and checkout call to action.
+ *
+ * Presentational and fully controlled: the preview page renders this several
+ * times down the scroll, so selection, in-flight state and the login modal all
+ * live once in useCheckoutFlow rather than inside each copy. Keeping any of
+ * that here would mean each block disagreed with the others about what the
+ * customer had picked.
+ */
 interface PricingSectionProps {
   comicId: string;
-  sessionId: string;
-  snapshot: SessionSnapshot;
   /**
    * Preview pages that exhausted every retry and have no finished variant.
    * Non-empty blocks checkout: a customer must not be able to pay for a book
    * with a page that does not exist, and the fix is free — regenerate it.
    */
   failedPageNumbers: number[];
+  selectedFormat: CoverFormat | null;
+  onSelectFormat: (format: CoverFormat) => void;
+  /** Drives the spinner. Shared, so every block reflects one submission. */
+  isUpdating: boolean;
+  isCheckoutDisabled: boolean;
+  onCheckout: () => void;
 }
 
 export default function PricingSection({
   comicId,
-  sessionId,
-  snapshot,
   failedPageNumbers,
+  selectedFormat,
+  onSelectFormat,
+  isUpdating,
+  isCheckoutDisabled,
+  onCheckout,
 }: PricingSectionProps) {
   const { data: comicDetail } = usePublicComic(comicId);
   const { selectedCountry, getCurrencySymbol } = useCountryStore();
-  const [selectedFormat, setSelectedFormat] = useState<"SOFTCOVER" | "HARDCOVER" | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  
-  const { isAuthenticated, loading: authLoading } = useAuth();
-  const router = useRouter();
-
-  // Must be read here, above the early return below — a hook called after a
-  // conditional return breaks the rules of hooks.
-  const ordersPaused = useOrdersPaused();
 
   if (!comicDetail) return null;
 
@@ -73,7 +71,7 @@ export default function PricingSection({
     return (
       <div className="flex flex-col items-center">
         {showMrp && (
-          <span className="text-sm font-medium text-gray-500 line-through leading-none mb-1">
+          <span className="text-[10px] font-medium text-gray-500 line-through leading-none mb-0.5">
             {currencySymbol} {mrp.toLocaleString("en-IN")}
           </span>
         )}
@@ -84,126 +82,74 @@ export default function PricingSection({
     );
   };
 
+  // Still needed locally for the warning banner below. The checkout guard that
+  // used the same value now lives in useCheckoutFlow, which computes it from
+  // the same prop.
   const hasFailedPages = failedPageNumbers.length > 0;
 
-  const handleCheckout = async () => {
-    // Store closed — stop here, on this page.
-    //
-    // Deliberately the FIRST thing in this function, before the cover-type
-    // PATCH, before the login modal, before anything touches the network.
-    // There is no point saving a format, asking someone to log in, or walking
-    // them through an address form for an order that cannot be placed.
-    //
-    // This is a courtesy, not the enforcement. The backend rejects checkout on
-    // its own, so a stale flag here (the public settings query caches for five
-    // minutes) can only mean someone gets to the address page and is stopped a
-    // step later — never that an order goes through.
-    if (ordersPaused) {
-      toast.error(ORDERS_PAUSED_MESSAGE);
-      return;
-    }
-
-    // Guarded here as well as on the disabled button: the button can be
-    // re-enabled from devtools, and this is the path to a real payment.
-    if (hasFailedPages) {
-      toast.error(
-        "Some pages could not be created. Please regenerate them before checking out."
-      );
-      return;
-    }
-
-    if (!selectedFormat) {
-      toast.error("Please select a cover format");
-      return;
-    }
-
-    if (authLoading) return;
-    
-    setIsUpdating(true);
-    try {
-      // 1. PATCH coverType
-      await updateSession(sessionId, { coverType: selectedFormat });
-      
-      // 2. Check auth
-      if (!isAuthenticated) {
-        setShowLoginModal(true);
-        setIsUpdating(false);
-        return;
-      }
-      
-      // 3. Attach user if missing
-      if (!snapshot.userId) {
-        await attachUser(sessionId);
-      }
-      
-      // 4. Navigate to checkout
-      router.push(`/personalize/${sessionId}/checkout`);
-      
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to update order details. Please try again.");
-      setIsUpdating(false);
-    }
-  };
-
   return (
-    <div className="w-full max-w-3xl mx-auto py-10 px-8 flex flex-col items-center bg-[#FFFFFF] rounded-[40px] border-[4px] border-[#914BBC] shadow-[12px_12px_0px_#403A8B] mt-12 mb-20 relative">
-      <h2 className={`${hankenGrotesk.className} text-2xl md:text-3xl text-center text-black font-semibold mb-2`}>
+    // max-w-xl (576px) rather than 2xl: at 2xl the two option cards left a wide
+    // band of dead space on either side, since the row only needs ~410px. The
+    // floor here is the title — "Complete Your Order To Unlock The Full Story"
+    // needs roughly 430px at text-xl, so going much below this wraps it to two
+    // lines and the card gets taller instead of narrower.
+    <div className="w-full max-w-xl mx-auto py-6 px-5 flex flex-col items-center bg-[#FFFFFF] rounded-[28px] border-[4px] border-[#914BBC] shadow-[12px_12px_0px_#403A8B] mt-8 mb-12 relative">
+      <h2 className={`${hankenGrotesk.className} text-lg md:text-xl text-center text-black font-semibold mb-1`}>
         Complete Your Order To Unlock The Full Story
       </h2>
 
-      <div className="md:hidden font-medium text-sm text-black mb-4 mt-2">
+      <div className="md:hidden font-medium text-xs text-black mb-2 mt-1">
         Choose Cover Format
       </div>
 
-      <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 w-full max-w-2xl mb-10 mt-8">
+      <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4 w-full max-w-lg mb-5 mt-4">
         {/* Softcover Option */}
         <div 
-          onClick={() => softcoverRule && setSelectedFormat("SOFTCOVER")}
-          className={`flex flex-col items-center p-5 rounded-[30px] transition-all cursor-pointer w-full max-w-[220px] ${
+          onClick={() => softcoverRule && onSelectFormat("SOFTCOVER")}
+          className={`flex flex-col items-center p-2.5 rounded-[18px] transition-all cursor-pointer w-full max-w-[150px] ${
             !softcoverRule ? "opacity-50 cursor-not-allowed border border-gray-200" :
             selectedFormat === "SOFTCOVER" ? "border-[4px] border-[#914BBC] scale-[1.02]" : "border border-black hover:border-gray-500"
           }`}
         >
-          <div className="text-[#403A8B] text-lg font-bold mb-1">SoftCover</div>
-          <div className="text-black text-xs mb-3 text-center">Flexible & Lightweight</div>
-          <div className="relative w-[110px] h-[145px] mb-3">
-            <Image 
-              src="/assets/home_page/softcover.png" 
-              alt="SoftCover" 
+          <div className="text-[#403A8B] text-sm font-bold mb-0.5">SoftCover</div>
+          <div className="text-black text-[10px] mb-1 text-center leading-tight">Flexible &amp; Lightweight</div>
+          <div className="relative w-[68px] h-[88px] mb-1">
+            <Image
+              src="/assets/home_page/softcover.png"
+              alt="SoftCover"
               fill
-              className="object-contain drop-shadow-md" 
+              className="object-contain drop-shadow-md"
             />
           </div>
-          <div className="text-black text-lg font-bold">
+          <div className="text-black text-sm font-bold">
             {renderPrice(softcoverRule)}
           </div>
         </div>
 
         {/* Middle Text */}
-        <div className="hidden md:flex flex-col items-center justify-center font-medium text-sm text-black">
+        <div className="hidden md:flex flex-col items-center justify-center font-medium text-xs text-black whitespace-nowrap">
           Choose Cover Format
         </div>
 
         {/* Hardcover Option */}
         <div 
-          onClick={() => hardcoverRule && setSelectedFormat("HARDCOVER")}
-          className={`flex flex-col items-center p-5 rounded-[30px] transition-all cursor-pointer w-full max-w-[220px] ${
+          onClick={() => hardcoverRule && onSelectFormat("HARDCOVER")}
+          className={`flex flex-col items-center p-2.5 rounded-[18px] transition-all cursor-pointer w-full max-w-[150px] ${
             !hardcoverRule ? "opacity-50 cursor-not-allowed border border-gray-200" :
             selectedFormat === "HARDCOVER" ? "border-[4px] border-[#914BBC] scale-[1.02]" : "border border-black hover:border-gray-500"
           }`}
         >
-          <div className="text-[#403A8B] text-lg font-bold mb-1">HardCover</div>
-          <div className="text-black text-xs mb-3 text-center">Sturdy & Long Lasting</div>
-          <div className="relative w-[110px] h-[145px] mb-3">
-            <Image 
-              src="/assets/home_page/hardcover.png" 
-              alt="HardCover" 
+          <div className="text-[#403A8B] text-sm font-bold mb-0.5">HardCover</div>
+          <div className="text-black text-[10px] mb-1 text-center leading-tight">Sturdy &amp; Long Lasting</div>
+          <div className="relative w-[68px] h-[88px] mb-1">
+            <Image
+              src="/assets/home_page/hardcover.png"
+              alt="HardCover"
               fill
-              className="object-contain drop-shadow-md" 
+              className="object-contain drop-shadow-md"
             />
           </div>
-          <div className="text-black text-lg font-bold">
+          <div className="text-black text-sm font-bold">
             {renderPrice(hardcoverRule)}
           </div>
         </div>
@@ -211,7 +157,7 @@ export default function PricingSection({
 
       {hasFailedPages && (
         <div
-          className={`${hankenGrotesk.className} w-full max-w-[420px] mb-5 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900`}
+          className={`${hankenGrotesk.className} w-full max-w-[400px] mb-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-center text-xs text-amber-900`}
         >
           <span className="font-bold">
             {failedPageNumbers.length === 1
@@ -223,24 +169,36 @@ export default function PricingSection({
       )}
 
       <button
-        onClick={handleCheckout}
-        disabled={isUpdating || authLoading || hasFailedPages}
-        className="px-8 py-3 bg-gradient-to-b from-[#5c58c2] to-[#403A8B] hover:from-[#6a66d0] hover:to-[#4a449d] text-white rounded-full font-bold text-sm md:text-base uppercase tracking-wider transition-all w-full max-w-[340px] border-2 border-[#1e1c4a] shadow-[0px_4px_0px_#FFD54A,0px_10px_20px_rgba(64,58,139,0.5)] active:translate-y-[4px] active:shadow-[0px_0px_0px_#FFD54A,0px_4px_10px_rgba(64,58,139,0.5)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+        onClick={onCheckout}
+        disabled={isCheckoutDisabled}
+        // Solid #3E419B rather than the old two-stop gradient: a single
+        // specified colour cannot be expressed as a gradient without inventing
+        // a second shade. Hover uses brightness rather than a hand-picked hex
+        // for the same reason — and matches how the personalize form's button
+        // handles its hover. Bottom edge and drop shadow are #BF8902 and a
+        // tint of the new blue, so nothing purple or yellow is left behind.
+        // Narrower button AND larger text pull against each other, so the
+        // horizontal padding drops from px-6 to px-5 to buy back the room.
+        // whitespace-nowrap is the safety net: at 20 uppercase characters this
+        // is close enough to the limit that a narrow viewport could otherwise
+        // break "CONTINUE TO CHECKOUT" across two lines, which looks broken in
+        // a pill. Narrow this further and the text size has to come back down.
+        className="px-5 py-2.5 bg-[#3E419B] hover:brightness-110 text-white rounded-full font-extrabold text-base uppercase tracking-wide whitespace-nowrap transition-all w-full max-w-[260px] border-2 border-[#1e1c4a] shadow-[0px_4px_0px_#BF8902,0px_10px_20px_rgba(62,65,155,0.5)] active:translate-y-[4px] active:shadow-[0px_0px_0px_#BF8902,0px_4px_10px_rgba(62,65,155,0.5)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isUpdating ? (
           <>
-            <Loader2 className="animate-spin" size={24} />
+            <Loader2 className="animate-spin" size={20} />
             Updating...
           </>
         ) : (
-          "CONTIUNE TO CHECKOUT"
+          "CONTINUE TO CHECKOUT"
         )}
       </button>
 
-      <LoginModal
-        isOpen={showLoginModal}
-        onOpenChange={setShowLoginModal}
-      />
+      {/* No LoginModal here. This component renders several times down the
+          preview, and one modal per copy would mount several dialogs for a
+          single login. PreviewViewer renders exactly one, driven by the shared
+          useCheckoutFlow state. */}
     </div>
   );
 }

@@ -27,6 +27,22 @@ export const SAMPLE_NAMES = {
   long: "Christopher",
 };
 
+/**
+ * Hard cap on a child's name in the customer-facing personalization forms.
+ *
+ * The name is stamped into speech bubbles at generation time, so a long one is
+ * auto-shrunk or clipped in the printed book. Capping the input is what stops
+ * that from reaching print.
+ *
+ * The backend independently allows up to 50 characters
+ * (session.schema.ts) — this is a stricter product rule layered on top, not a
+ * mirror of it. Raising this alone will not break anything server-side.
+ *
+ * Shared by ComicPersonalizeForm and NewPhotoForm, which duplicate each other's
+ * field set by design. A second copy of this number would inevitably drift.
+ */
+export const MAX_NAME_LENGTH = 9;
+
 export const SAMPLE_PRONOUNS: Record<string, string> = {
   "{pronoun_subject}": "he",
   "{pronoun_object}": "him",

@@ -11,6 +11,22 @@ import LockedPageOverlay from "./LockedPageOverlay";
 import RegenerateSlide from "./RegenerateSlide";
 import { PublicComicDetailPage } from "@/app/types/comic";
 
+/**
+ * Widest a page card is ever drawn, in px. The cap that applies to landscape
+ * pages, where height is never the binding constraint.
+ */
+const PAGE_MAX_WIDTH_PX = 540;
+
+/**
+ * Tallest a page card is ever drawn, as a share of the viewport.
+ *
+ * This is what guarantees a whole page is visible at once. Width alone cannot:
+ * a portrait page at 480px wide is ~720px tall, which does not fit a laptop
+ * viewport, so the customer could never see a full page without scrolling.
+ * Leaves room for the "Page N" label beneath and the page's own padding.
+ */
+const PAGE_MAX_HEIGHT_VH = 72;
+
 interface PreviewPageCardProps {
   page: SessionPage;
   comicPageMetadata: PublicComicDetailPage | undefined;
@@ -151,8 +167,22 @@ export default function PreviewPageCard({
     "hover:brightness-105 active:scale-95 disabled:opacity-0 disabled:pointer-events-none";
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-full max-w-[800px] mx-auto py-4">
-      <div className="flex flex-col items-center w-full max-w-[600px]">
+    <div className="relative flex flex-col items-center justify-center w-full max-w-[780px] mx-auto py-4">
+      {/* Width is bounded by BOTH the px cap and the viewport height, whichever
+          binds first for this page's shape.
+
+          `aspectRatio * 65vh` is the width at which this page would be exactly
+          65vh tall, so taking the min with the px cap means a portrait page
+          shrinks until it fits the screen while a landscape one simply stops at
+          480px. Done here rather than with a CSS max-height because the ratio
+          is only known in JS, and a max-height on an aspect-ratio box clips
+          rather than scales. */}
+      <div
+        className="flex flex-col items-center w-full"
+        style={{
+          maxWidth: `min(${PAGE_MAX_WIDTH_PX}px, calc(${aspectRatio} * ${PAGE_MAX_HEIGHT_VH}vh))`,
+        }}
+      >
         <div className="relative w-full">
           <div
             className="relative w-full rounded-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] bg-slate-100 ring-1 ring-black/5"

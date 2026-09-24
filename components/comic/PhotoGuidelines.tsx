@@ -29,7 +29,7 @@ export default function PhotoGuidelines() {
   // Track example images that failed to load so we show a neutral placeholder
   // instead of a broken-image icon.
   const [missingExamples, setMissingExamples] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   return (
@@ -40,10 +40,11 @@ export default function PhotoGuidelines() {
 
       {/* Text rules */}
       <ul className="list-disc list-inside space-y-0.5 text-xs text-[#333] mb-3">
-        <li>No one else should be in the picture</li>
-        <li>Child should be facing the camera</li>
-        <li>Face &amp; hair should not touch the edges</li>
-        <li>Hands or objects should not obstruct the face</li>
+        <li>Choose a clear, smiling photo.</li>
+        <li>Make sure the child’s full face is clearly visible.</li>
+        <li>No hats, sunglasses, hands or objects should obstruct the face</li>
+        <li>Avoid funny/distorted expressions and blurry photos.</li>
+        <li>No group photos or distant shots.</li>
       </ul>
 
       {/* Example photo grid — 3 good, 3 bad */}
@@ -64,7 +65,7 @@ export default function PhotoGuidelines() {
                   className="object-cover"
                   onError={() =>
                     setMissingExamples((prev) =>
-                      new Set(prev).add(example.file)
+                      new Set(prev).add(example.file),
                     )
                   }
                 />

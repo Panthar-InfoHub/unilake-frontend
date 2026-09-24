@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import {
   RegenerateResponse,
   SendToPrintSelection,
@@ -16,7 +16,16 @@ import SendToPrintSection from "./SendToPrintSection";
 import UploadAnotherPhotoBanner from "./UploadAnotherPhotoBanner";
 import Image from "next/image";
 import { ChevronDown, ImageIcon, ArrowLeftRight } from "lucide-react";
-import { chauPhilomeneOne } from "@/app/fonts";
+import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import LoginModal from "../checkout/LoginModal";
+import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
+
+/**
+ * How many comic pages appear between repeated pricing blocks. The block after
+ * the final page is suppressed so it never stacks directly on top of the
+ * closing one below the scroll.
+ */
+const PAGES_BETWEEN_PRICING = 3;
 
 /** Highest variantIndex that has actually finished, or null if none have. */
 function newestReadyIndex(page: SessionPage): number | null {
@@ -102,6 +111,27 @@ export default function PreviewViewer({
     [snapshot.pages]
   );
 
+  // Called ONCE for the whole page, however many pricing blocks render below.
+  // Cover selection, the in-flight flag and the login modal all live here, so
+  // every block shows the same choice and a single modal serves all of them.
+  const checkout = useCheckoutFlow({
+    sessionId: snapshot.id,
+    snapshot,
+    failedPageNumbers: failedPreviewPages,
+  });
+
+  // Spread into each block so the repeats can never drift apart from the
+  // closing one — there is exactly one prop set.
+  const pricingProps = {
+    comicId: snapshot.comicId,
+    failedPageNumbers: failedPreviewPages,
+    selectedFormat: checkout.selectedFormat,
+    onSelectFormat: checkout.setSelectedFormat,
+    isUpdating: checkout.isUpdating,
+    isCheckoutDisabled: checkout.isCheckoutDisabled,
+    onCheckout: checkout.handleCheckout,
+  };
+
   const { selections, blockedPages, hasInFlight } = useMemo(() => {
     const sel: SendToPrintSelection[] = [];
     const blocked: number[] = [];
@@ -136,7 +166,10 @@ export default function PreviewViewer({
     comicDetail !== undefined && snapshot.pages.length !== comicDetail.pageCount;
 
   return (
-    <div className="w-full flex flex-col items-center bg-[#F1E0CA] min-h-screen py-12">
+    // Same #F9E3C8 as the preloader and the page wrapper. Left at #F1E0CA this
+    // would just move the seam — the preloader hands over to this view inside
+    // the same page, so all three have to agree.
+    <div className="w-full flex flex-col items-center bg-[#F9E3C8] min-h-screen py-12">
       
       {isGeneratingSession && (
         <PreviewProgress pagesReady={pagesReady} totalPages={totalPreviewPages} />
@@ -149,9 +182,33 @@ export default function PreviewViewer({
       <div className="w-full max-w-4xl px-4 flex flex-col items-center gap-4">
         
         <div className="text-center mb-8 w-full mt-20 relative z-10">
+          {/* Comic title. Read from the snapshot rather than comicDetail so it
+              paints with the first render — comicDetail arrives from a separate
+              query and would make the title pop in a beat later. Deliberately
+              subordinate to the personalised heading below: the child's name is
+              the hook on this page, the book is the context. */}
+          <p className={`${hankenGrotesk.className} text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-[#3F3C95]/70 mb-2`}>
+            {snapshot.comic.title}
+          </p>
+
           <h2 className={`${chauPhilomeneOne.className} text-2xl md:text-4xl text-[#3F3C95]`}>
             {isPaid ? "Your Complete Storybook" : `Preview for ${snapshot.childName || "Your Child"}`}
           </h2>
+
+          {/* Description only exists on the public comic detail, so unlike the
+              title it cannot render until that query resolves, and it is null
+              for comics where no admin wrote one.
+
+              Shown in full, no clamp. Safe to render as text: Comic.description
+              is plain @db.Text, not the TipTap HTML that blogs and site pages
+              carry — so no sanitiser is involved. whitespace-pre-line keeps any
+              paragraph breaks the admin typed. */}
+          {comicDetail?.description && (
+            <p className={`${hankenGrotesk.className} mt-3 mx-auto max-w-2xl text-sm md:text-base text-gray-600 leading-relaxed whitespace-pre-line`}>
+              {comicDetail.description}
+            </p>
+          )}
+
           <div className="mt-4 flex flex-col items-center gap-2 text-gray-500 text-sm md:text-base font-medium">
             <span className="flex items-center gap-2">
               <ImageIcon size={18} className="text-[#3F3C95]" /> Watch the story come alive one page at a time!
@@ -235,34 +292,47 @@ export default function PreviewViewer({
           </div>
         )}
 
-        {/* All Pages */}
-        {snapshot.pages.map((page) => {
+        {/* All Pages, with a pricing block after every third one. */}
+        {snapshot.pages.map((page, index) => {
           const comicPageMetadata = comicDetail?.pages.find(p => p.pageNumber === page.pageNumber);
+
+          // Counted by position in the rendered list, not by pageNumber, so a
+          // gap in page numbering cannot throw the rhythm off.
+          //
+          // Never after the last page: the closing block already sits directly
+          // below the scroll, and the two would stack back to back whenever the
+          // page count divides by three.
+          const isLastPage = index === snapshot.pages.length - 1;
+          const showInlinePricing =
+            !isPaid &&
+            !isLastPage &&
+            (index + 1) % PAGES_BETWEEN_PRICING === 0;
+
           return (
-            <div key={page.pageId} className="w-full flex flex-col items-center">
-              <PreviewPageCard
-                page={page}
-                comicPageMetadata={comicPageMetadata}
-                onRegenerate={onRegenerate}
-                isGeneratingSession={isGeneratingSession || isGeneratingPaid}
-                isPaid={isPaid}
-                selectedVariantIndex={displayIndex(page)}
-                onVariantChange={handleVariantChange}
-                generatingFact={generatingFact}
-              />
-              <ChevronDown size={32} className="text-gray-300 mt-4" />
-            </div>
+            <Fragment key={page.pageId}>
+              <div className="w-full flex flex-col items-center">
+                <PreviewPageCard
+                  page={page}
+                  comicPageMetadata={comicPageMetadata}
+                  onRegenerate={onRegenerate}
+                  isGeneratingSession={isGeneratingSession || isGeneratingPaid}
+                  isPaid={isPaid}
+                  selectedVariantIndex={displayIndex(page)}
+                  onVariantChange={handleVariantChange}
+                  generatingFact={generatingFact}
+                />
+                <ChevronDown size={32} className="text-gray-300 mt-4" />
+              </div>
+
+              {showInlinePricing && <PricingSection {...pricingProps} />}
+            </Fragment>
           );
         })}
       </div>
 
+      {/* The closing block. Same props as every repeat above it. */}
       {!isPaid ? (
-        <PricingSection
-          comicId={snapshot.comicId}
-          sessionId={snapshot.id}
-          snapshot={snapshot}
-          failedPageNumbers={failedPreviewPages}
-        />
+        <PricingSection {...pricingProps} />
       ) : status === "PAID_PAGES_READY" ? (
         <SendToPrintSection
           sessionId={snapshot.id}
@@ -273,7 +343,12 @@ export default function PreviewViewer({
           pageCountMismatch={pageCountMismatch}
         />
       ) : null}
-      
+
+      {/* Exactly one, for however many pricing blocks rendered above. */}
+      <LoginModal
+        isOpen={checkout.showLoginModal}
+        onOpenChange={checkout.setShowLoginModal}
+      />
     </div>
   );
 }

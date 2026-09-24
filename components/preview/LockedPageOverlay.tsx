@@ -29,18 +29,21 @@ export default function LockedPageOverlay({
   return (
     <>
       {artworkUrl && (
-        // Optimised deliberately hard: this image is about to be blurred into
-        // illegibility, so there is no reason to ship the print master. The raw
-        // PNG runs 4-5MB; at 600px/q40 Next serves ~30KB of WebP, which looks
-        // identical once blurred. Decorative, so alt="" and aria-hidden — the
-        // heading below already carries the meaning.
+        // Still optimised hard — there is no reason to ship the 4-5MB print
+        // master behind a scrim. But quality tracks the blur: at the old 10px
+        // the artwork was illegible and q40 was free, whereas at 5px the page
+        // is meant to be made out, and q40's blockiness would read as a
+        // compression fault rather than a deliberate veil. q65 is still only
+        // ~60KB of WebP. Raise this again if the blur is lowered further.
+        // Decorative, so alt="" and aria-hidden — the heading below already
+        // carries the meaning.
         <Image
           src={artworkUrl}
           alt=""
           aria-hidden="true"
           fill
           sizes="600px"
-          quality={40}
+          quality={75}
           className="object-cover select-none pointer-events-none"
         />
       )}
@@ -48,7 +51,12 @@ export default function LockedPageOverlay({
       <div
         className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 rounded-sm ${
           artworkUrl
-            ? "bg-white/30 backdrop-blur-[10px]"
+            ? // THE BLUR KNOB. Halved from 10px so a locked page reads as a
+              // real, recognisable page rather than a smear. The white scrim
+              // stays at /30 — with less blur it is what keeps the heading
+              // legible over a busy or pale page, so lower it separately and
+              // only if the text still passes contrast.
+              "bg-white/30 backdrop-blur-[4px]"
             : // No artwork to blur — fall back to the flat box this component
               // rendered before, so the card is never a transparent hole.
               "bg-gray-100/80 backdrop-blur-sm"

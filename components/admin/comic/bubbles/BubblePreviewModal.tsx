@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import {
   Dialog,
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SegmentedControl } from "./SegmentedControl";
+import { PreviewZoomViewport } from "./PreviewZoomViewport";
 import { usePreviewPageStamp } from "@/hooks/usePages";
 import { SAMPLE_NAMES } from "@/lib/dialogueTokens";
 import type {
@@ -165,13 +165,22 @@ export function BubblePreviewModal({
               <p className="text-xs text-red-700 max-w-md">{errorMessage}</p>
             </div>
           ) : preview.data ? (
-            <Image
+            /* Fitted into a fixed-height viewport rather than rendered at full
+               width: a tall page used to run past the bottom of the dialog and
+               force it to scroll. The viewport also carries click-to-zoom, so
+               shrinking it here costs no detail — 1:1 inspection is a click
+               away. */
+            <PreviewZoomViewport
+              /* Remounts on every new render, which is what clears any zoom
+                 and pan left over from the previous image. Keyed on the
+                 submission timestamp rather than the image itself: the data
+                 URI is megabytes, and this component re-renders on every
+                 keystroke in the name field. */
+              key={preview.submittedAt}
               src={preview.data.image}
+              naturalWidth={preview.data.artworkWidth}
+              naturalHeight={preview.data.artworkHeight}
               alt={`Rendered preview of page ${pageNumber}`}
-              width={preview.data.artworkWidth}
-              height={preview.data.artworkHeight}
-              unoptimized
-              className="block w-full h-auto rounded-xl"
             />
           ) : (
             <p className="text-xs text-neutral-400">No preview yet.</p>

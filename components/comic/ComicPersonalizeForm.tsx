@@ -34,6 +34,7 @@ import { saveSession } from "@/app/lib/session-storage";
 import { normalizePhoto } from "@/app/lib/photo-normalize";
 import { checkPhoto } from "@/app/lib/photo-validate";
 import ImageCropModal from "./ImageCropModal";
+import { MAX_NAME_LENGTH } from "@/lib/dialogueTokens";
 
 interface ComicPersonalizeFormProps {
   comic: PublicComicDetail;
@@ -43,11 +44,15 @@ interface ComicPersonalizeFormProps {
 export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonalizeFormProps) {
   const router = useRouter();
 
+  // Everything starts empty. A pre-selected gender, age or birth month is a
+  // value the parent never chose but that ships in their book — "Boy" and "4"
+  // submit silently if they skip the field. An unset dropdown forces a real
+  // answer and makes the required-field validation below meaningful.
   const [formData, setFormData] = useState({
     name: "",
-    gender: "Boy",
-    age: "4",
-    birthMonth: "November",
+    gender: "",
+    age: "",
+    birthMonth: "",
     email: "",
     consent: false,
   });
@@ -170,13 +175,22 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
     e.preventDefault();
     
     // Client-side Validation
-    if (!formData.name) return toast.error("Please enter the child's name");
+    // Gender and age are checked explicitly now that they no longer carry a
+    // default — before, an untouched dropdown quietly submitted "Boy" and 4.
+    if (!formData.name.trim()) return toast.error("Please enter the child's name");
+    if (!formData.gender) return toast.error("Please select the child's gender");
+    if (!formData.age) return toast.error("Please select the child's age");
     if (!formData.email) return toast.error("Please enter a notification email");
     if (!formData.consent) return toast.error("You must agree to the privacy policy");
     if (photoState === "checking") return toast.error("Still checking your photo — one moment");
     if (!normalizedPhoto) return toast.error("Please upload a photo of the child");
 
     setIsLoading(true);
+
+    // Trimmed once, here, so the name that reaches the session, localStorage and
+    // the success callback is the same string — stray whitespace would otherwise
+    // be stamped into the speech bubbles.
+    const childName = formData.name.trim();
 
     try {
       // The photo was normalized and face-checked at drop time, so by the point we
@@ -194,7 +208,7 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
       // 2. Update Session Details
       setLoadingStep("Saving details...");
       await updateSession(sessionId, {
-        childName: formData.name,
+        childName,
         age: parseInt(formData.age, 10),
         pronounKey: formData.gender === "Boy" ? "HE" : "SHE",
         notificationEmail: formData.email,
@@ -221,13 +235,13 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
         wsRoomToken,
         comicId: comic.id,
         createdAt: new Date().toISOString(),
-        childName: formData.name,
+        childName,
       });
 
       // 7. Redirect
       const redirectUrl = `/personalize/${sessionId}/preview`;
       if (onSuccess) {
-        onSuccess(formData.name, redirectUrl);
+        onSuccess(childName, redirectUrl);
       } else {
         router.push(redirectUrl);
       }
@@ -265,11 +279,21 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5 mb-6">
         {/* Name */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm text-[#333333] font-medium">Child&apos;s Name *</label>
+          <label className="text-sm text-[#333333] font-medium">
+            Child&apos;s Name *
+            <span className="ml-1 font-normal text-gray-400">
+              (max {MAX_NAME_LENGTH} characters)
+            </span>
+          </label>
           <input
             type="text"
-            placeholder="Enter name..."
             required
+            // Hard cap rather than a validation message: the name is stamped
+            // into the speech bubbles, and a longer one gets auto-shrunk or
+            // clipped at print. Stopping the keystroke is kinder than letting a
+            // parent type "Alexandria" and rejecting it at submit. The label
+            // above says why input stops, or the field just feels broken.
+            maxLength={MAX_NAME_LENGTH}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:border-[#3F3C95] transition-colors"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -285,6 +309,12 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
               value={formData.gender}
               onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
             >
+              {/* `disabled` on the empty option: gender is required, so once a
+                  real choice is made there is no reason to offer a way back to
+                  unset. It still shows while nothing is picked. */}
+              <option value="" disabled>
+                Select gender
+              </option>
               <option value="Boy">Boy</option>
               <option value="Girl">Girl</option>
             </select>
@@ -305,6 +335,9 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
               value={formData.age}
               onChange={(e) => setFormData({ ...formData, age: e.target.value })}
             >
+              <option value="" disabled>
+                Select age
+              </option>
               {Array.from({ length: 18 }, (_, i) => i + 1).map((age) => (
                 <option key={age} value={age.toString()}>{age}</option>
               ))}
@@ -326,6 +359,9 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
               value={formData.birthMonth}
               onChange={(e) => setFormData({ ...formData, birthMonth: e.target.value })}
             >
+              {/* Not disabled, unlike gender and age: birth month is optional,
+                  so clearing it back to blank has to stay possible. */}
+              <option value="">Select month</option>
               {months.map((month) => (
                 <option key={month} value={month}>{month}</option>
               ))}
@@ -345,7 +381,10 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
             type="email"
             required
             placeholder="someone@gmail.com"
-            className="w-full px-4 py-2.5 rounded-xl border border-[#3F3C95] bg-[#EBE7FF] text-[#3F3C95] placeholder-[#3F3C95]/60 focus:outline-none focus:ring-1 focus:ring-[#3F3C95] transition-colors"
+            // Styled like every other field rather than filled purple with
+            // purple placeholder text — that combination read as a real entered
+            // value. The example is kept, but greyed so it is clearly a hint.
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-[#333333] placeholder-gray-400 focus:outline-none focus:border-[#3F3C95] transition-colors"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />

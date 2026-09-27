@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { chauPhilomeneOne } from "@/app/fonts";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 
 import { TeamMember } from "@/app/types/teamMember";
 import TeamMemberCard from "@/components/team/TeamMemberCard";
@@ -27,8 +28,10 @@ export default function OurTeam({ members }: OurTeamProps) {
           />
         </svg>
 
-        {/* Text overlay — centered vertically over the SVG */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
+        {/* Text overlay — centered vertically on the band's flat strip
+            (viewBox y 46→240 of 311 → 14.8% top / 22.8% bottom), not the
+            whole SVG box, whose flares sit lower and would center it low. */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] flex items-center pointer-events-none">
           <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-center">
             <div className="flex items-center justify-between w-full max-w-[270px] sm:max-w-[460px] md:max-w-[620px] lg:max-w-[780px] xl:max-w-[840px] px-2 sm:px-0">
               {/* Left Title Word */}
@@ -37,11 +40,7 @@ export default function OurTeam({ members }: OurTeamProps) {
                   ${chauPhilomeneOne.className}
                   text-white
                   uppercase
-                  text-2xl
-                  sm:text-3xl
-                  md:text-4xl
-                  lg:text-5xl
-                  xl:text-6xl
+                  ${BANNER_HEADING_SIZE}
                   z-30
                   relative
                 `}
@@ -55,11 +54,7 @@ export default function OurTeam({ members }: OurTeamProps) {
                   ${chauPhilomeneOne.className}
                   text-white
                   uppercase
-                  text-2xl
-                  sm:text-3xl
-                  md:text-4xl
-                  lg:text-5xl
-                  xl:text-6xl
+                  ${BANNER_HEADING_SIZE}
                   z-30
                   relative
                 `}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import {
   Dialog,
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SegmentedControl } from "./SegmentedControl";
+import { PreviewZoomViewport } from "./PreviewZoomViewport";
 import { usePreviewPageStamp } from "@/hooks/usePages";
 import { SAMPLE_NAMES } from "@/lib/dialogueTokens";
 import type {
@@ -41,8 +41,13 @@ interface BubblePreviewModalProps {
 }
 
 /**
- * Shows the REAL text render of a page: actual fonts, actual glyph widths,
- * actual auto-shrink. Not the Konva approximation on the mapping canvas.
+ * Shows the REAL backend text render of a page: actual fonts, actual glyph
+ * widths, actual auto-shrink, name colour included.
+ *
+ * The mapping canvas now draws with a copy of the same layout
+ * (lib/bubbleLayout.ts), so this should agree with it. This is the final check
+ * against the real renderer itself, and the only place to try any name and
+ * pronoun.
  *
  * Text only — the face swap is a separate pipeline stage and is not involved.
  * For a page with hasFace off, this is pixel-identical to what prints.
@@ -93,7 +98,7 @@ export function BubblePreviewModal({
             Preview — Page {pageNumber}
           </DialogTitle>
           <DialogDescription className="text-xs text-neutral-500">
-            Real text rendering with your fonts. No face swap. Nothing is saved.
+            Final check with the real print renderer. No face swap. Nothing is saved.
           </DialogDescription>
         </DialogHeader>
 
@@ -165,13 +170,22 @@ export function BubblePreviewModal({
               <p className="text-xs text-red-700 max-w-md">{errorMessage}</p>
             </div>
           ) : preview.data ? (
-            <Image
+            /* Fitted into a fixed-height viewport rather than rendered at full
+               width: a tall page used to run past the bottom of the dialog and
+               force it to scroll. The viewport also carries click-to-zoom, so
+               shrinking it here costs no detail — 1:1 inspection is a click
+               away. */
+            <PreviewZoomViewport
+              /* Remounts on every new render, which is what clears any zoom
+                 and pan left over from the previous image. Keyed on the
+                 submission timestamp rather than the image itself: the data
+                 URI is megabytes, and this component re-renders on every
+                 keystroke in the name field. */
+              key={preview.submittedAt}
               src={preview.data.image}
+              naturalWidth={preview.data.artworkWidth}
+              naturalHeight={preview.data.artworkHeight}
               alt={`Rendered preview of page ${pageNumber}`}
-              width={preview.data.artworkWidth}
-              height={preview.data.artworkHeight}
-              unoptimized
-              className="block w-full h-auto rounded-xl"
             />
           ) : (
             <p className="text-xs text-neutral-400">No preview yet.</p>

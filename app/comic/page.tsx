@@ -13,11 +13,9 @@ import { usePublicComics } from "@/hooks/usePublicComics";
 export default function ComicIndexPage() {
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
 
+  // "" means no filter — that's what each dropdown's "All …" option sends.
   const handleFilterChange = (filterId: string, value: string) => {
-    setSelectedFilters((prev) => ({
-      ...prev,
-      [filterId]: prev[filterId] === value ? "" : value,
-    }));
+    setSelectedFilters((prev) => ({ ...prev, [filterId]: value }));
   };
 
   const { data: comics, isLoading, error } = usePublicComics({

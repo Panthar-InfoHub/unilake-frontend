@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import StoryFilters from "@/components/home/StoryFilters";
 import StoryCard from "@/components/home/StoryCard";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 import { usePublicComics } from "@/hooks/usePublicComics";
 import { Loader2 } from "lucide-react";
 import { HowItWorks } from "@/app/types/howItWorks";
@@ -17,11 +18,9 @@ interface ChooseStoryProps {
 export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
 
+  // "" means no filter — that's what each dropdown's "All …" option sends.
   const handleFilterChange = (filterId: string, value: string) => {
-    setSelectedFilters((prev) => ({
-      ...prev,
-      [filterId]: prev[filterId] === value ? "" : value,
-    }));
+    setSelectedFilters((prev) => ({ ...prev, [filterId]: value }));
   };
 
   const { data: comics, isLoading, error } = usePublicComics({
@@ -49,61 +48,60 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
           />
         </svg>
 
-        {/* Text overlay — centered vertically over the SVG */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full px-8 pl-12 sm:pl-28 md:pl-40 lg:pl-52 xl:pl-[280px]">
-            <h2
-              className={`
-                ${chauPhilomeneOne.className}
-                text-white
-                uppercase
-                text-2xl
-                sm:text-3xl
-                md:text-4xl
-                lg:text-5xl
-                z-30
-                relative
-              `}
-            >
-              Choose Your Story
-            </h2>
+        {/* Title + dragon form ONE row that is centered as a group. The
+            flame's tip is the very first pixel column of DragonImg.png, so
+            placing the dragon's slot directly after the title in the flow
+            makes the flame start exactly at the "Y" — at every width, with
+            no measuring. Centering the title alone can't work: on wide
+            screens title + dragon don't fit to the right of center, so
+            the dragon gets pushed back over the text.
+            Vertically the row spans only the band's flat strip (viewBox y
+            46→240 of 311 → 14.8% top / 22.8% bottom), not the whole SVG box,
+            whose flares sit lower and would center the title visibly low.
+            The dragon slot stretches to this row, so the flame follows. */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] max-w-7xl mx-auto w-full px-4 sm:px-8 flex justify-center pointer-events-none">
+          <h2
+            className={`
+              ${chauPhilomeneOne.className}
+              self-center
+              shrink-0
+              whitespace-nowrap
+              text-white
+              uppercase
+              ${BANNER_HEADING_SIZE}
+              z-30
+              relative
+            `}
+          >
+            Choose Your Story
+          </h2>
+
+          {/* Dragon slot — spans the full band height (flex stretch) and
+              matches the dragon's width. The flame's tip sits at 53.6% of
+              the image's height (measured from the PNG), so centering that
+              line on the band puts the flame level with the title at every
+              size, instead of fixed bottom offsets that drift per breakpoint. */}
+          <div className="relative shrink-0 w-[140px] sm:w-[290px] md:w-[380px] lg:w-[460px] xl:w-[520px]">
+            <Image
+              src="/assets/home_page/DragonImg.png"
+              alt="Dragon"
+              width={669}
+              height={374}
+              priority
+              className="
+                absolute
+                left-0
+                w-full
+                h-auto
+                top-1/2
+                translate-y-[-53.6%]
+                pointer-events-none
+                select-none
+                z-20
+              "
+            />
           </div>
         </div>
-
-        {/* Dragon */}
-        <Image
-          src="/assets/home_page/DragonImg.png"
-          alt="Dragon"
-          width={680}
-          height={425}
-          priority
-          className="
-            absolute
-            right-4
-            sm:right-8
-            md:right-16
-            lg:right-32
-            xl:right-48
-
-            bottom-[-10px]
-            sm:bottom-[-15px]
-            md:bottom-[-20px]
-            lg:bottom-[-25px]
-            xl:bottom-[-30px]
-
-            w-[180px]
-            sm:w-[260px]
-            md:w-[340px]
-            lg:w-[420px]
-            xl:w-[480px]
-
-            h-auto
-            object-contain
-            pointer-events-none
-            select-none
-            z-20
-          "
-        />
       </div>
 
       {/* ===== Filters + Cards Grid ===== */}
@@ -163,18 +161,25 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
               />
             </svg>
 
-            {/* Text overlay — centered vertically over the SVG */}
-            <div className="absolute inset-0 flex items-center pointer-events-none">
-              <div className="max-w-7xl mx-auto w-full px-8 md:px-14 lg:px-20 relative">
+            {/* Text overlay — centered vertically over the SVG.
+                The right padding reserves the robot's footprint (its `right`
+                offset + width + a small gap, per breakpoint below), so the
+                title is centered in the space left of the robot. Below 1280px
+                this container ends at the viewport edge, so the padding equals
+                that footprint; above that the container is centered, so the
+                reservation shrinks by the side gutter `(100vw - 1280px) / 2`.
+                Vertically: centered on the band's flat strip (14.8% top /
+                22.8% bottom), not the whole SVG box — see the banner above. */}
+            <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] flex items-center pointer-events-none">
+              <div className="max-w-7xl mx-auto w-full relative flex justify-center pl-8 pr-[186px] sm:pr-[262px] md:pr-[348px] lg:pr-[452px] xl:pr-[max(2rem,calc(536px_-_(100vw_-_1280px)/2))]">
                 <h2
                   className={`
                     ${chauPhilomeneOne.className}
                     text-white
                     uppercase
-                    text-2xl
-                    sm:text-3xl
-                    md:text-4xl
-                    lg:text-5xl
+                    ${BANNER_HEADING_SIZE}
+                    sm:whitespace-nowrap
+                    text-center
                     z-30
                     relative
                   `}
@@ -184,7 +189,9 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
               </div>
             </div>
 
-            {/* Kid + Robot */}
+            {/* Kid + Robot — bottom-anchored with the same overhang below the
+                band as before, so the extra size grows upward into the
+                section's top margin instead of down into the steps below. */}
             <div
               className="
                 absolute
@@ -193,8 +200,11 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
                 md:right-8
                 lg:right-14
                 xl:right-20
-                top-1/2
-                -translate-y-1/2
+                bottom-[-20px]
+                sm:bottom-[-16px]
+                md:bottom-[-22px]
+                lg:bottom-[-28px]
+                xl:bottom-[-52px]
                 z-30
                 pointer-events-none
                 select-none
@@ -203,15 +213,15 @@ export default function ChooseStory({ howItWorks }: ChooseStoryProps) {
               <Image
                 src="/assets/home_page/kidWithRobo.png"
                 alt="Kid with Robot"
-                width={520}
-                height={520}
+                width={460}
+                height={392}
                 priority
                 className="
-                  w-[140px]
-                  sm:w-[180px]
-                  md:w-[240px]
-                  lg:w-[300px]
-                  xl:w-[360px]
+                  w-[170px]
+                  sm:w-[230px]
+                  md:w-[300px]
+                  lg:w-[380px]
+                  xl:w-[440px]
                   h-auto
                   object-contain
                 "

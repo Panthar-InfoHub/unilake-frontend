@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 import { Faq } from "@/app/types/faq";
 
 interface HomeFaqProps {
@@ -36,41 +37,39 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
           />
         </svg>
 
-        {/* Text/SVG overlay — centered vertically over the SVG */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-start">
-            <div
-              className="
+        {/* Text overlay — centered vertically over the SVG.
+            The left padding reserves the girl's footprint (her `left` offset
+            + width + a small gap, per breakpoint below), so the title is
+            centered in the space beside her and never runs into her. Below
+            1280px this container starts at the viewport edge, so the padding
+            equals that footprint; above that the container is centered, so
+            the reservation shrinks by the side gutter `(100vw - 1280px) / 2`.
+            Vertically it spans only the band's flat strip — viewBox y 46→240
+            of 311, i.e. 14.8% from the top and 22.8% from the bottom — not
+            the whole SVG box. The flares make the box taller below the strip
+            than above it, so centering on the box sat the text visibly low. */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] flex items-center pointer-events-none">
+          <div className="max-w-7xl mx-auto w-full relative flex justify-center pr-4 sm:pr-8 pl-[140px] sm:pl-[212px] md:pl-[262px] lg:pl-[356px] xl:pl-[max(2rem,calc(408px_-_(100vw_-_1280px)/2))]">
+            <h2
+              className={`
+                ${chauPhilomeneOne.className}
+                text-white
+                uppercase
+                ${BANNER_HEADING_SIZE}
+                whitespace-nowrap
                 z-30
                 relative
-                pl-[80px]
-                sm:pl-[120px]
-                md:pl-[180px]
-                lg:pl-[240px]
-                xl:pl-[280px]
-              "
+              `}
             >
-              <Image
-                src="/FAQ’s & FEEDBACK.svg"
-                alt="FAQ's & FEEDBACK"
-                width={764}
-                height={68}
-                className="
-                  w-auto
-                  h-5
-                  sm:h-7
-                  md:h-9
-                  lg:h-11
-                  xl:h-12
-                  object-contain
-                "
-                priority
-              />
-            </div>
+              FAQ&apos;s &amp; Feedback
+            </h2>
           </div>
         </div>
 
-        {/* Girl Image — Top-Left, sitting above the bar with space */}
+        {/* Girl Image — Top-Left, sitting above the bar with space.
+            Bottom offsets are unchanged, so the larger size grows upward;
+            each width is capped so she stays within the section's top
+            margin (mt-20, lg:mt-32) and doesn't reach the section above. */}
         <div
           className="
             absolute
@@ -93,15 +92,15 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
           <Image
             src="/assets/home_page/girlFeedbackImg.png"
             alt="Girl student raising hand"
-            width={280}
-            height={280}
+            width={328}
+            height={381}
             priority
             className="
-              w-[90px]
-              sm:w-[150px]
-              md:w-[160px]
-              lg:w-[200px]
-              xl:w-[250px]
+              w-[120px]
+              sm:w-[175px]
+              md:w-[210px]
+              lg:w-[280px]
+              xl:w-[300px]
               h-auto
               object-contain
             "

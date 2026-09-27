@@ -42,7 +42,7 @@ export function HeroImageSlideshow({
           src={fallbackSrc}
           alt="Hero Image"
           fill
-          sizes="(max-width: 768px) 100vw, 500px"
+          sizes="(max-width: 1024px) 100vw, 540px"
           className="object-cover w-full h-full"
           priority
         />
@@ -66,7 +66,7 @@ export function HeroImageSlideshow({
             src={img.imageUrl}
             alt="Hero Slideshow Image"
             fill
-            sizes="(max-width: 768px) 100vw, 500px"
+            sizes="(max-width: 1024px) 100vw, 540px"
             className="object-cover w-full h-full"
             priority={index === 0}
           />

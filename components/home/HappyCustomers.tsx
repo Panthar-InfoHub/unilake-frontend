@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne } from "@/app/fonts";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 
 import { CustomerReview } from "@/app/types/customerReview";
 
@@ -47,19 +48,26 @@ export default function HappyCustomers({ reviews }: HappyCustomersProps) {
           />
         </svg>
 
-        {/* Text overlay — centered vertically over the SVG */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-center">
+        {/* Text overlay — centered vertically over the SVG.
+            The left padding reserves the dino's footprint (its right edge
+            plus a small gap, per breakpoint below), so the title is centered
+            in the space beside the dino and never runs into it as it grows.
+            Below 1280px this container starts at the viewport edge, so the
+            padding equals the dino's right edge; above that the container
+            is centered, so the reservation shrinks by the side gutter
+            `(100vw - 1280px) / 2` and the title drifts back to true center.
+            Vertically it spans only the band's flat strip (viewBox y 46→240
+            of 311 → 14.8% top / 22.8% bottom), not the whole SVG box, whose
+            flares sit lower and would center the title visibly low. */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] flex items-center pointer-events-none">
+          <div className="max-w-7xl mx-auto w-full relative flex items-center justify-center pr-4 sm:pr-8 pl-[116px] sm:pl-[176px] md:pl-[252px] lg:pl-[336px] xl:pl-[max(2rem,calc(412px_-_(100vw_-_1280px)/2))]">
             <h2
               className={`
                 ${chauPhilomeneOne.className}
                 text-white
                 uppercase
-                text-xl
-                sm:text-2xl
-                md:text-3xl
-                lg:text-4xl
-                xl:text-5xl
+                ${BANNER_HEADING_SIZE}
+                sm:whitespace-nowrap
                 text-center
                 z-30
                 relative

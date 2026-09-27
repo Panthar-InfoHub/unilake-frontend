@@ -294,7 +294,10 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
   };
 
   return (
-    <div className="min-h-screen bg-[#F1E0CA] flex flex-col">
+    // #F9E3C8, matching ComicPreloader. This wrapper was #F1E0CA while the
+    // preloader inside it was #F9E3C8, which drew a visible seam across the
+    // screen where the preloader's block ended and the page showed through.
+    <div className="min-h-screen bg-[#F9E3C8] flex flex-col">
       <HomeHeaderSection />
       <main className="grow flex flex-col items-center justify-center">{renderBody()}</main>
       <Footer />

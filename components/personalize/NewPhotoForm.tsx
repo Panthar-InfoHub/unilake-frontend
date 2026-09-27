@@ -26,7 +26,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
-import { Check, CloudUpload, Image as ImageIcon, Loader2, X } from "lucide-react";
+import { Check, CloudUpload, Loader2, X } from "lucide-react";
+import { PHOTO_EXAMPLES_IMAGE } from "@/components/comic/PhotoGuidelines";
 
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import { SessionSnapshot } from "@/app/types/session";
@@ -41,22 +42,11 @@ import { saveSession } from "@/app/lib/session-storage";
 import { normalizePhoto } from "@/app/lib/photo-normalize";
 import { checkPhoto } from "@/app/lib/photo-validate";
 import ImageCropModal from "@/components/comic/ImageCropModal";
+import { MAX_NAME_LENGTH } from "@/lib/dialogueTokens";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
-];
-
-/**
- * Example shots for the guidance panel.
- */
-const PHOTO_EXAMPLES: { file: string; label: string; good: boolean }[] = [
-  { file: "smiling.png", label: "Smiling", good: true },
-  { file: "happy.png", label: "Happy", good: true },
-  { file: "detailed.png", label: "Detailed", good: true },
-  { file: "hats.png", label: "Hats", good: false },
-  { file: "expressions.png", label: "Expressions", good: false },
-  { file: "Distant.png", label: "Distant", good: false },
 ];
 
 interface NewPhotoFormProps {
@@ -67,13 +57,24 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
   const router = useRouter();
 
   // Pre-filled from the session being replaced, so the only thing left to do is
-  // pick a photo. birthMonth has no default to inherit — it is collected but
-  // never persisted, so the server has nothing to give back.
+  // pick a photo. That inheritance is the point of this screen and stays.
+  //
+  // What does NOT stay is a fallback the parent never chose. `pronounKey` of
+  // THEY or null used to land on "Boy", a missing age on "4", and birthMonth on
+  // "November" unconditionally — none of which came from the previous session,
+  // and all of which would submit silently. Where there is nothing to inherit
+  // the field is now empty and the validation below asks for it.
   const [formData, setFormData] = useState({
     name: previousSession.childName ?? "",
-    gender: previousSession.pronounKey === "SHE" ? "Girl" : "Boy",
-    age: previousSession.age != null ? String(previousSession.age) : "4",
-    birthMonth: "November",
+    gender:
+      previousSession.pronounKey === "SHE"
+        ? "Girl"
+        : previousSession.pronounKey === "HE"
+          ? "Boy"
+          : "",
+    age: previousSession.age != null ? String(previousSession.age) : "",
+    // Collected but never persisted, so the server has nothing to give back.
+    birthMonth: "",
     email: previousSession.notificationEmail ?? "",
     consent: false,
   });
@@ -94,10 +95,6 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
-
-  // Example images that failed to load, so the guidance panel shows a neutral
-  // box instead of a broken image until the real files are added.
-  const [missingExamples, setMissingExamples] = useState<Set<string>>(new Set());
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -199,7 +196,11 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
 
-    if (!formData.name) return toast.error("Please enter the child's name");
+    // Gender and age are checked explicitly now that they no longer fall back
+    // to an invented default — matches ComicPersonalizeForm.
+    if (!formData.name.trim()) return toast.error("Please enter the child's name");
+    if (!formData.gender) return toast.error("Please select the child's gender");
+    if (!formData.age) return toast.error("Please select the child's age");
     if (!formData.email) return toast.error("Please enter a notification email");
     if (!formData.consent)
       return toast.error("You must agree to the privacy policy");
@@ -209,6 +210,10 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
       return toast.error("Please upload a photo of the child");
 
     setIsLoading(true);
+
+    // Trimmed once so the session and localStorage agree — stray whitespace
+    // would otherwise be stamped into the speech bubbles.
+    const childName = formData.name.trim();
 
     try {
       const normalizedFile = new File([normalizedPhoto], "normalized.jpg", {
@@ -224,7 +229,7 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
       // 2. Details
       setLoadingStep("Saving details...");
       await updateSession(sessionId, {
-        childName: formData.name,
+        childName,
         age: parseInt(formData.age, 10),
         // Matches ComicPersonalizeForm exactly. The backend accepts THEY, but
         // neither form offers it — keep the two in step.
@@ -255,7 +260,7 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
         wsRoomToken,
         comicId: previousSession.comicId,
         createdAt: new Date().toISOString(),
-        childName: formData.name,
+        childName,
       });
 
       // 7. Into the new session's preview
@@ -291,49 +296,24 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
               Photo guidelines:
             </h2>
             <ul className="list-disc list-inside space-y-0.5 text-[11px] lg:text-xs text-[#333]">
-              <li>No one else should be in the picture</li>
-              <li>Child should be facing the camera</li>
-              <li>Face &amp; hair should not touch the edges</li>
-              <li>Hands or objects should not obstruct the face</li>
+              <li>Choose a clear, smiling photo.</li>
+              <li>Make sure the child’s full face is clearly visible.</li>
+              <li>No hats, sunglasses, hands or objects should obstruct the face</li>
+              <li>Avoid funny/distorted expressions and blurry photos.</li>
+              <li>No group photos or distant shots.</li>
             </ul>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {PHOTO_EXAMPLES.map((example) => (
-              <figure key={example.file} className="relative">
-                <div className="relative aspect-square rounded-lg overflow-hidden border border-[#914A8C]/30 bg-neutral-100">
-                  {/* Failures fall back to a neutral box rather than
-                      showing a broken-image icon. */}
-                  {missingExamples.has(example.file) ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <ImageIcon className="w-6 h-6 text-neutral-300" />
-                    </div>
-                  ) : (
-                    <Image
-                      src={`/assets/Reupload/${example.file}`}
-                      alt={example.label}
-                      fill
-                      sizes="(max-width: 1024px) 30vw, 180px"
-                      className="object-cover"
-                      onError={() =>
-                        setMissingExamples((prev) =>
-                          new Set(prev).add(example.file),
-                        )
-                      }
-                    />
-                  )}
-                </div>
-                <figcaption
-                  className={`absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white ${
-                    example.good ? "bg-emerald-600" : "bg-red-500"
-                  }`}
-                >
-                  {example.good ? <Check size={10} /> : <X size={10} />}
-                  {example.label}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+          {/* One composite image with the good/bad examples and their labels
+              baked in. Full width at its natural aspect ratio. */}
+          <Image
+            src={PHOTO_EXAMPLES_IMAGE.src}
+            alt={PHOTO_EXAMPLES_IMAGE.alt}
+            width={PHOTO_EXAMPLES_IMAGE.width}
+            height={PHOTO_EXAMPLES_IMAGE.height}
+            sizes="(max-width: 1024px) 90vw, 580px"
+            className="w-full h-auto rounded-lg"
+          />
 
           <p className="text-[10px] text-[#777] mt-2 lg:mt-3">
             * All photos are kept confidential and used only for creating your
@@ -414,11 +394,17 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
             <div className="space-y-0.5">
               <label className="text-[11px] lg:text-xs font-semibold text-[#333]">
                 Child&apos;s name
+                <span className="ml-1 font-normal text-gray-400">
+                  (max {MAX_NAME_LENGTH})
+                </span>
               </label>
               <input
                 type="text"
                 value={formData.name}
-                maxLength={50}
+                // Same cap as ComicPersonalizeForm — the name is stamped into
+                // the same speech bubbles either way. Was 50, which let this
+                // journey submit a name the other one would have refused.
+                maxLength={MAX_NAME_LENGTH}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
@@ -436,6 +422,12 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                   }
                   className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs bg-white focus:outline-none focus:border-[#914A8C]"
                 >
+                  {/* `disabled`: gender is required, so once a real choice is
+                      made there is no reason to offer a way back to unset. It
+                      still shows while nothing is inherited or picked. */}
+                  <option value="" disabled>
+                    Select
+                  </option>
                   <option value="Boy">Boy</option>
                   <option value="Girl">Girl</option>
                 </select>
@@ -450,6 +442,9 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                   }
                   className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs bg-white focus:outline-none focus:border-[#914A8C]"
                 >
+                  <option value="" disabled>
+                    Select
+                  </option>
                   {Array.from({ length: 19 }, (_, i) => (
                     <option key={i} value={String(i)}>
                       {i}
@@ -470,6 +465,9 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
                 }
                 className="w-full h-8 lg:h-9 rounded-xl border border-neutral-300 px-3 text-xs bg-white focus:outline-none focus:border-[#914A8C]"
               >
+                {/* Not disabled, unlike gender and age: birth month is
+                    optional, so clearing it back to blank has to stay possible. */}
+                <option value="">Select month</option>
                 {MONTHS.map((month) => (
                   <option key={month} value={month}>
                     {month}

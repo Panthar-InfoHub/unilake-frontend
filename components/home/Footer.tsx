@@ -211,7 +211,7 @@ export default function Footer() {
                   </li> */}
                   <li>
                     <Link href="/how_it_work" className="hover:text-white transition-colors duration-200">
-                      HOW ITS WORK
+                      HOW IT WORKS
                     </Link>
                   </li>
                 </ul>

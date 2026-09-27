@@ -38,6 +38,7 @@ import type {
 } from "@/app/types/comic";
 import { BubblePreviewModal } from "@/components/admin/comic/bubbles/BubblePreviewModal";
 import { SAMPLE_NAMES } from "@/lib/dialogueTokens";
+import { useFontFiles } from "@/hooks/useFontFiles";
 
 export default function BubbleMapperPage({
   params,
@@ -63,6 +64,9 @@ export default function BubbleMapperPage({
   // whole page one shade doesn't mean re-picking it every time. Resets to black
   // on a fresh page load — deliberately not persisted anywhere.
   const [lastUsedColor, setLastUsedColor] = useState<string>(DEFAULT_FONT_COLOR);
+  // Same for the name colour. null ("Same as text") is a real choice and is
+  // remembered too, so picking it once sticks for the next bubbles.
+  const [lastUsedNameColor, setLastUsedNameColor] = useState<string | null>(null);
 
   // Placement and casing stick the same way and for the same reason: a page is
   // usually mapped with one treatment throughout, so re-picking it on every
@@ -84,6 +88,15 @@ export default function BubbleMapperPage({
   const previewName = previewLongName ? SAMPLE_NAMES.long : SAMPLE_NAMES.short;
 
   const page = comic?.pages.find((p) => p.id === pageId);
+
+  // Parsed font files for every font a bubble on this page uses, so the canvas
+  // can draw text exactly as the print renderer will.
+  const fontStates = useFontFiles(
+    fonts ?? [],
+    bubbles
+      .filter((bubble) => !bubble.isDeleted && bubble.fontId)
+      .map((bubble) => bubble.fontId as string),
+  );
 
   // Load initial bubbles
   useEffect(() => {
@@ -165,6 +178,7 @@ export default function BubbleMapperPage({
       height: 0.15,
       fontSize: DEFAULT_FONT_SIZE,
       fontColor: lastUsedColor,
+      nameColor: lastUsedNameColor,
       textAlign: lastUsedTextAlign,
       textVerticalAlign: lastUsedTextVerticalAlign,
       textCase: lastUsedTextCase,
@@ -194,6 +208,7 @@ export default function BubbleMapperPage({
       fontId: bubble.fontId ?? null,
       fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
       fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
+      nameColor: bubble.nameColor ?? null,
       textAlign: bubble.textAlign ?? DEFAULT_TEXT_ALIGN,
       textVerticalAlign: bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN,
       textCase: bubble.textCase ?? DEFAULT_TEXT_CASE,
@@ -202,6 +217,8 @@ export default function BubbleMapperPage({
   const handleUpdateBubble = (id: string, updates: Partial<LocalBubble>) => {
     // Remember the most recent choices so the next new bubble starts there.
     if (updates.fontColor) setLastUsedColor(updates.fontColor);
+    // `in`, not truthiness: null ("Same as text") must be remembered as well.
+    if ("nameColor" in updates) setLastUsedNameColor(updates.nameColor ?? null);
     if (updates.textAlign) setLastUsedTextAlign(updates.textAlign);
     if (updates.textVerticalAlign)
       setLastUsedTextVerticalAlign(updates.textVerticalAlign);
@@ -309,6 +326,7 @@ export default function BubbleMapperPage({
               height: bubble.height || 0,
               fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
               fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
+              nameColor: bubble.nameColor ?? null,
               textAlign: bubble.textAlign ?? DEFAULT_TEXT_ALIGN,
               textVerticalAlign:
                 bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN,
@@ -335,6 +353,7 @@ export default function BubbleMapperPage({
               height: bubble.height,
               fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
               fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
+              nameColor: bubble.nameColor ?? null,
               textAlign: bubble.textAlign ?? DEFAULT_TEXT_ALIGN,
               textVerticalAlign:
                 bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN,
@@ -406,7 +425,10 @@ export default function BubbleMapperPage({
         <div className="flex-1 flex bg-white/70 backdrop-blur-sm rounded-3xl border border-[#914A8C]/15 shadow-sm overflow-hidden">
           <BubbleMapperCanvas
             artworkUrl={page.artworkUrl}
+            artworkWidth={page.artworkWidth}
+            artworkHeight={page.artworkHeight}
             bubbles={bubbles}
+            fontStates={fontStates}
             selectedBubbleId={selectedBubbleId}
             previewName={previewName}
             onSelectBubble={setSelectedBubbleId}

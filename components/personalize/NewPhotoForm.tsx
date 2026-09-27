@@ -26,7 +26,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
-import { Check, CloudUpload, Image as ImageIcon, Loader2, X } from "lucide-react";
+import { Check, CloudUpload, Loader2, X } from "lucide-react";
+import { PHOTO_EXAMPLES_IMAGE } from "@/components/comic/PhotoGuidelines";
 
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import { SessionSnapshot } from "@/app/types/session";
@@ -46,18 +47,6 @@ import { MAX_NAME_LENGTH } from "@/lib/dialogueTokens";
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
-];
-
-/**
- * Example shots for the guidance panel.
- */
-const PHOTO_EXAMPLES: { file: string; label: string; good: boolean }[] = [
-  { file: "smiling.png", label: "Smiling", good: true },
-  { file: "happy.png", label: "Happy", good: true },
-  { file: "detailed.png", label: "Detailed", good: true },
-  { file: "hats.png", label: "Hats", good: false },
-  { file: "expressions.png", label: "Expressions", good: false },
-  { file: "Distant.png", label: "Distant", good: false },
 ];
 
 interface NewPhotoFormProps {
@@ -106,10 +95,6 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
-
-  // Example images that failed to load, so the guidance panel shows a neutral
-  // box instead of a broken image until the real files are added.
-  const [missingExamples, setMissingExamples] = useState<Set<string>>(new Set());
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -319,42 +304,16 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
             </ul>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {PHOTO_EXAMPLES.map((example) => (
-              <figure key={example.file} className="relative">
-                <div className="relative aspect-square rounded-lg overflow-hidden border border-[#914A8C]/30 bg-neutral-100">
-                  {/* Failures fall back to a neutral box rather than
-                      showing a broken-image icon. */}
-                  {missingExamples.has(example.file) ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <ImageIcon className="w-6 h-6 text-neutral-300" />
-                    </div>
-                  ) : (
-                    <Image
-                      src={`/assets/Reupload/${example.file}`}
-                      alt={example.label}
-                      fill
-                      sizes="(max-width: 1024px) 30vw, 180px"
-                      className="object-cover"
-                      onError={() =>
-                        setMissingExamples((prev) =>
-                          new Set(prev).add(example.file),
-                        )
-                      }
-                    />
-                  )}
-                </div>
-                <figcaption
-                  className={`absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white ${
-                    example.good ? "bg-emerald-600" : "bg-red-500"
-                  }`}
-                >
-                  {example.good ? <Check size={10} /> : <X size={10} />}
-                  {example.label}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+          {/* One composite image with the good/bad examples and their labels
+              baked in. Full width at its natural aspect ratio. */}
+          <Image
+            src={PHOTO_EXAMPLES_IMAGE.src}
+            alt={PHOTO_EXAMPLES_IMAGE.alt}
+            width={PHOTO_EXAMPLES_IMAGE.width}
+            height={PHOTO_EXAMPLES_IMAGE.height}
+            sizes="(max-width: 1024px) 90vw, 580px"
+            className="w-full h-auto rounded-lg"
+          />
 
           <p className="text-[10px] text-[#777] mt-2 lg:mt-3">
             * All photos are kept confidential and used only for creating your

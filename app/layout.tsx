@@ -52,6 +52,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: siteDescription,
     applicationName: SITE_NAME,
+    // Browser tab / bookmark icon. Hardcoded to the brand logo for now.
+    icons: {
+      icon: "/assets/home_page/logo.png",
+      apple: "/assets/home_page/logo.png",
+    },
     openGraph: {
       type: "website",
       siteName: SITE_NAME,

@@ -26,20 +26,25 @@ export default function StoryCard({ comic }: StoryCardProps) {
     ? comic.coverThumbnailUrls 
     : ["/assets/home_page/bookCover1.png"]; // Default fallback image
 
+  // The instant swap on hover-in and the reset on hover-out happen in the
+  // event handlers; the effect only drives the ongoing 1500ms cycle.
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isHovered && images.length > 1) {
-      interval = setInterval(() => {
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      }, 1500);
-    } else {
-      setCurrentImageIndex(0);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    if (!isHovered || images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, 1500);
+    return () => clearInterval(interval);
   }, [isHovered, images.length]);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (images.length > 1) setCurrentImageIndex(1);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setCurrentImageIndex(0);
+  };
 
   // Safely extract age value to display in format "AGE: X-Y"
   let ageLabel = comic.ageGroup?.replace("AGE_", "").replace("_", "-") || "ALL AGES";
@@ -73,8 +78,8 @@ export default function StoryCard({ comic }: StoryCardProps) {
         group
         ${hankenGrotesk.className}
       `}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Background SVG Frame (card.svg includes shadow & body) */}
       <Image
@@ -85,14 +90,17 @@ export default function StoryCard({ comic }: StoryCardProps) {
         priority
       />
 
-      {/* Book Cover Image */}
+      {/* Book Cover Image.
+          Shifted up and shortened slightly vs. the frame's full inner area so
+          the bottom edge clears the chalk-tray ledge drawn into card.svg below
+          the board — a taller image used to paint over the duster/chalk. */}
       <div
         className="absolute z-10 overflow-hidden shadow-[inset_0_4px_8px_rgba(0,0,0,0.35)] bg-slate-900/50"
         style={{
           left: "16%",
-          top: "6.5%",
+          top: "5%",
           width: "68%",
-          height: "37.5%",
+          height: "34%",
           borderRadius: "4px",
         }}
       >
@@ -104,7 +112,6 @@ export default function StoryCard({ comic }: StoryCardProps) {
           className="
             object-cover
             absolute inset-0
-            transition-all duration-500 ease-out
           "
           priority
         />
@@ -155,26 +162,21 @@ export default function StoryCard({ comic }: StoryCardProps) {
           </span>
         </div>
 
-        {/* Title */}
-        <h3 className={`${hankenGrotesk.className} text-base sm:text-lg md:text-[24px] font-bold text-[#000000] uppercase leading-tight md:leading-[48px] tracking-normal line-clamp-1 mb-1 md:mb-2`}>
+        {/* Title — one line. Font size trimmed slightly (was 24px/md with a
+            48px line-height, badly mismatched, which is why it could render
+            clipped) and the line-height normalized so it always renders. */}
+        <h3 className={`${hankenGrotesk.className} text-sm sm:text-base md:text-xl font-bold text-[#000000] uppercase leading-tight tracking-normal line-clamp-1 mb-1`}>
           {comic.title}
         </h3>
 
-        {/* Description — exactly one line, always.
-            `line-clamp-1` is only a ceiling: it cuts a long description at one
-            line with an ellipsis, but a short one would still collapse to
-            whatever height it needs, pulling the price and button up with it and
-            leaving cards misaligned across the grid. The min-height supplies the
-            floor, so the block is a fixed size whether the description is long,
-            short, or missing entirely.
-            Same reasoning as the fixed-height price wrapper below. The px values
-            are one rendered line at each breakpoint (10px/12px at leading-snug,
-            then the explicit 18px), rounded up. */}
-        <p className={`${poppins.className} text-[10px] sm:text-xs md:text-[14px] font-normal text-[#000000]/[0.74] leading-snug md:leading-[18px] line-clamp-1 min-h-[14px] sm:min-h-[17px] md:min-h-[18px] mb-1 md:mb-3 overflow-hidden`}>
+        {/* Description — up to two lines now. line-clamp-2 caps long text
+            with an ellipsis; the explicit height is the floor for short or
+            missing text, so the row never collapses. */}
+        <p className={`${poppins.className} text-[10px] sm:text-xs md:text-[14px] font-normal text-[#000000]/[0.74] leading-snug line-clamp-2 h-[28px] sm:h-[34px] md:h-[36px] mb-2 md:mb-3 overflow-hidden`}>
           {comic.description || "A personalized storybook adventure for your child."}
         </p>
 
-        {/* Price Layout */}
+        {/* Price — back to MRP stacked under the discounted price. */}
         {pricing ? (
           <div className="flex flex-col gap-0 md:gap-0.5 mb-2 md:mb-3 h-[36px] md:h-[50px]">
             <span className={`${protestStrike.className} text-[18px] sm:text-[20px] md:text-[24px] font-normal text-[#000000] leading-none md:leading-[16px] uppercase`}>
@@ -204,10 +206,9 @@ export default function StoryCard({ comic }: StoryCardProps) {
             and ends well above that. Pushing the button to the container's
             bottom drops it into the empty space BELOW the visible card.
             The button does not need pinning: everything above it is already a
-            fixed height — the tag row cannot wrap, the title and description are
-            both clamped to one line with a min-height, and the price wrapper has
-            an explicit height in both of its branches. So the button lands at
-            the same place on every card by simply flowing after them. */}
+            fixed height — the tag row cannot wrap, and the title/description/
+            price block above has its own explicit height. So the button lands
+            at the same place on every card by simply flowing after them. */}
         <div className="flex justify-center w-full">
           <button
             onClick={() => router.push(`/comic/${comic.id}`)}
@@ -216,7 +217,7 @@ export default function StoryCard({ comic }: StoryCardProps) {
               w-[80%]
               bg-gradient-to-b from-[#3F3C95] to-[#2B2882]
               text-white
-              text-[10px] font-extrabold
+              text-sm sm:text-base md:text-lg font-extrabold
               uppercase tracking-wider
               py-2
               rounded-full

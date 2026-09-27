@@ -33,25 +33,34 @@ import {
   DIALOGUE_TOKENS,
   DIALOGUE_TOKEN_LABELS,
   findInvalidTokens,
-  substituteTokens,
+  substituteTokensToSegments,
   SAMPLE_NAMES,
-  SAMPLE_PRONOUNS,
 } from "@/lib/dialogueTokens";
 
 /**
- * Swatch + hex field for a bubble's text colour.
+ * Swatch + hex field for one of a bubble's colours.
  *
  * Keeps a local draft so a half-typed "#d9" is never pushed to the bubble (and
  * bounced by the API); only a complete, valid value commits. Mount this with
  * `key={bubbleId}` so switching bubbles always starts from a clean draft, even
  * when the two bubbles happen to share a colour.
+ *
+ * `onReset` + `isInherited` serve the name colour: while inherited the field
+ * shows the text colour with a "Same as text" note, and once a colour is picked
+ * a "Same as text" button puts it back.
  */
 function ColorField({
+  label,
   value,
   onCommit,
+  onReset,
+  isInherited = false,
 }: {
+  label: string;
   value: string;
   onCommit: (color: string) => void;
+  onReset?: () => void;
+  isInherited?: boolean;
 }) {
   const [draft, setDraft] = useState(value);
   const [committed, setCommitted] = useState(value);
@@ -68,7 +77,21 @@ function ColorField({
 
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-neutral-700">Text Colour</Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs font-semibold text-neutral-700">{label}</Label>
+        {onReset &&
+          (isInherited ? (
+            <span className="text-[10px] font-medium text-neutral-500">Same as text</span>
+          ) : (
+            <button
+              type="button"
+              onClick={onReset}
+              className="text-[10px] px-2 py-0.5 rounded-full bg-[#914A8C]/10 text-[#914A8C] hover:bg-[#914A8C]/20 font-medium transition-colors border border-[#914A8C]/15"
+            >
+              Same as text
+            </button>
+          ))}
+      </div>
       <div className="flex items-center gap-2">
         {/* The native picker only ever emits a valid #rrggbb, so it commits directly. */}
         <input
@@ -159,22 +182,41 @@ export function BubbleSidebar({
   const selectedBubble = activeBubbles.find(b => b.id === selectedBubbleId);
 
   const selectedColor = selectedBubble?.fontColor ?? DEFAULT_FONT_COLOR;
+  // null = the name follows the text colour ("Same as text").
+  const selectedNameColor = selectedBubble?.nameColor ?? null;
 
   const commitColor = (value: string) => {
     if (!selectedBubble || !isValidFontColor(value)) return;
     onUpdateBubble(selectedBubble.id, { fontColor: normalizeFontColor(value) });
   };
 
+  const commitNameColor = (value: string) => {
+    if (!selectedBubble || !isValidFontColor(value)) return;
+    onUpdateBubble(selectedBubble.id, { nameColor: normalizeFontColor(value) });
+  };
+
+  const resetNameColor = () => {
+    if (!selectedBubble) return;
+    onUpdateBubble(selectedBubble.id, { nameColor: null });
+  };
+
+  // The name colour only means something when there is a name to paint.
+  const hasNameToken = (selectedBubble?.dialogue ?? "").includes("{name}");
+
   const invalidTokens = selectedBubble ? findInvalidTokens(selectedBubble.dialogue || "") : [];
   const previewName = previewLongName ? SAMPLE_NAMES.long : SAMPLE_NAMES.short;
   // Casing is applied here too, not just at render: a preview that shows
   // different capitalisation from the printed page is worse than no preview.
-  const previewText = selectedBubble
-    ? applyTextCase(
-        substituteTokens(selectedBubble.dialogue || "", previewName, SAMPLE_PRONOUNS),
-        selectedBubble.textCase ?? DEFAULT_TEXT_CASE,
+  // Kept as segments so the name can be shown in its own colour.
+  const previewSegments = selectedBubble
+    ? substituteTokensToSegments(selectedBubble.dialogue || "", previewName, "HE").map(
+        (segment) => ({
+          ...segment,
+          text: applyTextCase(segment.text, selectedBubble.textCase ?? DEFAULT_TEXT_CASE),
+        }),
       )
-    : "";
+    : [];
+  const previewText = previewSegments.map((segment) => segment.text).join("");
 
   const insertTokenAtCursor = (token: string) => {
     if (!selectedBubble) return;
@@ -344,7 +386,25 @@ export function BubbleSidebar({
                   </div>
                 </div>
                 <div className="text-xs text-neutral-800 bg-neutral-100 border border-neutral-200 rounded-lg p-2.5 leading-relaxed italic min-h-[2.5rem]">
-                  {previewText ? previewText : <span className="text-neutral-400">(no dialogue)</span>}
+                  {previewText ? (
+                    previewSegments.map((segment, index) =>
+                      segment.isName && selectedNameColor ? (
+                        // Only the name is coloured: the rest stays readable on
+                        // this grey box whatever the text colour is.
+                        <span
+                          key={index}
+                          className="font-semibold not-italic"
+                          style={{ color: selectedNameColor }}
+                        >
+                          {segment.text}
+                        </span>
+                      ) : (
+                        <span key={index}>{segment.text}</span>
+                      ),
+                    )
+                  ) : (
+                    <span className="text-neutral-400">(no dialogue)</span>
+                  )}
                 </div>
                 <div className="text-[10px] text-neutral-400 mt-1 text-right">
                   {previewText.length} chars after substitution
@@ -402,9 +462,22 @@ export function BubbleSidebar({
 
             <ColorField
               key={selectedBubble.id}
+              label="Text Colour"
               value={selectedColor}
               onCommit={commitColor}
             />
+
+            {hasNameToken && (
+              <ColorField
+                key={`${selectedBubble.id}-name`}
+                label="Name Colour"
+                // While inherited, show the text colour it is following.
+                value={selectedNameColor ?? selectedColor}
+                onCommit={commitNameColor}
+                onReset={resetNameColor}
+                isInherited={selectedNameColor === null}
+              />
+            )}
 
             <div className="space-y-3">
               <SegmentedControl

@@ -163,7 +163,7 @@ export function AddressFormModal({
                   <FormItem>
                     <FormLabel className="text-gray-700 font-semibold text-sm">Label (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Home, Office, Grandma's House" className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                      <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                     </FormControl>
                     <FormMessage className="text-xs text-red-500" />
                   </FormItem>
@@ -178,7 +178,7 @@ export function AddressFormModal({
                     <FormItem>
                       <FormLabel className="text-gray-700 font-semibold text-sm">Recipient Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Doe" className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                        <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs text-red-500" />
                     </FormItem>
@@ -192,7 +192,7 @@ export function AddressFormModal({
                     <FormItem>
                       <FormLabel className="text-gray-700 font-semibold text-sm">Phone Number *</FormLabel>
                       <FormControl>
-                        <Input placeholder="+1234567890" className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                        <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs text-red-500" />
                     </FormItem>
@@ -202,12 +202,26 @@ export function AddressFormModal({
 
               <FormField
                 control={form.control}
+                name="zip"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-semibold text-sm">ZIP / Postal Code *</FormLabel>
+                    <FormControl>
+                      <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-xs text-red-500" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="line1"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-gray-700 font-semibold text-sm">Address Line 1 *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Street address, P.O. box" className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                      <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                     </FormControl>
                     <FormMessage className="text-xs text-red-500" />
                   </FormItem>
@@ -221,7 +235,7 @@ export function AddressFormModal({
                   <FormItem>
                     <FormLabel className="text-gray-700 font-semibold text-sm">Address Line 2 (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Apartment, suite, unit, building, floor, etc." className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                      <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                     </FormControl>
                     <FormMessage className="text-xs text-red-500" />
                   </FormItem>
@@ -236,13 +250,13 @@ export function AddressFormModal({
                     <FormItem>
                       <FormLabel className="text-gray-700 font-semibold text-sm">City *</FormLabel>
                       <FormControl>
-                        <Input placeholder="City" className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                        <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs text-red-500" />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="state"
@@ -250,7 +264,7 @@ export function AddressFormModal({
                     <FormItem>
                       <FormLabel className="text-gray-700 font-semibold text-sm">State / Province *</FormLabel>
                       <FormControl>
-                        <Input placeholder="State" className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                        <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs text-red-500" />
                     </FormItem>
@@ -258,54 +272,38 @@ export function AddressFormModal({
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <FormField
-                  control={form.control}
-                  name="zip"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-semibold text-sm">ZIP / Postal Code *</FormLabel>
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem className="min-w-0">
+                    <FormLabel className="text-gray-700 font-semibold text-sm">Country *</FormLabel>
+                    <Select
+                      disabled={isCountriesLoading}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
                       <FormControl>
-                        <Input placeholder="ZIP Code" className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                         {/* w-full overrides SelectTrigger's base w-fit — the
+                             label here is "Name (CODE)", so it is the longest
+                             country string anywhere in the app. */}
+                         <SelectTrigger className="w-full h-11 rounded-xl bg-gray-50 border-gray-200 focus:ring-[#914A8C]">
+                           <SelectValue placeholder={isCountriesLoading ? "Loading..." : "Select Country"} />
+                         </SelectTrigger>
                       </FormControl>
-                      <FormMessage className="text-xs text-red-500" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem className="min-w-0">
-                      <FormLabel className="text-gray-700 font-semibold text-sm">Country *</FormLabel>
-                      <Select
-                        disabled={isCountriesLoading}
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        value={field.value}
-                      >
-                        <FormControl>
-                           {/* w-full overrides SelectTrigger's base w-fit — the
-                               label here is "Name (CODE)", so it is the longest
-                               country string anywhere in the app. */}
-                           <SelectTrigger className="w-full h-11 rounded-xl bg-gray-50 border-gray-200 focus:ring-[#914A8C]">
-                             <SelectValue placeholder={isCountriesLoading ? "Loading..." : "Select Country"} />
-                           </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[200px]">
-                          {countries.map((c) => (
-                            <SelectItem key={c.code} value={c.code}>
-                              {c.name} ({c.code})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage className="text-xs text-red-500" />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <SelectContent className="max-h-[200px]">
+                        {countries.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            {c.name} ({c.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs text-red-500" />
+                  </FormItem>
+                )}
+              />
 
             </div>
 

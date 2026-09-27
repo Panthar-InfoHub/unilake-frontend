@@ -1,28 +1,40 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { Stage, Layer, Image as KonvaImage, Rect, Transformer, Text, Group } from "react-konva";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import { Stage, Layer, Image as KonvaImage, Rect, Transformer, Text, Group, Shape } from "react-konva";
+import type Konva from "konva";
 import useImage from "use-image";
+import type { PathCommand } from "opentype.js";
 import { LocalBubble } from "./BubbleSidebar";
-import { SAMPLE_PRONOUNS, substituteTokens } from "@/lib/dialogueTokens";
 import {
   DEFAULT_FONT_SIZE,
   DEFAULT_FONT_COLOR,
   clampRect,
-  fontSizeToPx,
   normalizedToPixel,
   pixelToNormalized,
   DEFAULT_TEXT_ALIGN,
   DEFAULT_TEXT_VERTICAL_ALIGN,
   DEFAULT_TEXT_CASE,
-  applyTextCase,
-  toKonvaAlign,
-  toKonvaVerticalAlign,
 } from "./bubbleCoordinates";
+import { layoutBubble, type BubbleLayout } from "@/lib/bubbleLayout";
+import type { FontFileState } from "@/hooks/useFontFiles";
+
+const SELECTED_STROKE = "#914A8C";
+const IDLE_STROKE = "#999";
+const PROBLEM_STROKE = "#dc2626";
 
 interface BubbleMapperCanvasProps {
   artworkUrl: string | null;
+  /**
+   * The artwork's real pixel size from the DB (Sharp-probed on upload) — the
+   * same numbers the print renderer lays text out against. Null only on pages
+   * uploaded before probing existed; the loaded image's size is used then.
+   */
+  artworkWidth: number | null;
+  artworkHeight: number | null;
   bubbles: LocalBubble[];
+  /** Parsed fonts by id, for drawing text exactly as it prints. */
+  fontStates: Map<string, FontFileState>;
   selectedBubbleId: string | null;
   /**
    * Sample child name substituted into `{name}` for the on-canvas preview, so
@@ -35,20 +47,51 @@ interface BubbleMapperCanvasProps {
   onUpdateBubble: (id: string, updates: Partial<LocalBubble>) => void;
 }
 
+/** Size of a bubble while its resize handle is being dragged, in display px. */
+type LiveSize = { id: string; widthPx: number; heightPx: number };
+
 export function BubbleMapperCanvas({
   artworkUrl,
+  artworkWidth,
+  artworkHeight,
   bubbles,
+  fontStates,
   selectedBubbleId,
   previewName,
   onSelectBubble,
   onUpdateBubble,
 }: BubbleMapperCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<any>(null);
-  const trRef = useRef<any>(null);
+  const stageRef = useRef<Konva.Stage>(null);
+  const trRef = useRef<Konva.Transformer>(null);
 
   const [image] = useImage(artworkUrl || "");
   const [dimensions, setDimensions] = useState({ width: 0, height: 0, scale: 1, imageWidth: 0, imageHeight: 0 });
+
+  // Live resize: the size being dragged, re-laid-out at most once per frame.
+  const [liveSize, setLiveSize] = useState<LiveSize | null>(null);
+  const pendingLiveRef = useRef<LiveSize | null>(null);
+  const liveFrameRef = useRef<number | null>(null);
+
+  const scheduleLiveSize = useCallback((next: LiveSize) => {
+    pendingLiveRef.current = next;
+    if (liveFrameRef.current !== null) return;
+    liveFrameRef.current = requestAnimationFrame(() => {
+      liveFrameRef.current = null;
+      setLiveSize(pendingLiveRef.current);
+    });
+  }, []);
+
+  const clearLiveSize = useCallback(() => {
+    if (liveFrameRef.current !== null) cancelAnimationFrame(liveFrameRef.current);
+    liveFrameRef.current = null;
+    pendingLiveRef.current = null;
+    setLiveSize(null);
+  }, []);
+
+  useEffect(() => () => {
+    if (liveFrameRef.current !== null) cancelAnimationFrame(liveFrameRef.current);
+  }, []);
 
   // Handle Resize
   useEffect(() => {
@@ -56,13 +99,13 @@ export function BubbleMapperCanvas({
       if (containerRef.current && image) {
         const containerW = containerRef.current.clientWidth;
         const containerH = containerRef.current.clientHeight;
-        
+
         // Calculate scale to fit image within container
         const imgRatio = image.width / image.height;
         const containerRatio = containerW / containerH;
-        
+
         let targetW, targetH;
-        
+
         if (imgRatio > containerRatio) {
           targetW = containerW - 40; // 20px padding
           targetH = targetW / imgRatio;
@@ -88,19 +131,19 @@ export function BubbleMapperCanvas({
 
   // Handle Transformer Selection
   useEffect(() => {
-    if (selectedBubbleId && trRef.current) {
+    if (selectedBubbleId && trRef.current && stageRef.current) {
       const node = stageRef.current.findOne(`#bubble-${selectedBubbleId}`);
       if (node) {
         trRef.current.nodes([node]);
-        trRef.current.getLayer().batchDraw();
+        trRef.current.getLayer()?.batchDraw();
       }
     } else if (trRef.current) {
       trRef.current.nodes([]);
-      trRef.current.getLayer().batchDraw();
+      trRef.current.getLayer()?.batchDraw();
     }
   }, [selectedBubbleId, bubbles]);
 
-  const checkDeselect = (e: any) => {
+  const checkDeselect = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     // deselect when clicked on empty area or image
     const clickedOnEmpty = e.target === e.target.getStage();
     const clickedOnImage = e.target.name() === 'backgroundImage';
@@ -123,11 +166,16 @@ export function BubbleMapperCanvas({
 
   const activeBubbles = bubbles.filter(b => !b.isDeleted);
 
+  // The print renderer lays out against the DB's artwork size. Fall back to the
+  // loaded image only for legacy pages that were never probed.
+  const layoutArtworkWidth = artworkWidth ?? image?.width ?? 0;
+  const layoutArtworkHeight = artworkHeight ?? image?.height ?? 0;
+
   return (
     <div className="flex-1 relative bg-neutral-100 rounded-3xl overflow-hidden shadow-inner m-4 border border-neutral-200" ref={containerRef}>
       {dimensions.width > 0 && image && (
-        <Stage 
-          width={dimensions.width} 
+        <Stage
+          width={dimensions.width}
           height={dimensions.height}
           onMouseDown={checkDeselect}
           onTouchStart={checkDeselect}
@@ -136,10 +184,10 @@ export function BubbleMapperCanvas({
           <Layer>
             {/* Centered Image */}
             <Group x={offsetX} y={offsetY}>
-              <KonvaImage 
-                image={image} 
-                width={dimensions.imageWidth} 
-                height={dimensions.imageHeight} 
+              <KonvaImage
+                image={image}
+                width={dimensions.imageWidth}
+                height={dimensions.imageHeight}
                 name="backgroundImage"
               />
 
@@ -148,8 +196,14 @@ export function BubbleMapperCanvas({
                 // Convert normalized values to pixel values based on current image render size
                 const x = normalizedToPixel(bubble.x || 0.1, 0, image.width, dimensions.imageWidth);
                 const y = normalizedToPixel(bubble.y || 0.1, 0, image.height, dimensions.imageHeight);
-                const width = normalizedToPixel(bubble.width || 0.2, 0, image.width, dimensions.imageWidth);
-                const height = normalizedToPixel(bubble.height || 0.1, 0, image.height, dimensions.imageHeight);
+                const storedWidth = normalizedToPixel(bubble.width || 0.2, 0, image.width, dimensions.imageWidth);
+                const storedHeight = normalizedToPixel(bubble.height || 0.1, 0, image.height, dimensions.imageHeight);
+
+                // While this bubble's resize handle is held, draw it at the
+                // dragged size instead of the stored one.
+                const live = liveSize?.id === bubble.id ? liveSize : null;
+                const width = live ? live.widthPx : storedWidth;
+                const height = live ? live.heightPx : storedHeight;
 
                 return (
                   <Group
@@ -191,11 +245,32 @@ export function BubbleMapperCanvas({
 
                       onUpdateBubble(bubble.id, { x: clamped.x, y: clamped.y });
                     }}
+                    onTransform={(e) => {
+                      // Live resize. The transformer scales the node; turn that
+                      // scale into a real size straight away (the pattern Konva
+                      // documents for resizable text), so the box and the text
+                      // are laid out at the new size rather than stretched.
+                      const node = e.target;
+                      const nextWidth = Math.max(1, node.width() * node.scaleX());
+                      const nextHeight = Math.max(1, node.height() * node.scaleY());
+
+                      node.scaleX(1);
+                      node.scaleY(1);
+                      node.width(nextWidth);
+                      node.height(nextHeight);
+
+                      // Resize the box imperatively too, so the transformer's
+                      // frame never lags a frame behind the React re-render.
+                      const box = (node as Konva.Group).findOne<Konva.Rect>(".bubble-box");
+                      box?.width(nextWidth);
+                      box?.height(nextHeight);
+
+                      scheduleLiveSize({ id: bubble.id, widthPx: nextWidth, heightPx: nextHeight });
+                    }}
                     onTransformEnd={(e) => {
-                      // transformer is changing scale of the node
-                      // and NOT its width or height
-                      // but in the store we have only width and height
-                      // to match the data better we will reset scale on transform end
+                      // Scale is already folded into width/height by onTransform;
+                      // the multiply below is kept so this stays correct even if a
+                      // transform ever ends without a transform event.
                       const node = e.target;
                       const scaleX = node.scaleX();
                       const scaleY = node.scaleY();
@@ -219,52 +294,30 @@ export function BubbleMapperCanvas({
                         width: clamped.width,
                         height: clamped.height,
                       });
+                      clearLiveSize();
                     }}
                   >
-                    <Rect
-                      width={width}
-                      height={height}
-                      fill={selectedBubbleId === bubble.id ? "rgba(145, 74, 140, 0.2)" : "rgba(255, 255, 255, 0.4)"}
-                      stroke={selectedBubbleId === bubble.id ? "#914A8C" : "#999"}
-                      strokeWidth={2}
-                      cornerRadius={8}
-                    />
-                    <Text
-                      // Show what the reader will see, not the raw token —
-                      // "{name}" gives no sense of how much room the text needs.
-                      // Note this is still Konva's own layout, not the print
-                      // renderer's: the backend wraps on real glyph widths and
-                      // shrinks the type to fit, so treat this as a guide to
-                      // placement rather than an exact proof of the final page.
-                      text={
-                        bubble.dialogue?.trim()
-                          ? applyTextCase(
-                              substituteTokens(bubble.dialogue, previewName, SAMPLE_PRONOUNS),
-                              bubble.textCase ?? DEFAULT_TEXT_CASE
-                            )
-                          : "Double click to edit..."
-                      }
-                      width={width - 10}
-                      height={height - 10}
-                      x={5}
-                      y={5}
-                      fontSize={fontSizeToPx(
-                        bubble.fontSize ?? DEFAULT_FONT_SIZE,
-                        dimensions.imageHeight
-                      )}
-                      fill={bubble.fontColor ?? DEFAULT_FONT_COLOR}
-                      align={toKonvaAlign(bubble.textAlign ?? DEFAULT_TEXT_ALIGN)}
-                      verticalAlign={toKonvaVerticalAlign(
-                        bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN
-                      )}
-                      wrap="word"
+                    <BubbleContent
+                      bubble={bubble}
+                      isSelected={selectedBubbleId === bubble.id}
+                      displayWidth={width}
+                      displayHeight={height}
+                      // Normalized size fed to the layout: the live size while
+                      // resizing, otherwise the stored one.
+                      normalizedWidth={live ? width / dimensions.imageWidth : bubble.width || 0.2}
+                      normalizedHeight={live ? height / dimensions.imageHeight : bubble.height || 0.1}
+                      displayScale={layoutArtworkWidth > 0 ? dimensions.imageWidth / layoutArtworkWidth : 1}
+                      artworkWidth={layoutArtworkWidth}
+                      artworkHeight={layoutArtworkHeight}
+                      fontState={bubble.fontId ? fontStates.get(bubble.fontId) : undefined}
+                      previewName={previewName}
                     />
                   </Group>
                 );
               })}
             </Group>
 
-            <Transformer 
+            <Transformer
               ref={trRef}
               // No backend field for rotation — see note in app/types/comic.ts
               rotateEnabled={false}
@@ -294,5 +347,241 @@ export function BubbleMapperCanvas({
         </Stage>
       )}
     </div>
+  );
+}
+
+// ============================================================
+// BUBBLE CONTENT — box + text exactly as it prints
+// ============================================================
+
+interface BubbleContentProps {
+  bubble: LocalBubble;
+  isSelected: boolean;
+  displayWidth: number;
+  displayHeight: number;
+  normalizedWidth: number;
+  normalizedHeight: number;
+  /** Screen px per artwork px. */
+  displayScale: number;
+  artworkWidth: number;
+  artworkHeight: number;
+  /** undefined when the bubble has no font assigned. */
+  fontState: FontFileState | undefined;
+  previewName: string;
+}
+
+/** Plain-language state of one bubble, derived from its font and layout. */
+type ContentState =
+  | { kind: "placeholder" }
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | { kind: "drawn"; layout: Extract<BubbleLayout, { status: "ok" }> };
+
+function BubbleContent({
+  bubble,
+  isSelected,
+  displayWidth,
+  displayHeight,
+  normalizedWidth,
+  normalizedHeight,
+  displayScale,
+  artworkWidth,
+  artworkHeight,
+  fontState,
+  previewName,
+}: BubbleContentProps) {
+  const dialogue = bubble.dialogue ?? "";
+
+  // Primitives and the parsed font only — the FontFileState wrapper object is
+  // rebuilt on every render, so depending on it would re-run the layout (the
+  // expensive shrink-to-fit loop) for every bubble on every render. The parsed
+  // font itself is the query's cached value and keeps its identity.
+  const fontStatus = fontState?.status;
+  const fontErrorMessage = fontState?.status === "error" ? fontState.message : null;
+  const loadedFont = fontState?.status === "ready" ? fontState.loaded : null;
+
+  // Recomputed only when something that changes the text layout changes.
+  // Moving a bubble never lands here: position is not an input.
+  const state = useMemo<ContentState>(() => {
+    if (!dialogue.trim()) return { kind: "placeholder" };
+    if (fontStatus === "loading") return { kind: "loading" };
+    if (fontErrorMessage !== null) return { kind: "error", message: fontErrorMessage };
+    if (artworkWidth <= 0 || artworkHeight <= 0) return { kind: "loading" };
+
+    const layout = layoutBubble({
+      dialogue,
+      childName: previewName,
+      pronounKey: "HE",
+      width: normalizedWidth,
+      height: normalizedHeight,
+      fontSize: bubble.fontSize ?? DEFAULT_FONT_SIZE,
+      fontColor: bubble.fontColor ?? DEFAULT_FONT_COLOR,
+      nameColor: bubble.nameColor ?? null,
+      textAlign: bubble.textAlign ?? DEFAULT_TEXT_ALIGN,
+      textVerticalAlign: bubble.textVerticalAlign ?? DEFAULT_TEXT_VERTICAL_ALIGN,
+      textCase: bubble.textCase ?? DEFAULT_TEXT_CASE,
+      artworkWidth,
+      artworkHeight,
+      // null = no font assigned; layoutBubble reports that with the backend's message.
+      font: loadedFont,
+    });
+
+    if (layout.status === "empty") return { kind: "placeholder" };
+    if (layout.status === "error") return { kind: "error", message: layout.message };
+    return { kind: "drawn", layout };
+  }, [
+    dialogue,
+    previewName,
+    normalizedWidth,
+    normalizedHeight,
+    bubble.fontSize,
+    bubble.fontColor,
+    bubble.nameColor,
+    bubble.textAlign,
+    bubble.textVerticalAlign,
+    bubble.textCase,
+    artworkWidth,
+    artworkHeight,
+    fontStatus,
+    fontErrorMessage,
+    loadedFont,
+  ]);
+
+  const hasProblem =
+    state.kind === "error" || (state.kind === "drawn" && !state.layout.fitted);
+
+  return (
+    <>
+      <Rect
+        name="bubble-box"
+        width={displayWidth}
+        height={displayHeight}
+        fill={isSelected ? "rgba(145, 74, 140, 0.2)" : "rgba(255, 255, 255, 0.4)"}
+        stroke={hasProblem ? PROBLEM_STROKE : isSelected ? SELECTED_STROKE : IDLE_STROKE}
+        strokeWidth={2}
+        cornerRadius={8}
+      />
+
+      {state.kind === "drawn" && (
+        <GlyphText layout={state.layout} displayScale={displayScale} />
+      )}
+
+      {state.kind === "drawn" && !state.layout.fitted && (
+        // Above the box, so it never covers the text it is warning about.
+        <Text
+          text="Text doesn't fit"
+          y={-16}
+          fontSize={11}
+          fontStyle="bold"
+          fill={PROBLEM_STROKE}
+          listening={false}
+        />
+      )}
+
+      {state.kind === "placeholder" && (
+        <Text
+          text="Double click to edit..."
+          x={6}
+          y={6}
+          width={Math.max(0, displayWidth - 12)}
+          fontSize={12}
+          fill="#777"
+          listening={false}
+        />
+      )}
+
+      {state.kind === "loading" && (
+        <Text
+          text="Loading font…"
+          width={displayWidth}
+          height={displayHeight}
+          align="center"
+          verticalAlign="middle"
+          fontSize={12}
+          fontStyle="italic"
+          fill="#888"
+          listening={false}
+        />
+      )}
+
+      {state.kind === "error" && (
+        <Text
+          text={state.message}
+          x={6}
+          y={6}
+          width={Math.max(0, displayWidth - 12)}
+          height={Math.max(0, displayHeight - 12)}
+          fontSize={11}
+          fill={PROBLEM_STROKE}
+          wrap="word"
+          ellipsis
+          listening={false}
+        />
+      )}
+    </>
+  );
+}
+
+/** Replays opentype path commands onto a 2D canvas context. */
+function tracePath(ctx: CanvasRenderingContext2D, commands: PathCommand[]) {
+  ctx.beginPath();
+  for (const command of commands) {
+    switch (command.type) {
+      case "M":
+        ctx.moveTo(command.x, command.y);
+        break;
+      case "L":
+        ctx.lineTo(command.x, command.y);
+        break;
+      case "C":
+        ctx.bezierCurveTo(command.x1, command.y1, command.x2, command.y2, command.x, command.y);
+        break;
+      case "Q":
+        ctx.quadraticCurveTo(command.x1, command.y1, command.x, command.y);
+        break;
+      case "Z":
+        ctx.closePath();
+        break;
+    }
+  }
+}
+
+/**
+ * Draws the bubble's glyph outlines — the same geometry the print renderer
+ * stamps — in one fill per colour. Layout is in artwork px, so it is scaled to
+ * the on-screen size here. Click-through: selection is handled by the box.
+ */
+function GlyphText({
+  layout,
+  displayScale,
+}: {
+  layout: Extract<BubbleLayout, { status: "ok" }>;
+  displayScale: number;
+}) {
+  return (
+    <Shape
+      listening={false}
+      perfectDrawEnabled={false}
+      sceneFunc={(context) => {
+        const ctx = (context as unknown as { _context: CanvasRenderingContext2D })._context;
+
+        ctx.save();
+        ctx.scale(displayScale, displayScale);
+
+        if (layout.textCommands.length > 0) {
+          tracePath(ctx, layout.textCommands);
+          ctx.fillStyle = layout.fill;
+          ctx.fill();
+        }
+
+        if (layout.nameFill && layout.nameCommands.length > 0) {
+          tracePath(ctx, layout.nameCommands);
+          ctx.fillStyle = layout.nameFill;
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }}
+    />
   );
 }

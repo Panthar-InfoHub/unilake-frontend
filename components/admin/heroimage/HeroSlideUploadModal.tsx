@@ -154,8 +154,8 @@ export function HeroSlideUploadModal({
               </p>
               <div className="text-[12px] font-semibold text-[#914A8C]/80 flex flex-col items-center gap-0.5 mt-1 text-center">
                 <p>Supported formats: PNG, JPEG, WEBP</p>
-                <p>Recommended dimensions: 500 × 550 px (portrait, ~10:11 ratio)</p>
-                <p className="opacity-80">Images outside this ratio will appear stretched or squished.</p>
+                <p>Recommended dimensions: 1080 × 1080 px (square, 1:1 ratio)</p>
+                <p className="opacity-80">Non-square images are cropped at the edges to fit.</p>
               </div>
             </div>
           ) : (

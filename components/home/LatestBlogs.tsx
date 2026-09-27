@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 import { BlogListItem } from "@/app/types/blog";
 import { MoveRight } from "lucide-react";
 
@@ -115,19 +116,17 @@ export default function LatestBlogs({ blogs }: LatestBlogsProps) {
           />
         </svg>
 
-        {/* Text overlay — centered vertically over the SVG */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
+        {/* Text overlay — centered vertically on the band's flat strip
+            (viewBox y 46→240 of 311 → 14.8% top / 22.8% bottom), not the
+            whole SVG box, whose flares sit lower and would center it low. */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] flex items-center pointer-events-none">
           <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-center">
             <h2
               className={`
                 ${chauPhilomeneOne.className}
                 text-white
                 uppercase
-                text-xl
-                sm:text-2xl
-                md:text-3xl
-                lg:text-4xl
-                xl:text-5xl
+                ${BANNER_HEADING_SIZE}
                 text-center
                 z-30
                 relative

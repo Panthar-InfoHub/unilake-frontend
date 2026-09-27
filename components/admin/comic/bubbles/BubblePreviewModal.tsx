@@ -41,8 +41,13 @@ interface BubblePreviewModalProps {
 }
 
 /**
- * Shows the REAL text render of a page: actual fonts, actual glyph widths,
- * actual auto-shrink. Not the Konva approximation on the mapping canvas.
+ * Shows the REAL backend text render of a page: actual fonts, actual glyph
+ * widths, actual auto-shrink, name colour included.
+ *
+ * The mapping canvas now draws with a copy of the same layout
+ * (lib/bubbleLayout.ts), so this should agree with it. This is the final check
+ * against the real renderer itself, and the only place to try any name and
+ * pronoun.
  *
  * Text only — the face swap is a separate pipeline stage and is not involved.
  * For a page with hasFace off, this is pixel-identical to what prints.
@@ -93,7 +98,7 @@ export function BubblePreviewModal({
             Preview — Page {pageNumber}
           </DialogTitle>
           <DialogDescription className="text-xs text-neutral-500">
-            Real text rendering with your fonts. No face swap. Nothing is saved.
+            Final check with the real print renderer. No face swap. Nothing is saved.
           </DialogDescription>
         </DialogHeader>
 

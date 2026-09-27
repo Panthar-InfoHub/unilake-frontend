@@ -1,22 +1,19 @@
-"use client";
-
-import { useState } from "react";
 import Image from "next/image";
-import { Check, X, Image as ImageIcon } from "lucide-react";
 
 /**
- * Example shots for the guidance panel.
- * Same data as in components/personalize/NewPhotoForm.tsx — if a photo is
- * added or renamed there, update this list too.
+ * Composite example image for the photo-guidance panels: good and bad example
+ * shots with their labels baked into the image. Shared with
+ * components/personalize/NewPhotoForm.tsx so both pages stay in sync.
  */
-const PHOTO_EXAMPLES: { file: string; label: string; good: boolean }[] = [
-  { file: "smiling.png", label: "Smiling", good: true },
-  { file: "happy.png", label: "Happy", good: true },
-  { file: "detailed.png", label: "Detailed", good: true },
-  { file: "hats.png", label: "Hats", good: false },
-  { file: "expressions.png", label: "Expressions", good: false },
-  { file: "Distant.png", label: "Distant", good: false },
-];
+export const PHOTO_EXAMPLES_IMAGE = {
+  src: "/assets/home_page/personalize_page_image.jpeg",
+  width: 1546,
+  height: 958,
+  alt:
+    "Photo examples. Good: a smiling child, a happy child, and a detailed close-up of a child's face. " +
+    "Bad: a child wearing a hat and sunglasses, a child making a scrunched-up face, " +
+    "a child standing far away in a field, and a group photo with multiple faces.",
+};
 
 /**
  * Static photo-upload guidance displayed on the comic detail page.
@@ -26,12 +23,6 @@ const PHOTO_EXAMPLES: { file: string; label: string; good: boolean }[] = [
  * start the personalization form.
  */
 export default function PhotoGuidelines() {
-  // Track example images that failed to load so we show a neutral placeholder
-  // instead of a broken-image icon.
-  const [missingExamples, setMissingExamples] = useState<Set<string>>(
-    new Set(),
-  );
-
   return (
     <div className="mt-5 w-full bg-white rounded-[14px] border border-[#3F3C95] shadow-sm p-4">
       <h3 className="text-sm font-bold text-[#3F3C95] mb-2">
@@ -47,41 +38,15 @@ export default function PhotoGuidelines() {
         <li>No group photos or distant shots.</li>
       </ul>
 
-      {/* Example photo grid — 3 good, 3 bad */}
-      <div className="grid grid-cols-3 gap-2">
-        {PHOTO_EXAMPLES.map((example) => (
-          <figure key={example.file} className="relative">
-            <div className="relative aspect-square rounded-lg overflow-hidden border border-[#3F3C95]/20 bg-neutral-100">
-              {missingExamples.has(example.file) ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <ImageIcon className="w-6 h-6 text-neutral-300" />
-                </div>
-              ) : (
-                <Image
-                  src={`/assets/Reupload/${example.file}`}
-                  alt={example.label}
-                  fill
-                  sizes="(max-width: 1024px) 30vw, 140px"
-                  className="object-cover"
-                  onError={() =>
-                    setMissingExamples((prev) =>
-                      new Set(prev).add(example.file),
-                    )
-                  }
-                />
-              )}
-            </div>
-            <figcaption
-              className={`absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white ${
-                example.good ? "bg-emerald-600" : "bg-red-500"
-              }`}
-            >
-              {example.good ? <Check size={10} /> : <X size={10} />}
-              {example.label}
-            </figcaption>
-          </figure>
-        ))}
-      </div>
+      {/* Good/bad examples — one image, full width at its natural aspect ratio. */}
+      <Image
+        src={PHOTO_EXAMPLES_IMAGE.src}
+        alt={PHOTO_EXAMPLES_IMAGE.alt}
+        width={PHOTO_EXAMPLES_IMAGE.width}
+        height={PHOTO_EXAMPLES_IMAGE.height}
+        sizes="(max-width: 1024px) 90vw, 440px"
+        className="w-full h-auto rounded-lg"
+      />
 
       <p className="text-[10px] text-[#777] mt-2">
         * All photos are kept confidential and used only for creating your

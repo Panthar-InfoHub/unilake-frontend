@@ -140,8 +140,8 @@ export type TextVerticalAlign = "TOP" | "MIDDLE" | "BOTTOM";
 export type TextCase = "AS_TYPED" | "UPPERCASE" | "LOWERCASE";
 
 // NOTE: There is intentionally no `rotation` field. The backend `Bubble` model
-// stores 12 fields only (x, y, width, height, dialogue, fontId, fontSize,
-// fontColor, textAlign, textVerticalAlign, textCase, sortOrder) and
+// stores 13 fields only (x, y, width, height, dialogue, fontId, fontSize,
+// fontColor, nameColor, textAlign, textVerticalAlign, textCase, sortOrder) and
 // validateBody strips anything else silently — a rotation sent here would save
 // with a 200 and vanish on reload.
 // Removed 2026-08-01. To add it later: rotation column + migration, both Zod
@@ -161,6 +161,11 @@ export interface Bubble {
   fontSize: number;
   /** Canonical "#rrggbb". Never null — the column defaults to #000000. */
   fontColor: string;
+  /**
+   * Canonical "#rrggbb" for the {name} part of the dialogue only.
+   * null = the name is drawn in fontColor like the rest of the text.
+   */
+  nameColor: string | null;
   /** Horizontal placement of each line inside the bubble box. */
   textAlign: TextAlign;
   /** Placement of the whole block of lines inside the bubble box. */
@@ -193,6 +198,7 @@ export interface PreviewStampBubble {
   fontId?: string | null;
   fontSize: number;
   fontColor: string;
+  nameColor: string | null;
   textAlign: TextAlign;
   textVerticalAlign: TextVerticalAlign;
   textCase: TextCase;

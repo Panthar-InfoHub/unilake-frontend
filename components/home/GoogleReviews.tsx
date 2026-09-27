@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 import { usePublicGoogleReviews } from "@/hooks/usePublicContent";
 import { MAX_RATING } from "@/app/types/googleReview";
 
@@ -42,38 +43,60 @@ export default function GoogleReviews() {
           />
         </svg>
 
-        {/* Combined UFO + Text Overlay — Centered & aligned side-by-side */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="flex items-center gap-0 sm:gap-2 max-w-7xl w-full px-8 justify-center">
-            {/* UFO */}
-            <div className="relative w-[100px] sm:w-[220px] md:w-[300px] lg:w-[380px] xl:w-[440px] aspect-[580/220] -mt-4 sm:-mt-10 lg:-mt-28 select-none pointer-events-none">
-              <Image
-                src="/assets/home_page/ufoImg.png"
-                alt="5 Star UFO"
-                fill
-                sizes="(max-width: 640px) 140px, (max-width: 768px) 220px, (max-width: 1024px) 300px, (max-width: 1280px) 380px, 440px"
-                priority
-                className="object-contain"
-              />
-            </div>
-            {/* Text */}
-            <h2
-              className={`
-                ${chauPhilomeneOne.className}
-                text-white
-                uppercase
-                text-lg
-                sm:text-2xl
-                md:text-3xl
-                lg:text-4xl
-                xl:text-5xl
-                z-30
-                relative
-              `}
-            >
-              Excellent On Google
-            </h2>
+        {/* UFO + title form ONE row centered as a group (same approach as
+            the dragon in ChooseStory). The UFO slot sits directly before
+            the title, so the beam's tip lands on the "E" at every width. */}
+        {/* Leftward nudge is capped per breakpoint by the spare room beside
+            the group, so the UFO never gets clipped at the viewport edge.
+            None on mobile — the row already nearly fills the screen there.
+            Vertically the row spans only the band's flat strip — viewBox y
+            46→240 of 311, i.e. 14.8% from the top and 22.8% from the bottom.
+            The flares make the SVG box taller below the strip than above it,
+            so centering on the whole box sat the title visibly low. The UFO
+            slot stretches to this same row, so the beam follows the title.
+            Title sizes are capped per breakpoint so title + UFO still fit
+            the screen width (the UFO takes most of it). */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] max-w-7xl mx-auto w-full px-4 sm:px-8 flex justify-center pointer-events-none sm:-translate-x-4 md:-translate-x-6 lg:-translate-x-8 xl:-translate-x-12 2xl:-translate-x-24">
+          {/* UFO slot — full band height (flex stretch), UFO width.
+              Measured from ufoImg.png: the beam tip is 86.4% down the image
+              and 2.9% short of its right edge (transparent margin). Centering
+              that tip on the band and nudging the image right by the margin
+              puts the beam level with, and touching, the title. */}
+          <div className="relative shrink-0 w-[150px] sm:w-[320px] md:w-[400px] lg:w-[540px] xl:w-[700px]">
+            <Image
+              src="/assets/home_page/ufoImg.png"
+              alt="5 Star UFO"
+              width={822}
+              height={301}
+              priority
+              className="
+                absolute
+                left-0
+                w-full
+                h-auto
+                top-1/2
+                translate-x-[2.9%]
+                translate-y-[-86.4%]
+                select-none
+                pointer-events-none
+              "
+            />
           </div>
+
+          <h2
+            className={`
+              ${chauPhilomeneOne.className}
+              self-center
+              shrink-0
+              whitespace-nowrap
+              text-white
+              ${BANNER_HEADING_SIZE}
+              z-30
+              relative
+            `}
+          >
+            Excellent On Google
+          </h2>
         </div>
       </div>
 

@@ -16,6 +16,8 @@ import {
   DEFAULT_DESCRIPTION,
 } from "@/lib/seo";
 
+const ENABLE_YOUTUBE_EMBEDS = false;
+
 interface BlogDetailPageProps {
   params: Promise<{
     slug: string;
@@ -125,19 +127,23 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           </p>
         </header>
 
-        {/* Cover Image — no fixed ratio and no object-fit: it renders at its
-            own proportions, full column width. A tall image is tall, a wide one
-            is wide, and nothing is ever cropped. width/height 0 + h-auto is the
-            next/image pattern for an image whose real dimensions we do not
+        {/* Cover Image — shown whole at its own proportions, never cropped.
+            Width is capped by the column and height by min(70vh, 640px); the
+            browser keeps the aspect ratio under both caps, so a landscape image
+            still fills the column while a square or portrait one is limited by
+            height and centered, instead of towering over the viewport. The
+            frame (border, radius, shadow) sits on the image itself so it hugs
+            the picture with no empty bands. width/height 0 + auto sizing is
+            the next/image pattern for images whose real dimensions we don't
             store — the tradeoff is a small layout shift as it loads. */}
         {blog.coverImageUrl && (
-          <div className="w-full rounded-3xl overflow-hidden mb-12 shadow-lg border-4 border-white">
+          <div className="flex justify-center mb-12">
             <Image
               src={blog.coverImageUrl}
               alt={blog.title}
               width={0}
               height={0}
-              className="block w-full h-auto"
+              className="block w-auto h-auto max-w-full max-h-[min(70vh,640px)] rounded-3xl border-4 border-white shadow-lg"
               priority
               sizes="(max-width: 1024px) 100vw, 900px"
             />
@@ -146,7 +152,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
         {/* Content */}
         <div className="bg-[#F9E7D3] rounded-3xl p-8 md:p-12 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-[#E5E7EB]">
-          <BlogBodyRenderer html={blog.body} />
+          <BlogBodyRenderer html={blog.body} embedYouTube={ENABLE_YOUTUBE_EMBEDS} />
         </div>
       </article>
 

@@ -82,7 +82,7 @@ export default function BubbleMapperPage({
 
   // Which sample name previews use. Lives here rather than in the sidebar so the
   // canvas and the sidebar always agree. Defaults to the LONG name: sizing a
-  // bubble against the worst case is what stops a real "Christopher" from being
+  // bubble against the worst case is what stops a real "Ramanujan" from being
   // shrunk to fit at generation time.
   const [previewLongName, setPreviewLongName] = useState(true);
   const previewName = previewLongName ? SAMPLE_NAMES.long : SAMPLE_NAMES.short;

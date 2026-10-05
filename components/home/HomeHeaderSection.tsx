@@ -5,7 +5,12 @@ import { usePathname } from "next/navigation";
 import AnnouncementBanner from "./AnnouncementBanner";
 import Header from "./Header";
 
-export default function HomeHeaderSection() {
+interface HomeHeaderSectionProps {
+  /** Passed through to Header — see HeaderProps.showOnlyAtTop. */
+  showOnlyAtTop?: boolean;
+}
+
+export default function HomeHeaderSection({ showOnlyAtTop = false }: HomeHeaderSectionProps = {}) {
   const [bannerHeight, setBannerHeight] = useState(0);
   const pathname = usePathname();
   const isHomePage = pathname === "/";
@@ -13,7 +18,7 @@ export default function HomeHeaderSection() {
   return (
     <>
       {isHomePage && <AnnouncementBanner onHeightChange={setBannerHeight} />}
-      <Header topOffset={isHomePage ? bannerHeight : 0} />
+      <Header topOffset={isHomePage ? bannerHeight : 0} showOnlyAtTop={showOnlyAtTop} />
     </>
   );
 }

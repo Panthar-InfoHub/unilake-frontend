@@ -45,7 +45,22 @@ interface PreviewPageCardProps {
    * every card on screen displays the same one at the same time.
    */
   generatingFact?: string;
+  /**
+   * The book has been sent to print. Shows only the variant that was printed —
+   * no arrows, no thumbnails, no regenerate.
+   */
+  readOnly?: boolean;
+  /**
+   * False while the session is AWAITING_PAYMENT: the backend refuses to
+   * regenerate there, so the regenerate slide is not offered. Variant browsing
+   * still works.
+   */
+  canRegenerate?: boolean;
 }
+
+/** Variant caps — must match MAX_VARIANTS_BEFORE/AFTER_PAYMENT in the backend's config/generation.ts. */
+const MAX_VARIANTS_BEFORE_PAYMENT = 3;
+const MAX_VARIANTS_AFTER_PAYMENT = 8;
 
 export default function PreviewPageCard({
   page,
@@ -56,10 +71,28 @@ export default function PreviewPageCard({
   selectedVariantIndex,
   onVariantChange,
   generatingFact,
+  readOnly = false,
+  canRegenerate = true,
 }: PreviewPageCardProps) {
+  // Every variant is navigable, including ones still generating: a pending variant is
+  // exactly what the user wants to see the status of after hitting regenerate.
+  //
+  // Read-only narrows that to the printed one. The fallback (newest finished)
+  // only covers a session with no selection recorded, which send-to-print
+  // should make impossible — but an empty card would be worse than a guess.
+  const variants = readOnly
+    ? (() => {
+        const printed = page.variants.filter((v) => v.isSelected);
+        if (printed.length > 0) return printed;
+        return page.variants.filter((v) => v.status === "SD_READY").slice(-1);
+      })()
+    : page.variants;
+
   // Falls back to the first slot so a page with nothing ready yet still renders
   // its generating placeholder, matching the old local-state initialiser.
-  const activeVariantIndex = selectedVariantIndex ?? 0;
+  const activeVariantIndex = readOnly
+    ? (variants[0]?.variantIndex ?? 0)
+    : (selectedVariantIndex ?? 0);
   const setActiveVariantIndex = (variantIndex: number) =>
     onVariantChange(page.pageNumber, variantIndex);
 
@@ -73,17 +106,17 @@ export default function PreviewPageCard({
 
   const isLocked = isPaid ? false : !page.isPreviewPage;
 
-  // Every variant is navigable, including ones still generating: a pending variant is
-  // exactly what the user wants to see the status of after hitting regenerate.
-  const variants = page.variants;
-  
-  const maxRegenerations = isPaid ? 6 : 3;
+  const maxRegenerations = isPaid ? MAX_VARIANTS_AFTER_PAYMENT : MAX_VARIANTS_BEFORE_PAYMENT;
   const triesLeft = maxRegenerations - variants.length;
+
+  const regenerateAllowed = canRegenerate && !readOnly;
+  const showNavigation = !isLocked && !readOnly;
 
   const activePosition = variants.findIndex((v) => v.variantIndex === activeVariantIndex);
   const canGoPrev = activePosition > 0 || showRegenerateSlide;
   const canGoNextNormal = activePosition >= 0 && activePosition < variants.length - 1;
-  const canGoNextToRegenerate = !isLocked && variants.length > 0 && activePosition === variants.length - 1;
+  const canGoNextToRegenerate =
+    regenerateAllowed && !isLocked && variants.length > 0 && activePosition === variants.length - 1;
   const canGoNext = !showRegenerateSlide && (canGoNextNormal || canGoNextToRegenerate);
 
   const currentVariant = variants.find((v) => v.variantIndex === activeVariantIndex);
@@ -229,7 +262,7 @@ export default function PreviewPageCard({
           </div>
 
           {/* Variant navigation */}
-          {!isLocked && (variants.length > 1 || canGoNextToRegenerate) && (
+          {showNavigation && (variants.length > 1 || canGoNextToRegenerate) && (
             <>
               <button
                 type="button"
@@ -263,7 +296,7 @@ export default function PreviewPageCard({
         </div>
       </div>
 
-      {!isLocked && variants.length > 0 && (
+      {showNavigation && variants.length > 0 && (
         <div className="flex flex-row lg:flex-col items-center gap-3 mt-4 lg:mt-0 overflow-x-auto lg:absolute lg:top-12 lg:right-4 w-full lg:w-auto p-2">
           {variants.map((variant) => {
             const isReady = variant.status === "SD_READY";

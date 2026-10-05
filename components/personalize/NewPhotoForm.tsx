@@ -221,7 +221,7 @@ export default function NewPhotoForm({ previousSession }: NewPhotoFormProps) {
       });
 
       // 1. Create a BRAND NEW session. The old one is left alone — it keeps its
-      //    pages and expires on its own 24h clock.
+      //    pages and expires on its own 7-day clock.
       setLoadingStep("Creating your session...");
       const sessionResponse = await createSession(previousSession.comicId);
       const { id: sessionId, wsRoomToken } = sessionResponse;

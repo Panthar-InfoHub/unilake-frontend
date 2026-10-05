@@ -1,7 +1,6 @@
 "use client";
 
-import { usePublicComic } from "@/hooks/usePublicComics";
-import { useCountryStore } from "@/stores/useCountryStore";
+import { useCoverPricing } from "@/hooks/useCoverPricing";
 import { hankenGrotesk } from "@/app/fonts";
 import Image from "next/image";
 
@@ -10,16 +9,132 @@ import { resolveMrp } from "@/lib/utils";
 import type { CoverFormat } from "@/hooks/useCheckoutFlow";
 
 /**
- * The cover-format selector and checkout call to action.
+ * The cover-format selector and checkout call to action. Rendered twice on the
+ * preview page: full size once below the last comic page, and `compact` inside
+ * CheckoutBar, which floats at the bottom of the screen while the pages scroll.
  *
- * Presentational and fully controlled: the preview page renders this several
- * times down the scroll, so selection, in-flight state and the login modal all
- * live once in useCheckoutFlow rather than inside each copy. Keeping any of
- * that here would mean each block disagreed with the others about what the
- * customer had picked.
+ * Presentational and fully controlled: selection, in-flight state and the
+ * login modal live once in useCheckoutFlow, shared with CheckoutBar, so the
+ * two always agree about what the customer picked.
  */
+/**
+ * The close-up shown in each option's picture box.
+ *
+ * There are no separate close-up photos: the box is a window onto the bottom-
+ * left corner of the existing full-book image, where the spine (hardcover) or
+ * the thin page edge (softcover) is visible — the detail that tells the two
+ * apart at a glance.
+ *
+ * `crop` is the window in fractions of the source image: left edge, top edge,
+ * and width. Its height follows from the box's 2.1:1 shape. It is turned into
+ * CSS by cropStyle() below. Retune a crop by changing these three numbers only.
+ */
+const COVER_OPTIONS = {
+  SOFTCOVER: {
+    name: "Softcover",
+    tagline: "Lightweight",
+    src: "/assets/home_page/softcover.png",
+    width: 654,
+    height: 523,
+    crop: { x: 0.06, y: 0.6, w: 0.46 },
+  },
+  HARDCOVER: {
+    name: "Hardcover",
+    tagline: "Long Lasting",
+    src: "/assets/home_page/hardcover.png",
+    width: 632,
+    height: 562,
+    crop: { x: 0.08, y: 0.7, w: 0.46 },
+  },
+} as const;
+
+/** Width ÷ height of the picture box. Must match `aspect-[2.1/1]` below. */
+const PICTURE_BOX_RATIO = 2.1;
+
+/**
+ * Positions the full image inside the picture box so only the crop window
+ * shows. The image is scaled so the window's width fills the box, then shifted
+ * up and left by the window's offset.
+ *
+ * Percentages rather than px, so the crop holds at any box size. `left` and
+ * `width` are relative to the box width; `top` is relative to the box HEIGHT,
+ * which is width ÷ PICTURE_BOX_RATIO — hence that factor in the top formula.
+ */
+function cropStyle(option: (typeof COVER_OPTIONS)[CoverFormat]) {
+  const { x, y, w } = option.crop;
+  const heightOverWidth = option.height / option.width;
+
+  return {
+    width: `${100 / w}%`,
+    left: `${(-x / w) * 100}%`,
+    top: `${-y * (PICTURE_BOX_RATIO / w) * heightOverWidth * 100}%`,
+  };
+}
+
+/**
+ * Every size in the section, in two sets: the full section below the last page,
+ * and the compact copy that floats at the bottom of the screen (CheckoutBar).
+ *
+ * Only sizes differ — same structure, same text, same colours — so the floating
+ * bar is the same design, just smaller. One notable difference: the full
+ * section stacks its cards below md; the compact one keeps them side by side
+ * at every width, shrunk to fit a phone, so it stays short enough to float.
+ *
+ * Complete class strings, never assembled from pieces: Tailwind only generates
+ * classes it can find written out in full in the source.
+ */
+const SIZES = {
+  full: {
+    container:
+      "max-w-[640px] py-6 px-5 rounded-[28px] border-[4px] shadow-[12px_12px_0px_#403A8B] mt-8 mb-12",
+    heading: "text-lg md:text-2xl mb-1",
+    row: "flex-col md:flex-row gap-3 md:gap-4 mb-5 mt-4",
+    card: "gap-3 px-3 py-2.5 rounded-[18px] max-w-[280px]",
+    cardSelected: "border-[4px]",
+    tagline: "text-[11px] whitespace-nowrap mb-1",
+    picture: "w-[104px] rounded-lg",
+    right: "gap-1.5",
+    name: "text-lg tracking-wide",
+    mrp: "text-sm mb-1",
+    price: "text-2xl",
+    choose: "text-xs",
+    warning: "mb-4 px-4 py-2.5 text-xs",
+    button:
+      "px-5 py-2.5 text-base max-w-[260px] shadow-[0px_4px_0px_#BF8902,0px_10px_20px_rgba(62,65,155,0.5)] active:translate-y-[4px]",
+    spinner: 20,
+  },
+  compact: {
+    container:
+      "max-w-[560px] py-2.5 px-3 rounded-[20px] border-[3px] shadow-[6px_6px_0px_#403A8B]",
+    heading: "text-sm md:text-base",
+    // Phone sizes (unprefixed) are budgeted for a 360px-wide screen: after the
+    // bar's and section's padding, each card gets ~117px, split into a 44px
+    // picture, a 6px gap and ~67px for "Hardcover" / "₹ 1,600". The tagline
+    // may wrap to two lines so it never widens the picture column.
+    row: "flex-row gap-1 sm:gap-3 mb-2.5 mt-2",
+    card: "flex-1 min-w-0 gap-1.5 sm:gap-2.5 px-1.5 sm:px-2.5 py-1.5 rounded-xl max-w-[240px]",
+    cardSelected: "border-[3px]",
+    tagline: "text-[9px] sm:text-[10px] sm:whitespace-nowrap text-center mb-0.5",
+    picture: "w-[44px] sm:w-[84px] rounded-md",
+    right: "gap-1",
+    name: "text-[11px] tracking-normal sm:text-base sm:tracking-wide",
+    mrp: "text-[10px] sm:text-xs mb-0.5",
+    price: "text-sm sm:text-lg",
+    choose: "text-[9px] sm:text-[10px]",
+    warning: "mb-2 px-3 py-1 text-[11px]",
+    button:
+      "px-4 py-1.5 text-sm max-w-[240px] shadow-[0px_3px_0px_#BF8902,0px_6px_14px_rgba(62,65,155,0.4)] active:translate-y-[3px]",
+    spinner: 16,
+  },
+} as const;
+
 interface PricingSectionProps {
   comicId: string;
+  /**
+   * The smaller copy used by the floating CheckoutBar. Same design, compact
+   * sizes, no outer margins (the bar positions it). Defaults to the full size.
+   */
+  compact?: boolean;
   /**
    * Preview pages that exhausted every retry and have no finished variant.
    * Non-empty blocks checkout: a customer must not be able to pay for a book
@@ -32,132 +147,143 @@ interface PricingSectionProps {
   isUpdating: boolean;
   isCheckoutDisabled: boolean;
   onCheckout: () => void;
+  /**
+   * Resuming an unpaid checkout (session at AWAITING_PAYMENT). The cover was
+   * chosen and priced when checkout began and the backend has locked it, so the
+   * other option is disabled and the button resumes payment instead.
+   */
+  locked?: boolean;
 }
 
 export default function PricingSection({
   comicId,
+  compact = false,
   failedPageNumbers,
   selectedFormat,
   onSelectFormat,
   isUpdating,
   isCheckoutDisabled,
   onCheckout,
+  locked = false,
 }: PricingSectionProps) {
-  const { data: comicDetail } = usePublicComic(comicId);
-  const { selectedCountry, getCurrencySymbol } = useCountryStore();
+  const { isLoaded, softcoverRule, hardcoverRule, currencySymbol } =
+    useCoverPricing(comicId);
 
-  if (!comicDetail) return null;
+  if (!isLoaded) return null;
 
-  // Filter pricing rules for selected country
-  const countryPricing = comicDetail.pricingRules.filter(
-    (rule) => rule.country.code === selectedCountry?.code
-  );
-
-  const softcoverRule = countryPricing.find((r) => r.coverType === "SOFTCOVER");
-  const hardcoverRule = countryPricing.find((r) => r.coverType === "HARDCOVER");
-
-  const currencySymbol = getCurrencySymbol();
+  const s = compact ? SIZES.compact : SIZES.full;
 
   /**
-   * Price block for one cover option. Returns "N/A" when the comic isn't priced
-   * for the selected country, and drops the strike-through line when there is
-   * no real discount to show.
+   * Price block for one cover option: struck-through MRP above the price.
+   * "N/A" when the comic isn't priced for the selected country; the MRP line
+   * is dropped when there is no real discount to show.
    */
   const renderPrice = (rule: typeof softcoverRule) => {
-    if (!rule) return <span>N/A</span>;
+    if (!rule) return <span className={`${s.price} font-extrabold`}>N/A</span>;
 
     const { price, mrp, showMrp } = resolveMrp(rule);
 
     return (
       <div className="flex flex-col items-center">
         {showMrp && (
-          <span className="text-[10px] font-medium text-gray-500 line-through leading-none mb-0.5">
+          <span className={`${s.mrp} font-medium text-gray-500 line-through leading-none whitespace-nowrap`}>
             {currencySymbol} {mrp.toLocaleString("en-IN")}
           </span>
         )}
-        <span>
+        <span className={`${s.price} font-extrabold leading-none whitespace-nowrap`}>
           {currencySymbol} {price.toLocaleString("en-IN")}
         </span>
       </div>
     );
   };
 
+  /**
+   * One selectable cover option. Tagline + close-up on the left, name + price
+   * on the right. A real <button> so it is reachable and selectable from the
+   * keyboard; `aria-pressed` tells screen readers which one is chosen.
+   */
+  const renderOption = (format: CoverFormat, rule: typeof softcoverRule) => {
+    const option = COVER_OPTIONS[format];
+    const isSelected = selectedFormat === format;
+    // Locked: the chosen cover stays shown as selected; the other is inert.
+    const isDisabled = !rule || (locked && !isSelected);
+
+    return (
+      <button
+        type="button"
+        onClick={() => !isDisabled && !locked && onSelectFormat(format)}
+        disabled={isDisabled}
+        aria-pressed={isSelected}
+        className={`${hankenGrotesk.className} ${s.card} grid grid-cols-[auto_1fr] items-center w-full text-black transition-all ${
+          isDisabled
+            ? "opacity-50 cursor-not-allowed border border-gray-200"
+            : isSelected
+              ? `${s.cardSelected} border-[#914BBC] scale-[1.02] ${locked ? "cursor-default" : "cursor-pointer"}`
+              : "border border-black hover:border-gray-500 cursor-pointer"
+        }`}
+      >
+        {/* Left: tagline over the close-up picture. */}
+        <div className="flex flex-col items-center">
+          <span className={`${s.tagline} leading-tight`}>{option.tagline}</span>
+          <div className={`${s.picture} relative aspect-[2.1/1] border border-black/70 overflow-hidden bg-white`}>
+            <Image
+              src={option.src}
+              alt={`${option.name} book`}
+              width={option.width}
+              height={option.height}
+              sizes="230px"
+              // max-w-none: Tailwind's base styles cap images at 100% width,
+              // which would undo the zoom.
+              className="absolute max-w-none h-auto"
+              style={cropStyle(option)}
+            />
+          </div>
+        </div>
+
+        {/* Right: name over price. */}
+        <div className={`${s.right} flex flex-col items-center min-w-0`}>
+          <span className={`${s.name} font-bold leading-none`}>{option.name}</span>
+          {renderPrice(rule)}
+        </div>
+      </button>
+    );
+  };
+
   // Still needed locally for the warning banner below. The checkout guard that
   // used the same value now lives in useCheckoutFlow, which computes it from
   // the same prop.
-  const hasFailedPages = failedPageNumbers.length > 0;
+  //
+  // Never shown when locked: it tells the customer to regenerate, which the
+  // backend refuses at AWAITING_PAYMENT.
+  const hasFailedPages = !locked && failedPageNumbers.length > 0;
 
   return (
-    // max-w-xl (576px) rather than 2xl: at 2xl the two option cards left a wide
-    // band of dead space on either side, since the row only needs ~410px. The
-    // floor here is the title — "Complete Your Order To Unlock The Full Story"
-    // needs roughly 430px at text-xl, so going much below this wraps it to two
-    // lines and the card gets taller instead of narrower.
-    <div className="w-full max-w-xl mx-auto py-6 px-5 flex flex-col items-center bg-[#FFFFFF] rounded-[28px] border-[4px] border-[#914BBC] shadow-[12px_12px_0px_#403A8B] mt-8 mb-12 relative">
-      <h2 className={`${hankenGrotesk.className} text-lg md:text-xl text-center text-black font-semibold mb-1`}>
-        Complete Your Order To Unlock The Full Story
+    // Full: max-w-[640px] fits two ~280px option cards plus "Choose" in one row
+    // from md up; below md the cards stack. Compact: see SIZES.
+    <div className={`${s.container} w-full mx-auto flex flex-col items-center bg-[#FFFFFF] border-[#914BBC] relative`}>
+      <h2 className={`${hankenGrotesk.className} ${s.heading} text-center text-black font-bold`}>
+        {locked
+          ? "Complete Your Payment to Unlock the Full Story"
+          : "Complete Your Order to Unlock the Full Story"}
       </h2>
 
-      <div className="md:hidden font-medium text-xs text-black mb-2 mt-1">
-        Choose Cover Format
-      </div>
+      {locked && (
+        <p className={`${hankenGrotesk.className} ${s.choose} mt-1 text-center text-gray-500 font-medium`}>
+          Cover was chosen at checkout
+        </p>
+      )}
 
-      <div className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4 w-full max-w-lg mb-5 mt-4">
-        {/* Softcover Option */}
-        <div 
-          onClick={() => softcoverRule && onSelectFormat("SOFTCOVER")}
-          className={`flex flex-col items-center p-2.5 rounded-[18px] transition-all cursor-pointer w-full max-w-[150px] ${
-            !softcoverRule ? "opacity-50 cursor-not-allowed border border-gray-200" :
-            selectedFormat === "SOFTCOVER" ? "border-[4px] border-[#914BBC] scale-[1.02]" : "border border-black hover:border-gray-500"
-          }`}
-        >
-          <div className="text-[#403A8B] text-sm font-bold mb-0.5">SoftCover</div>
-          <div className="text-black text-[10px] mb-1 text-center leading-tight">Flexible &amp; Lightweight</div>
-          <div className="relative w-[68px] h-[88px] mb-1">
-            <Image
-              src="/assets/home_page/softcover.png"
-              alt="SoftCover"
-              fill
-              className="object-contain drop-shadow-md"
-            />
-          </div>
-          <div className="text-black text-sm font-bold">
-            {renderPrice(softcoverRule)}
-          </div>
-        </div>
+      <div className={`${s.row} flex items-center justify-center w-full`}>
+        {renderOption("SOFTCOVER", softcoverRule)}
 
-        {/* Middle Text */}
-        <div className="hidden md:flex flex-col items-center justify-center font-medium text-xs text-black whitespace-nowrap">
-          Choose Cover Format
-        </div>
+        <span className={`${hankenGrotesk.className} ${s.choose} font-bold text-black whitespace-nowrap`}>Choose</span>
 
-        {/* Hardcover Option */}
-        <div 
-          onClick={() => hardcoverRule && onSelectFormat("HARDCOVER")}
-          className={`flex flex-col items-center p-2.5 rounded-[18px] transition-all cursor-pointer w-full max-w-[150px] ${
-            !hardcoverRule ? "opacity-50 cursor-not-allowed border border-gray-200" :
-            selectedFormat === "HARDCOVER" ? "border-[4px] border-[#914BBC] scale-[1.02]" : "border border-black hover:border-gray-500"
-          }`}
-        >
-          <div className="text-[#403A8B] text-sm font-bold mb-0.5">HardCover</div>
-          <div className="text-black text-[10px] mb-1 text-center leading-tight">Sturdy &amp; Long Lasting</div>
-          <div className="relative w-[68px] h-[88px] mb-1">
-            <Image
-              src="/assets/home_page/hardcover.png"
-              alt="HardCover"
-              fill
-              className="object-contain drop-shadow-md"
-            />
-          </div>
-          <div className="text-black text-sm font-bold">
-            {renderPrice(hardcoverRule)}
-          </div>
-        </div>
+        {renderOption("HARDCOVER", hardcoverRule)}
       </div>
 
       {hasFailedPages && (
         <div
-          className={`${hankenGrotesk.className} w-full max-w-[400px] mb-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-center text-xs text-amber-900`}
+          className={`${hankenGrotesk.className} ${s.warning} w-full max-w-[400px] rounded-2xl border border-amber-300 bg-amber-50 text-center text-amber-900`}
         >
           <span className="font-bold">
             {failedPageNumbers.length === 1
@@ -183,21 +309,23 @@ export default function PricingSection({
         // is close enough to the limit that a narrow viewport could otherwise
         // break "CONTINUE TO CHECKOUT" across two lines, which looks broken in
         // a pill. Narrow this further and the text size has to come back down.
-        className="px-5 py-2.5 bg-[#3E419B] hover:brightness-110 text-white rounded-full font-extrabold text-base uppercase tracking-wide whitespace-nowrap transition-all w-full max-w-[260px] border-2 border-[#1e1c4a] shadow-[0px_4px_0px_#BF8902,0px_10px_20px_rgba(62,65,155,0.5)] active:translate-y-[4px] active:shadow-[0px_0px_0px_#BF8902,0px_4px_10px_rgba(62,65,155,0.5)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+        className={`${s.button} bg-[#3E419B] hover:brightness-110 text-white rounded-full font-extrabold uppercase tracking-wide whitespace-nowrap transition-all w-full border-2 border-[#1e1c4a] active:shadow-[0px_0px_0px_#BF8902,0px_4px_10px_rgba(62,65,155,0.5)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed`}
       >
         {isUpdating ? (
           <>
-            <Loader2 className="animate-spin" size={20} />
+            <Loader2 className="animate-spin" size={s.spinner} />
             Updating...
           </>
+        ) : locked ? (
+          "COMPLETE PAYMENT"
         ) : (
           "CONTINUE TO CHECKOUT"
         )}
       </button>
 
-      {/* No LoginModal here. This component renders several times down the
-          preview, and one modal per copy would mount several dialogs for a
-          single login. PreviewViewer renders exactly one, driven by the shared
+      {/* No LoginModal here. This section and CheckoutBar both start checkout,
+          and one modal per component would mount two dialogs for a single
+          login. PreviewViewer renders exactly one, driven by the shared
           useCheckoutFlow state. */}
     </div>
   );

@@ -272,7 +272,7 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
 
       {/* Form Heading */}
       <h2 className="text-xl sm:text-2xl font-medium text-[#333333] mb-6">
-        Personalize Your Child&apos;s Book
+        Personalise Your Child&apos;s Book
       </h2>
 
       {/* Form Fields */}
@@ -467,7 +467,7 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
           />
         </div>
         <p className="text-xs text-gray-500 leading-relaxed">
-          I confirm that I am 18 years of age or older and that I have received permission from the child&apos;s parent or legal guardian to provide this information for the creation of a personalized storybook, in compliance with the <Link href="#" className="text-[#3F3C95] font-medium hover:underline">Privacy Policy</Link>.
+          I confirm that I am 18 years of age or older and that I have received permission from the child&apos;s parent or legal guardian to provide this information for the creation of a personalized storybook, in compliance with the <Link href="/privacy" className="text-[#3F3C95] font-medium hover:underline">Privacy Policy</Link>.
         </p>
       </div>
 
@@ -483,7 +483,7 @@ export default function ComicPersonalizeForm({ comic, onSuccess }: ComicPersonal
             <span>{loadingStep}</span>
           </div>
         ) : (
-          "PERSONALISED"
+          "PERSONALISE"
         )}
       </button>
 

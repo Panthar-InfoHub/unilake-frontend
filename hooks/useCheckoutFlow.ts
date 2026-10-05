@@ -42,7 +42,7 @@ export function useCheckoutFlow({
   snapshot,
   failedPageNumbers,
 }: UseCheckoutFlowArgs) {
-  const [selectedFormat, setSelectedFormat] = useState<CoverFormat | null>(null);
+  const [pickedFormat, setPickedFormat] = useState<CoverFormat | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -50,9 +50,41 @@ export function useCheckoutFlow({
   const ordersPaused = useOrdersPaused();
   const router = useRouter();
 
+  // Resume: checkout was already started, so an unpaid Order + Razorpay order
+  // exist, priced for the cover chosen back then. The backend has locked
+  // coverType since (a PATCH 409s), so the cover is read off the session and
+  // cannot be changed here — derived, not stored, so it can never drift.
+  const isResume = snapshot.status === "AWAITING_PAYMENT";
+  const selectedFormat: CoverFormat | null = isResume
+    ? snapshot.coverType
+    : pickedFormat;
+  const setSelectedFormat = useCallback(
+    (format: CoverFormat) => {
+      if (!isResume) setPickedFormat(format);
+    },
+    [isResume]
+  );
+
   const hasFailedPages = failedPageNumbers.length > 0;
 
   const handleCheckout = useCallback(async () => {
+    if (isResume) {
+      // None of the fresh-checkout guards apply when resuming:
+      //   - orders paused: the backend lets an existing unpaid order finish by
+      //     design, so blocking here would strand someone mid-payment;
+      //   - failed pages: checkout was already gated on them, and regeneration
+      //     is refused at AWAITING_PAYMENT, so the customer could not fix it;
+      //   - the coverType PATCH: locked, and already set.
+      if (authLoading) return;
+      if (!isAuthenticated) {
+        setShowLoginModal(true);
+        return;
+      }
+      setIsUpdating(true);
+      router.push(`/personalize/${sessionId}/checkout`);
+      return;
+    }
+
     // Store closed — stop here, on this page.
     //
     // Deliberately the FIRST thing in this function, before the cover-type
@@ -110,6 +142,7 @@ export function useCheckoutFlow({
       setIsUpdating(false);
     }
   }, [
+    isResume,
     ordersPaused,
     hasFailedPages,
     selectedFormat,
@@ -123,11 +156,13 @@ export function useCheckoutFlow({
   return {
     selectedFormat,
     setSelectedFormat,
+    isResume,
     isUpdating,
     hasFailedPages,
     // Every checkout button shares this, so one in-flight submission disables
     // all of them rather than just the block that was clicked.
-    isCheckoutDisabled: isUpdating || authLoading || hasFailedPages,
+    isCheckoutDisabled:
+      isUpdating || authLoading || (!isResume && hasFailedPages),
     handleCheckout,
     showLoginModal,
     setShowLoginModal,

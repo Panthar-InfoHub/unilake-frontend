@@ -7,7 +7,7 @@ import ComicPreloader from "@/components/comic/ComicPreloader";
 import { usePublicComic } from "@/hooks/usePublicComics";
 import HomeHeaderSection from "@/components/home/HomeHeaderSection";
 import Footer from "@/components/home/Footer";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { clearSession, isValidSessionId, consumeShowPreloader, getSessionBySessionId } from "@/app/lib/session-storage";
@@ -65,7 +65,9 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
     totalPreviewPages,
     hasNoPreviewPages,
     isExpired,
+    isAwaitingPayment,
     isPaid,
+    isSentToPrint,
     paidPagesReady,
     totalPaidPages,
     triggerGeneration,
@@ -197,7 +199,7 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
       return (
         <PreviewErrorState
           title="This preview has expired"
-          message="Previews are kept for 24 hours. Please personalize your comic again — it only takes a moment."
+          message="Previews are kept for 7 days. Please personalize your comic again — it only takes a moment."
           actionLabel="Start Again"
           onAction={handleStartAgain}
         />
@@ -215,39 +217,12 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
         />
       );
     }
-    
-    // Payment specific routing
-    if (status === "AWAITING_PAYMENT") {
-      return (
-        <PreviewErrorState
-          title="Payment Required"
-          message="Please complete your payment to continue generating the full comic."
-          actionLabel="Complete Payment"
-          onAction={() => router.push(`/personalize/${sessionId}/checkout`)}
-        />
-      );
-    }
-    
-    if (status === "CONFIRMED") {
-      return (
-        <div className="flex flex-col items-center justify-center p-12 text-center max-w-md mx-auto">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-[#3F3C95] mb-4">Your order is confirmed!</h2>
-          <p className="text-gray-600 mb-8">We&apos;ve received your order and are preparing it for print. You&apos;ll receive an email with shipping updates soon.</p>
-          <button
-            onClick={() => router.push("/dashboard/orders")}
-            className="px-8 py-3 bg-[#3F3C95] text-white rounded-full font-medium hover:bg-[#3F3C95]/90 transition-colors"
-          >
-            View My Orders
-          </button>
-        </div>
-      );
-    }
-    
+
+    // AWAITING_PAYMENT and every sent-to-print status used to replace the
+    // viewer with a message screen. Both now fall through to it: an unpaid
+    // customer sees what they are paying for (and resumes checkout from the
+    // pricing section), and a printed book stays viewable read-only.
+
     // A session-level FAILED that is not an expiry means every preview page
     // exhausted its retries. This used to replace the whole viewer with
     // "There was an issue with your payment" — wrong on both counts: it is not
@@ -269,6 +244,24 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
           </div>
         )}
 
+        {isSentToPrint && (
+          <div className="w-full max-w-2xl mx-auto mt-24 px-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-900">
+              <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
+              <span className="flex-1">
+                <strong>Your book has been sent to print.</strong> These are the
+                pages we&apos;re printing.
+              </span>
+              <button
+                onClick={() => router.push("/dashboard/orders")}
+                className="shrink-0 font-bold text-emerald-800 underline underline-offset-2 hover:text-emerald-950 cursor-pointer"
+              >
+                View my order
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Data is still good — we just couldn't reach the server on the last
             refresh. Say so quietly rather than replacing the whole preview. */}
         {error && (
@@ -285,7 +278,9 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
           pagesReady={pagesReady}
           totalPreviewPages={totalPreviewPages}
           onRegenerate={regeneratePage}
+          isAwaitingPayment={isAwaitingPayment}
           isPaid={isPaid}
+          isSentToPrint={isSentToPrint}
           paidPagesReady={paidPagesReady}
           totalPaidPages={totalPaidPages}
         />
@@ -298,7 +293,9 @@ export default function PreviewPage({ params }: { params: Promise<{ sessionId: s
     // preloader inside it was #F9E3C8, which drew a visible seam across the
     // screen where the preloader's block ended and the page showed through.
     <div className="min-h-screen bg-[#F9E3C8] flex flex-col">
-      <HomeHeaderSection />
+      {/* Header stays hidden on upward scroll here and only returns at the top,
+          so it never slides in over the comic pages while browsing variants. */}
+      <HomeHeaderSection showOnlyAtTop />
       <main className="grow flex flex-col items-center justify-center">{renderBody()}</main>
       <Footer />
     </div>

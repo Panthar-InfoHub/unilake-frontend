@@ -24,7 +24,19 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
   return (
     <>
       {/* ===== Symmetrical Flared Purple Banner ===== */}
-      <div className="relative w-full overflow-visible mt-20 lg:mt-32">
+      {/* `id="faq"` lives here, not on the <section> below, so the /#faq links
+          (Header, mobile menu, Footer) land on the heading rather than halfway
+          down the question list.
+
+          The scroll margin is how far the girl pokes up above this box (her
+          height + bottom offset − the SVG height, per breakpoint below) plus
+          the 86px fixed Header plus a 16px gap — so she lands fully visible
+          even when the Header is showing. Change the girl's width/bottom or
+          the SVG height and these numbers must move with them. */}
+      <div
+        id="faq"
+        className="relative w-full overflow-visible mt-20 lg:mt-32 scroll-mt-[172px] sm:scroll-mt-[200px] md:scroll-mt-[206px] lg:scroll-mt-[250px] xl:scroll-mt-[273px]"
+      >
         {/* Flared wave SVG */}
         <svg
           viewBox="0 0 1728 311"
@@ -109,11 +121,16 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
       </div>
 
       {/* ===== Content Section ===== */}
-      <section id="faq" className="bg-[#F8E7D2] pb-6 pt-14 md:pt-20 relative">
+      <section className="bg-[#F8E7D2] pb-6 pt-14 md:pt-20 relative">
         <div className="max-w-4xl mx-auto px-6 sm:px-8">
 
-          {/* FAQ Accordion List */}
-          <div className="flex flex-col gap-5 mb-16">
+          {/* FAQ Accordion List.
+              No bottom margin: the gap down to the Feedback block is this
+              section's pb-6 plus FaqFeedback's own top padding (64px mobile,
+              88px desktop). Adjust it there, not here — FaqFeedback's padding
+              must still stand on its own when there are no FAQs and this
+              component renders nothing. */}
+          <div className="flex flex-col gap-5">
             {faqs.map((item) => {
               const isExpanded = expandedId === item.id;
               return (

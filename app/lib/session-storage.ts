@@ -1,5 +1,13 @@
 const STORAGE_KEY_PREFIX = "unilake_session_";
 
+/**
+ * How long a stored session is kept before it is forgotten. Mirrors the
+ * backend's session lifetime (`SESSION_LIFETIME_DAYS` in the backend's
+ * session.service.ts) — two repos, so change both together, along with the
+ * "Previews are kept for…" message on the preview page.
+ */
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -77,13 +85,13 @@ export function getSession(comicId: string): StoredSession | null {
       return null;
     }
 
-    // 24-hour TTL check
+    // TTL check
     const createdAt = new Date(data.createdAt).getTime();
     const now = Date.now();
     const ageMs = now - createdAt;
-    
-    // If older than 24 hours, clear it and return null
-    if (ageMs > 24 * 60 * 60 * 1000) {
+
+    // If older than the session lifetime, clear it and return null
+    if (ageMs > SESSION_TTL_MS) {
       clearSession(comicId);
       return null;
     }

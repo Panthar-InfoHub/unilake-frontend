@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   ShoppingCart,
   BookOpen,
-  // Users,  ← kept alongside the commented-out nav entry below
+  Users,
   Megaphone,
   Star,
   UsersRound,
@@ -43,11 +43,7 @@ const NAV_ITEMS = [
   { label: "Comics", icon: BookOpen, href: "/admin/comics" },
   { label: "Countries", icon: Globe, href: "/admin/countries" },
   { label: "Themes", icon: Palette, href: "/admin/themes" },
-  // HIDDEN, not removed — the Users screen is still a stub and has no backend
-  // endpoints behind it yet, so linking to it from the sidebar only leads to an
-  // "under construction" page. Uncomment this line (and the `Users` icon import
-  // above) when the screen is built.
-  // { label: "Users", icon: Users, href: "/admin/users" },
+  { label: "Users", icon: Users, href: "/admin/users" },
   { label: "Announcement Bar", icon: Megaphone, href: "/admin/announcement-bar" },
   { label: "Customer Reviews", icon: Star, href: "/admin/customer-reviews" },
   { label: "Google Reviews", icon: MessageSquareQuote, href: "/admin/google-reviews" },

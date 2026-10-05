@@ -24,7 +24,7 @@ export const DIALOGUE_TOKEN_LABELS: Record<DialogueToken, string> = {
 /** Sample substitution values for preview. */
 export const SAMPLE_NAMES = {
   short: "Aarav",
-  long: "Christopher",
+  long: "Ramanujan",
 };
 
 /**

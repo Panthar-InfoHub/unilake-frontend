@@ -6,7 +6,7 @@ export default function ComicInfoCards() {
   const cards = [
     {
       id: 1,
-      text: "Perfect for children aged 3 - 7",
+      text: "Uses Self Reference Effect to Teach ",
       icon: <Baby className="w-4 h-4 text-white" strokeWidth={2.5} />,
       iconBg: "bg-[#3F3C95]",
       border: "border-[#3F3C95]",

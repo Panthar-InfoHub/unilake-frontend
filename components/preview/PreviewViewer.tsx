@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   RegenerateResponse,
   SendToPrintSelection,
@@ -12,6 +12,7 @@ import { useRotatingFact } from "@/hooks/useRotatingFact";
 import PreviewProgress from "./PreviewProgress";
 import PreviewPageCard from "./PreviewPageCard";
 import PricingSection from "./PricingSection";
+import CheckoutBar from "./CheckoutBar";
 import SendToPrintSection from "./SendToPrintSection";
 import UploadAnotherPhotoBanner from "./UploadAnotherPhotoBanner";
 import Image from "next/image";
@@ -19,13 +20,6 @@ import { ChevronDown, ImageIcon, ArrowLeftRight } from "lucide-react";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import LoginModal from "../checkout/LoginModal";
 import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
-
-/**
- * How many comic pages appear between repeated pricing blocks. The block after
- * the final page is suppressed so it never stacks directly on top of the
- * closing one below the scroll.
- */
-const PAGES_BETWEEN_PRICING = 3;
 
 /** Highest variantIndex that has actually finished, or null if none have. */
 function newestReadyIndex(page: SessionPage): number | null {
@@ -42,7 +36,12 @@ interface PreviewViewerProps {
    *  preview-page count once that in-memory value is lost to a refresh. */
   totalPreviewPages: number;
   onRegenerate: (pageNumber: number) => Promise<RegenerateResponse | undefined>;
+  /** Checkout started but not paid: preview only, cover locked, payment resumes. */
+  isAwaitingPayment?: boolean;
+  /** Payment captured — every page unlocked. */
   isPaid?: boolean;
+  /** Paid AND sent to print — read-only, printed variants only. */
+  isSentToPrint?: boolean;
   paidPagesReady?: number;
   totalPaidPages?: number;
 }
@@ -53,7 +52,9 @@ export default function PreviewViewer({
   pagesReady,
   totalPreviewPages,
   onRegenerate,
+  isAwaitingPayment = false,
   isPaid,
+  isSentToPrint = false,
   paidPagesReady = 0,
   totalPaidPages = 0,
 }: PreviewViewerProps) {
@@ -72,7 +73,10 @@ export default function PreviewViewer({
   const generatingFact = useRotatingFact(generatingFacts);
 
   const isGeneratingSession = status === "GENERATING_PREVIEW";
-  const isGeneratingPaid = status === "GENERATING_PAID";
+  // PAID is the brief hop before the webhook flips to GENERATING_PAID. Showing
+  // the bar from PAID means a customer arriving from their orders page sees
+  // progress straight away rather than a book of blank placeholders.
+  const isGeneratingPaid = status === "GENERATING_PAID" || status === "PAID";
 
   const coverUrl = snapshot.comic.coverThumbnailUrls?.[0];
 
@@ -111,18 +115,20 @@ export default function PreviewViewer({
     [snapshot.pages]
   );
 
-  // Called ONCE for the whole page, however many pricing blocks render below.
-  // Cover selection, the in-flight flag and the login modal all live here, so
-  // every block shows the same choice and a single modal serves all of them.
+  // Called ONCE for the whole page. Cover selection, the in-flight flag and the
+  // login modal all live here, so the floating CheckoutBar and the full
+  // PricingSection below the last page show the same choice, and a single
+  // modal serves both.
   const checkout = useCheckoutFlow({
     sessionId: snapshot.id,
     snapshot,
     failedPageNumbers: failedPreviewPages,
   });
 
-  // Spread into each block so the repeats can never drift apart from the
-  // closing one — there is exactly one prop set.
+  // Spread into both the bar and the full section, so they can never drift
+  // apart — there is exactly one prop set.
   const pricingProps = {
+    locked: checkout.isResume,
     comicId: snapshot.comicId,
     failedPageNumbers: failedPreviewPages,
     selectedFormat: checkout.selectedFormat,
@@ -165,6 +171,55 @@ export default function PreviewViewer({
   const pageCountMismatch =
     comicDetail !== undefined && snapshot.pages.length !== comicDetail.pageCount;
 
+  // ── Floating checkout bar visibility ──────────────────────────────────────
+  //
+  // The bar floats at the bottom of the screen only while BOTH hold:
+  //   1. the first comic page has come into view (or been scrolled past), so
+  //      it never covers the heading and intro at the top, and
+  //   2. the full checkout section below the last page is still BELOW the
+  //      screen. Once that section scrolls into view it takes over — the bar
+  //      slides away and the full section sits in its place. Scrolling back up
+  //      pushes the section below the screen again and the bar returns.
+  //
+  // "Below the screen" rather than "not visible" is deliberate: past the
+  // section, down in the footer, it is off screen ABOVE, and the bar must not
+  // come back over the footer.
+  //
+  // IntersectionObserver rather than a scroll listener: the browser reports
+  // only the crossings, with no per-frame work on our side.
+  const firstPageRef = useRef<HTMLDivElement>(null);
+  const fullCheckoutRef = useRef<HTMLDivElement>(null);
+  const [firstPageReached, setFirstPageReached] = useState(false);
+  const [fullCheckoutBelow, setFullCheckoutBelow] = useState(true);
+
+  useEffect(() => {
+    if (isPaid) return;
+
+    const firstPage = firstPageRef.current;
+    const fullCheckout = fullCheckoutRef.current;
+    if (!firstPage || !fullCheckout) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const { top, bottom } = entry.boundingClientRect;
+
+        if (entry.target === firstPage) {
+          // In view, or already scrolled past above the screen.
+          setFirstPageReached(entry.isIntersecting || bottom < 0);
+        } else {
+          // Not in view AND its top edge is below the screen.
+          setFullCheckoutBelow(!entry.isIntersecting && top > 0);
+        }
+      }
+    });
+
+    observer.observe(firstPage);
+    observer.observe(fullCheckout);
+    return () => observer.disconnect();
+  }, [isPaid]);
+
+  const showCheckoutBar = !isPaid && firstPageReached && fullCheckoutBelow;
+
   return (
     // Same #F9E3C8 as the preloader and the page wrapper. Left at #F1E0CA this
     // would just move the seam — the preloader hands over to this view inside
@@ -176,7 +231,11 @@ export default function PreviewViewer({
       )}
       
       {isGeneratingPaid && (
-        <PreviewProgress pagesReady={paidPagesReady} totalPages={totalPaidPages} />
+        <PreviewProgress
+          pagesReady={paidPagesReady}
+          totalPages={totalPaidPages}
+          title="Creating the rest of your book..."
+        />
       )}
 
       <div className="w-full max-w-4xl px-4 flex flex-col items-center gap-4">
@@ -192,7 +251,11 @@ export default function PreviewViewer({
           </p>
 
           <h2 className={`${chauPhilomeneOne.className} text-2xl md:text-4xl text-[#3F3C95]`}>
-            {isPaid ? "Your Complete Storybook" : `Preview for ${snapshot.childName || "Your Child"}`}
+            {isSentToPrint
+              ? "Your Printed Storybook"
+              : isPaid
+                ? "Your Complete Storybook"
+                : `Preview for ${snapshot.childName || "Your Child"}`}
           </h2>
 
           {/* Description only exists on the public comic detail, so unlike the
@@ -209,14 +272,18 @@ export default function PreviewViewer({
             </p>
           )}
 
-          <div className="mt-4 flex flex-col items-center gap-2 text-gray-500 text-sm md:text-base font-medium">
-            <span className="flex items-center gap-2">
-              <ImageIcon size={18} className="text-[#3F3C95]" /> Watch the story come alive one page at a time!
-            </span>
-            <span className="flex items-center gap-2">
-              <ArrowLeftRight size={18} className="text-[#3F3C95]" /> Slide left or right to pick the best image
-            </span>
-          </div>
+          {/* Instructions for a book still being made and picked. Once it is
+              printed there is nothing to watch or choose, so they go. */}
+          {!isSentToPrint && (
+            <div className="mt-4 flex flex-col items-center gap-2 text-gray-500 text-sm md:text-base font-medium">
+              <span className="flex items-center gap-2">
+                <ImageIcon size={18} className="text-[#3F3C95]" /> Watch the story come alive one page at a time!
+              </span>
+              <span className="flex items-center gap-2">
+                <ArrowLeftRight size={18} className="text-[#3F3C95]" /> Slide left or right to pick the best image
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Cover Page */}
@@ -268,7 +335,9 @@ export default function PreviewViewer({
 
             No JS is needed to stop at the footer: a sticky element is bound by
             its parent's box, and this column ends before the Footer. */}
-        {!isPaid && (
+        {/* Also hidden while awaiting payment: a fresh session from here would
+            leave the unpaid order behind, and this session's photo is locked. */}
+        {!isPaid && !isAwaitingPayment && (
           <div className="hidden lg:block sticky top-24 z-20 h-0 w-full -mb-4 pointer-events-none relative">
             <div className="absolute right-[calc(100%+1.5rem)] xl:right-[calc(100%+2.5rem)] top-0 pointer-events-auto">
               <UploadAnotherPhotoBanner
@@ -282,7 +351,7 @@ export default function PreviewViewer({
 
         {/* Mobile fallback. There is no room for a side rail at phone widths,
             so below lg it is a normal block above the first page. */}
-        {!isPaid && (
+        {!isPaid && !isAwaitingPayment && (
           <div className="lg:hidden w-full">
             <UploadAnotherPhotoBanner
               sessionId={snapshot.id}
@@ -292,47 +361,43 @@ export default function PreviewViewer({
           </div>
         )}
 
-        {/* All Pages, with a pricing block after every third one. */}
+        {/* All pages. Checkout is no longer repeated between them — the
+            floating CheckoutBar covers that while scrolling. */}
         {snapshot.pages.map((page, index) => {
           const comicPageMetadata = comicDetail?.pages.find(p => p.pageNumber === page.pageNumber);
 
-          // Counted by position in the rendered list, not by pageNumber, so a
-          // gap in page numbering cannot throw the rhythm off.
-          //
-          // Never after the last page: the closing block already sits directly
-          // below the scroll, and the two would stack back to back whenever the
-          // page count divides by three.
-          const isLastPage = index === snapshot.pages.length - 1;
-          const showInlinePricing =
-            !isPaid &&
-            !isLastPage &&
-            (index + 1) % PAGES_BETWEEN_PRICING === 0;
-
           return (
-            <Fragment key={page.pageId}>
-              <div className="w-full flex flex-col items-center">
-                <PreviewPageCard
-                  page={page}
-                  comicPageMetadata={comicPageMetadata}
-                  onRegenerate={onRegenerate}
-                  isGeneratingSession={isGeneratingSession || isGeneratingPaid}
-                  isPaid={isPaid}
-                  selectedVariantIndex={displayIndex(page)}
-                  onVariantChange={handleVariantChange}
-                  generatingFact={generatingFact}
-                />
-                <ChevronDown size={32} className="text-gray-300 mt-4" />
-              </div>
-
-              {showInlinePricing && <PricingSection {...pricingProps} />}
-            </Fragment>
+            <div
+              key={page.pageId}
+              // The first page is the bar's start signal — see the observer.
+              ref={index === 0 ? firstPageRef : undefined}
+              className="w-full flex flex-col items-center"
+            >
+              <PreviewPageCard
+                page={page}
+                comicPageMetadata={comicPageMetadata}
+                onRegenerate={onRegenerate}
+                isGeneratingSession={isGeneratingSession || isGeneratingPaid}
+                isPaid={isPaid}
+                selectedVariantIndex={displayIndex(page)}
+                onVariantChange={handleVariantChange}
+                generatingFact={generatingFact}
+                readOnly={isSentToPrint}
+                canRegenerate={!isAwaitingPayment}
+              />
+              <ChevronDown size={32} className="text-gray-300 mt-4" />
+            </div>
           );
         })}
       </div>
 
-      {/* The closing block. Same props as every repeat above it. */}
+      {/* The full checkout section, once, below the last page. The wrapper is
+          what the observer watches: when it scrolls into view the floating
+          bar slides away and this takes its place. */}
       {!isPaid ? (
-        <PricingSection {...pricingProps} />
+        <div ref={fullCheckoutRef} className="w-full">
+          <PricingSection {...pricingProps} />
+        </div>
       ) : status === "PAID_PAGES_READY" ? (
         <SendToPrintSection
           sessionId={snapshot.id}
@@ -344,7 +409,10 @@ export default function PreviewViewer({
         />
       ) : null}
 
-      {/* Exactly one, for however many pricing blocks rendered above. */}
+      {/* Floats over the pages until the full section above scrolls into view. */}
+      {!isPaid && <CheckoutBar {...pricingProps} visible={showCheckoutBar} />}
+
+      {/* Exactly one, shared by the bar and the full section. */}
       <LoginModal
         isOpen={checkout.showLoginModal}
         onOpenChange={checkout.setShowLoginModal}

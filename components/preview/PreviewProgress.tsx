@@ -3,9 +3,15 @@ interface PreviewProgressProps {
   /** Total preview pages expected. Always a real number — the hook falls back to the
    *  snapshot's own preview-page count when /generate's value isn't in memory. */
   totalPages: number;
+  /** Defaults to the preview wording; the paid-pages bar passes its own. */
+  title?: string;
 }
 
-export default function PreviewProgress({ pagesReady, totalPages }: PreviewProgressProps) {
+export default function PreviewProgress({
+  pagesReady,
+  totalPages,
+  title = "Generating your preview...",
+}: PreviewProgressProps) {
   const total = Math.max(totalPages, 1);
   const rawPercent = (pagesReady / total) * 100;
   // Cap at 95% until we actually hit PREVIEW_READY state from the backend
@@ -14,7 +20,7 @@ export default function PreviewProgress({ pagesReady, totalPages }: PreviewProgr
   return (
     <div className="w-full max-w-2xl mx-auto mb-8 px-4">
       <div className="flex justify-between items-end mb-2">
-        <h3 className="text-lg font-semibold text-gray-800">Generating your preview...</h3>
+        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
         <span className="text-sm font-medium text-[#3F3C95]">
           {pagesReady} of {totalPages} pages ready
         </span>

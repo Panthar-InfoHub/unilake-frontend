@@ -51,13 +51,13 @@ export default async function Hero() {
 
 
 
-            <h2 className={`${chauPhilomeneOne.className} text-[clamp(1.35rem,4vw+0.3rem,2.375rem)] leading-tight font-bold text-[#F26A2E] mt-3 sm:mt-4 lg:mt-5`}>
+            <h2 className={`${chauPhilomeneOne.className} text-[clamp(1.35rem,4vw+0.3rem,2.375rem)] leading-tight font-bold text-[#F26A2E]`}>
 
               When They See Themselves
 
             </h2>
 
-            <h1 className={`${chauPhilomeneOne.className} text-[clamp(1.75rem,5.5vw+0.5rem,3.1875rem)] leading-[1.05] sm:leading-[1.02] font-black text-[#37308D] uppercase mt-3 sm:mt-4 lg:mt-5`}>
+            <h1 className={`${chauPhilomeneOne.className} text-[clamp(1.75rem,5.5vw+0.5rem,3.1875rem)] leading-[1.05] sm:leading-[1.02] font-black text-[#37308D] uppercase`}>
 
               Inside A
               <br />

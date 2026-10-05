@@ -1,6 +1,6 @@
 "use client";
 
-import { hankenGrotesk } from "@/app/fonts";
+import { boogaloo } from "@/app/fonts";
 import FeedbackForm from "@/components/shared/FeedbackForm";
 
 /**
@@ -20,8 +20,7 @@ export default function FaqFeedback() {
             <div className="w-5 h-5 rounded-full bg-[#8E4A92] shadow-sm" />
             <h3
               className={`
-                ${hankenGrotesk.className}
-                font-extrabold
+                ${boogaloo.className}
                 text-[#000000]
                 text-xl
                 sm:text-2xl

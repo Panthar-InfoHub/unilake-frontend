@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { hankenGrotesk, chauPhilomeneOne } from "@/app/fonts";
+import { hankenGrotesk, boogaloo } from "@/app/fonts";
 import { Faq } from "@/app/types/faq";
 
 interface ComicPageFaqSectionProps {
@@ -61,7 +61,7 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
             >
               <h2
                 className={`
-                  ${chauPhilomeneOne.className}
+                  ${boogaloo.className}
                   text-white
                   uppercase
                   text-2xl

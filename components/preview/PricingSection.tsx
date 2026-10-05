@@ -1,7 +1,7 @@
 "use client";
 
 import { useCoverPricing } from "@/hooks/useCoverPricing";
-import { hankenGrotesk } from "@/app/fonts";
+import { frutiger, poppins } from "@/app/fonts";
 import Image from "next/image";
 
 import { Loader2 } from "lucide-react";
@@ -87,7 +87,7 @@ const SIZES = {
   full: {
     container:
       "max-w-[640px] py-6 px-5 rounded-[28px] border-[4px] shadow-[12px_12px_0px_#403A8B] mt-8 mb-12",
-    heading: "text-lg md:text-2xl mb-1",
+    heading: "text-xl md:text-[28px] leading-tight mb-1",
     row: "flex-col md:flex-row gap-3 md:gap-4 mb-5 mt-4",
     card: "gap-3 px-3 py-2.5 rounded-[18px] max-w-[280px]",
     cardSelected: "border-[4px]",
@@ -106,7 +106,7 @@ const SIZES = {
   compact: {
     container:
       "max-w-[560px] py-2.5 px-3 rounded-[20px] border-[3px] shadow-[6px_6px_0px_#403A8B]",
-    heading: "text-sm md:text-base",
+    heading: "text-sm md:text-lg leading-tight",
     // Phone sizes (unprefixed) are budgeted for a 360px-wide screen: after the
     // bar's and section's padding, each card gets ~117px, split into a 44px
     // picture, a 6px gap and ~67px for "Hardcover" / "₹ 1,600". The tagline
@@ -179,18 +179,18 @@ export default function PricingSection({
    * is dropped when there is no real discount to show.
    */
   const renderPrice = (rule: typeof softcoverRule) => {
-    if (!rule) return <span className={`${s.price} font-extrabold`}>N/A</span>;
+    if (!rule) return <span className={`${s.price} font-bold`}>N/A</span>;
 
     const { price, mrp, showMrp } = resolveMrp(rule);
 
     return (
       <div className="flex flex-col items-center">
         {showMrp && (
-          <span className={`${s.mrp} font-medium text-gray-500 line-through leading-none whitespace-nowrap`}>
+          <span className={`${s.mrp} text-gray-500 line-through leading-none whitespace-nowrap`}>
             {currencySymbol} {mrp.toLocaleString("en-IN")}
           </span>
         )}
-        <span className={`${s.price} font-extrabold leading-none whitespace-nowrap`}>
+        <span className={`${s.price} font-bold leading-none whitespace-nowrap`}>
           {currencySymbol} {price.toLocaleString("en-IN")}
         </span>
       </div>
@@ -214,7 +214,7 @@ export default function PricingSection({
         onClick={() => !isDisabled && !locked && onSelectFormat(format)}
         disabled={isDisabled}
         aria-pressed={isSelected}
-        className={`${hankenGrotesk.className} ${s.card} grid grid-cols-[auto_1fr] items-center w-full text-black transition-all ${
+        className={`${s.card} grid grid-cols-[auto_1fr] items-center w-full text-black transition-all ${
           isDisabled
             ? "opacity-50 cursor-not-allowed border border-gray-200"
             : isSelected
@@ -260,15 +260,21 @@ export default function PricingSection({
   return (
     // Full: max-w-[640px] fits two ~280px option cards plus "Choose" in one row
     // from md up; below md the cards stack. Compact: see SIZES.
-    <div className={`${s.container} w-full mx-auto flex flex-col items-center bg-[#FFFFFF] border-[#914BBC] relative`}>
-      <h2 className={`${hankenGrotesk.className} ${s.heading} text-center text-black font-bold`}>
+    //
+    // Frutiger is set ONCE here and inherited by everything inside — heading,
+    // cards, prices and warning. Only its two real weights are used:
+    // font-bold for the heading, cover names, prices and "Choose"; regular for
+    // taglines, MRP and helper text (see app/fonts.ts). The button is the one
+    // exception and sets Poppins itself.
+    <div className={`${frutiger.className} ${s.container} w-full mx-auto flex flex-col items-center bg-[#FFFFFF] border-[#914BBC] relative`}>
+      <h2 className={`${s.heading} text-center text-black font-bold`}>
         {locked
           ? "Complete Your Payment to Unlock the Full Story"
           : "Complete Your Order to Unlock the Full Story"}
       </h2>
 
       {locked && (
-        <p className={`${hankenGrotesk.className} ${s.choose} mt-1 text-center text-gray-500 font-medium`}>
+        <p className={`${s.choose} mt-1 text-center text-gray-500`}>
           Cover was chosen at checkout
         </p>
       )}
@@ -276,14 +282,14 @@ export default function PricingSection({
       <div className={`${s.row} flex items-center justify-center w-full`}>
         {renderOption("SOFTCOVER", softcoverRule)}
 
-        <span className={`${hankenGrotesk.className} ${s.choose} font-bold text-black whitespace-nowrap`}>Choose</span>
+        <span className={`${s.choose} font-bold text-black whitespace-nowrap`}>Choose</span>
 
         {renderOption("HARDCOVER", hardcoverRule)}
       </div>
 
       {hasFailedPages && (
         <div
-          className={`${hankenGrotesk.className} ${s.warning} w-full max-w-[400px] rounded-2xl border border-amber-300 bg-amber-50 text-center text-amber-900`}
+          className={`${s.warning} w-full max-w-[400px] rounded-2xl border border-amber-300 bg-amber-50 text-center text-amber-900`}
         >
           <span className="font-bold">
             {failedPageNumbers.length === 1
@@ -309,7 +315,9 @@ export default function PricingSection({
         // is close enough to the limit that a narrow viewport could otherwise
         // break "CONTINUE TO CHECKOUT" across two lines, which looks broken in
         // a pill. Narrow this further and the text size has to come back down.
-        className={`${s.button} bg-[#3E419B] hover:brightness-110 text-white rounded-full font-extrabold uppercase tracking-wide whitespace-nowrap transition-all w-full border-2 border-[#1e1c4a] active:shadow-[0px_0px_0px_#BF8902,0px_4px_10px_rgba(62,65,155,0.5)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed`}
+        // Poppins ExtraBold, not Frutiger: the heavy rounded call to action is
+        // set on the button itself so it overrides the container's Frutiger.
+        className={`${poppins.className} ${s.button} bg-[#3E419B] hover:brightness-110 text-white rounded-full font-extrabold uppercase tracking-wide whitespace-nowrap transition-all w-full border-2 border-[#1e1c4a] active:shadow-[0px_0px_0px_#BF8902,0px_4px_10px_rgba(62,65,155,0.5)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed`}
       >
         {isUpdating ? (
           <>

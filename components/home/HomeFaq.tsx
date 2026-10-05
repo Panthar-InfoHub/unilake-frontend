@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { boogaloo, hankenGrotesk } from "@/app/fonts";
 import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 import { Faq } from "@/app/types/faq";
 
@@ -64,7 +64,7 @@ export default function HomeFaq({ faqs }: HomeFaqProps) {
           <div className="max-w-7xl mx-auto w-full relative flex justify-center pr-4 sm:pr-8 pl-[140px] sm:pl-[212px] md:pl-[262px] lg:pl-[356px] xl:pl-[max(2rem,calc(408px_-_(100vw_-_1280px)/2))]">
             <h2
               className={`
-                ${chauPhilomeneOne.className}
+                ${boogaloo.className}
                 text-white
                 uppercase
                 ${BANNER_HEADING_SIZE}

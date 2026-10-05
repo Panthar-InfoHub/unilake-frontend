@@ -14,9 +14,16 @@ interface HeaderProps {
   topOffset?: number;
   hideBulbForced?: boolean;
   flatBackground?: boolean;
+  /**
+   * When true, scrolling back up does NOT bring the header back — it only
+   * reappears once the page is back near the top. Used on the comic preview
+   * page, where the header sliding in over the pages on every small upward
+   * scroll gets in the way of browsing variants.
+   */
+  showOnlyAtTop?: boolean;
 }
 
-export default function Header({ topOffset = 0, hideBulbForced = false, flatBackground = false }: HeaderProps = {}) {
+export default function Header({ topOffset = 0, hideBulbForced = false, flatBackground = false, showOnlyAtTop = false }: HeaderProps = {}) {
   // Trigger fetch and store sync
   const { isLoading, isError } = useCountryHydration();
   
@@ -47,7 +54,10 @@ export default function Header({ topOffset = 0, hideBulbForced = false, flatBack
       const currentScrollY = window.scrollY;
       setHideBulb(currentScrollY > 80);
 
-      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+      if (showOnlyAtTop) {
+        // Direction is ignored: visible near the top, hidden everywhere else.
+        setShowHeader(currentScrollY <= 80);
+      } else if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
         setShowHeader(false);
       } else {
         setShowHeader(true);
@@ -58,7 +68,7 @@ export default function Header({ topOffset = 0, hideBulbForced = false, flatBack
     window.addEventListener("scroll", handleScroll);
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [showOnlyAtTop]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -137,9 +147,9 @@ export default function Header({ topOffset = 0, hideBulbForced = false, flatBack
             { name: "Home", href: "/" },
             { name: "Our Books", href: "/comic" },
             { name: "How it works", href: "/how_it_work" },
-            { name: "Faq", href: "/#faq" },
+            { name: "FAQ", href: "/#faq" },
             { name: "Blogs", href: "/blog" },
-            { name: "Team", href: "/team" }
+            { name: "Contact us", href: "/contact" }
           ].map((item) => (
             <li key={item.name} className={`${isActive(item.href) ? "text-[#FFD54A]" : "hover:text-[#FFD54A]"} cursor-pointer transition-colors duration-200`}>
               <Link href={item.href}>{item.name}</Link>

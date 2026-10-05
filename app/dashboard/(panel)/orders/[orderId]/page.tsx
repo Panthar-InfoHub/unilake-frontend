@@ -104,8 +104,10 @@ export default function OrderDetailPage({
           <p className="text-sm text-amber-900 mb-4">
             Finish checkout and we&apos;ll start printing your book right away.
           </p>
+          {/* To the preview, not straight to checkout: the customer sees the
+              book they are paying for, and resumes payment from there. */}
           <button
-            onClick={() => router.push(`/personalize/${order.sessionId}/checkout`)}
+            onClick={() => router.push(`/personalize/${order.sessionId}/preview`)}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#914A8C] hover:bg-[#7a3e75] text-white font-bold text-sm rounded-xl transition-colors shadow-sm cursor-pointer"
           >
             <CreditCard size={16} />
@@ -114,7 +116,7 @@ export default function OrderDetailPage({
         </div>
       ) : statusCode === "AWAITING_SELECTION" ? (
         // Deliberately renders nothing. The timeline is wrong here — there is
-        // no parcel yet — and the call to action lives in the PDF card below,
+        // no parcel yet — and the call to action lives in the "Your book" card below,
         // so a banner at the top would just duplicate it.
         null
       ) : statusCode === "CANCELLED" ? (

@@ -8,14 +8,70 @@ interface OrderSummaryProps {
   snapshot: SessionSnapshot;
 }
 
+/** Long edge of the image box, in px. The short edge follows the page's ratio. */
+const IMAGE_BOX_LONG_EDGE_PX = 128;
+
+/** Box used for the marketing-thumbnail fallback, whose dimensions are unknown. */
+const FALLBACK_BOX = { width: 96, height: 128 };
+
+type SummaryImage = {
+  url: string;
+  width: number;
+  height: number;
+  /** True when this is the child's generated page, false for the fallback thumbnail. */
+  isGenerated: boolean;
+};
+
+/**
+ * The picture for the summary: the child's first generated page.
+ *
+ * "First" is the lowest-numbered page with a finished variant, and of that page
+ * the NEWEST finished variant — the same one the preview page shows by default
+ * (see newestReadyIndex in PreviewViewer). The customer's in-preview pick is not
+ * persisted anywhere, so this is the closest match to what they last saw.
+ *
+ * The box takes the page's real aspect ratio with its long edge capped, so a
+ * landscape comic shows whole instead of being cropped into a portrait frame.
+ * Falls back to the comic's marketing thumbnail when nothing has finished.
+ */
+function resolveSummaryImage(
+  snapshot: SessionSnapshot,
+  metadataPages: { pageNumber: number; artworkWidth: number | null; artworkHeight: number | null }[]
+): SummaryImage | null {
+  const pages = [...snapshot.pages].sort((a, b) => a.pageNumber - b.pageNumber);
+
+  for (const page of pages) {
+    const ready = page.variants.filter((v) => v.status === "SD_READY");
+    if (ready.length === 0) continue;
+
+    const newest = ready.reduce((best, v) => (v.variantIndex > best.variantIndex ? v : best));
+    // displayImageUrl is the light WebP; finalImageUrl is the multi-MB print master.
+    const url = newest.displayImageUrl ?? newest.finalImageUrl;
+    if (!url) continue;
+
+    const meta = metadataPages.find((p) => p.pageNumber === page.pageNumber);
+    const naturalWidth = page.artworkWidth ?? meta?.artworkWidth ?? FALLBACK_BOX.width;
+    const naturalHeight = page.artworkHeight ?? meta?.artworkHeight ?? FALLBACK_BOX.height;
+    const ratio = naturalWidth / naturalHeight;
+
+    const width = ratio >= 1 ? IMAGE_BOX_LONG_EDGE_PX : Math.round(IMAGE_BOX_LONG_EDGE_PX * ratio);
+    const height = ratio >= 1 ? Math.round(IMAGE_BOX_LONG_EDGE_PX / ratio) : IMAGE_BOX_LONG_EDGE_PX;
+
+    return { url, width, height, isGenerated: true };
+  }
+
+  const thumbnailUrl = snapshot.comic.coverThumbnailUrls?.[0];
+  return thumbnailUrl ? { url: thumbnailUrl, ...FALLBACK_BOX, isGenerated: false } : null;
+}
+
 export default function OrderSummary({ snapshot }: OrderSummaryProps) {
   const { data: comicDetail } = usePublicComic(snapshot.comicId);
   const { selectedCountry, getCurrencySymbol } = useCountryStore();
 
   if (!comicDetail) return null;
 
-  const coverUrl = snapshot.comic.coverThumbnailUrls?.[0];
-  
+  const summaryImage = resolveSummaryImage(snapshot, comicDetail.pages);
+
   // Find pricing rule
   const countryPricing = comicDetail.pricingRules.filter(
     (rule) => rule.country.code === selectedCountry?.code
@@ -39,14 +95,23 @@ export default function OrderSummary({ snapshot }: OrderSummaryProps) {
       <h2 className="text-xl font-bold text-[#3F3C95] mb-6">Order Summary</h2>
       
       <div className="flex gap-4">
-        {coverUrl && (
-          <div className="relative w-24 h-32 rounded-md overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
+        {summaryImage && (
+          <div
+            className="relative rounded-md overflow-hidden bg-gray-100 shrink-0 border border-gray-200"
+            style={{ width: summaryImage.width, height: summaryImage.height }}
+          >
             <Image
-              src={coverUrl}
-              alt="Comic Cover"
+              src={summaryImage.url}
+              alt={
+                summaryImage.isGenerated
+                  ? `${comicDetail.title} — personalized for ${snapshot.childName || "your child"}`
+                  : "Comic Cover"
+              }
               fill
-              className="object-cover"
-              sizes="96px"
+              // The generated box already matches the page's ratio, so contain
+              // shows the whole page. The fallback thumbnail keeps its old crop.
+              className={summaryImage.isGenerated ? "object-contain" : "object-cover"}
+              sizes={`${summaryImage.width}px`}
             />
           </div>
         )}

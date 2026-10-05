@@ -17,13 +17,29 @@ type Slide =
 const FALLBACK_IMAGE = "/assets/home_page/bookCover1.png";
 
 /**
- * Builds the slide list, placing the video third.
- *
- * `Math.min(2, images.length)` is the whole positioning rule: with 3+ images it
- * lands at index 2 (3rd), with 2 images at index 2 (3rd, i.e. last), with 1
- * image at index 1 (2nd). No stored position is needed.
+ * How many leading thumbnails the detail page carousel skips — it opens on
+ * image 3. Only this carousel; the story card and share image still use them.
  */
-function buildSlides(images: string[], videoUrl?: string | null): Slide[] {
+const SKIPPED_LEADING_IMAGES = 2;
+
+/**
+ * Builds the slide list: drops the first two thumbnails, then places the video
+ * third among what remains.
+ *
+ * The skip only applies when something is left afterwards. A comic with one or
+ * two thumbnails shows all of them, so the carousel never ends up empty.
+ *
+ * `Math.min(2, images.length)` is the whole video positioning rule, applied to
+ * the images AFTER the skip: with 3+ remaining it lands at index 2 (3rd), with
+ * 2 at index 2 (3rd, i.e. last), with 1 at index 1 (2nd). No stored position
+ * is needed.
+ */
+function buildSlides(allImages: string[], videoUrl?: string | null): Slide[] {
+  const images =
+    allImages.length > SKIPPED_LEADING_IMAGES
+      ? allImages.slice(SKIPPED_LEADING_IMAGES)
+      : allImages;
+
   const slides: Slide[] = images.map((url) => ({ kind: "image", url }));
 
   if (videoUrl) {

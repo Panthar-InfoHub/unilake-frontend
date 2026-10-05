@@ -5,6 +5,32 @@ import { SessionSnapshot, SessionStatus, Variant, WSEvent } from "@/app/types/se
 import { SessionWebSocket } from "@/app/lib/websocket";
 
 /**
+ * The customer has sent the book to print — selections are committed and the
+ * session is read-only from here on. Includes the failure branches: PDF_FAILED
+ * and SHIPMENT_FAILED are ops problems after the commit, and the customer's
+ * book is exactly as final in them as in COMPLETED.
+ */
+export const SENT_TO_PRINT_STATUSES: SessionStatus[] = [
+  "CONFIRMED",
+  "COMPILING_PDF",
+  "PDF_FAILED",
+  "SHIPMENT_QUEUED",
+  "SHIPMENT_FAILED",
+  "COMPLETED",
+];
+
+/**
+ * Payment has been captured. Every page is unlocked. Deliberately excludes
+ * AWAITING_PAYMENT — at that point the customer has only opened checkout.
+ */
+export const POST_PAYMENT_STATUSES: SessionStatus[] = [
+  "PAID",
+  "GENERATING_PAID",
+  "PAID_PAGES_READY",
+  ...SENT_TO_PRINT_STATUSES,
+];
+
+/**
  * Applies `updateVariants` to the one page matching `pageNumber`, leaving every other
  * page untouched and returning a new snapshot object (TanStack Query needs a new
  * reference to re-render). A no-op if the cache is empty or the page isn't found.
@@ -64,8 +90,14 @@ export function useSessionPreview(sessionId: string | null) {
     refetchInterval: (query) => {
       const polledStatus = query.state.data?.status;
       
-      // Payment polling: 2s, regardless of WS state (§12.2)
-      if (polledStatus === "AWAITING_PAYMENT" || polledStatus === "PAID") {
+      // PAID is a brief hop before the webhook flips the session to
+      // GENERATING_PAID — poll fast so the progress bar appears promptly.
+      //
+      // AWAITING_PAYMENT is deliberately NOT polled here. Payment is confirmed
+      // on the checkout page (VerifyingPaymentOverlay polls there); on the
+      // preview nothing changes while the customer is just looking, and
+      // refetchOnWindowFocus picks up a payment made in another tab.
+      if (polledStatus === "PAID") {
         return 2_000;
       }
 
@@ -302,7 +334,7 @@ export function useSessionPreview(sessionId: string | null) {
   const hasNoPreviewPages =
     (!!snapshot && previewPages.length === 0) || generateEnqueuedNothing;
 
-  // Sessions die after 24h. REST keeps working, but the WebSocket refuses the upgrade
+  // Unpaid sessions die after 7 days. REST keeps working, but the WebSocket refuses the upgrade
   // (§1.2) — so an expired session looks fine and then silently never updates.
   const isExpired = !!snapshot?.isExpired;
 
@@ -312,17 +344,14 @@ export function useSessionPreview(sessionId: string | null) {
     p.variants.some((v) => v.status === "SD_READY")
   ).length;
   const totalPaidPages = paidPages.length;
-  const isPaid = [
-    "AWAITING_PAYMENT",
-    "PAID",
-    "GENERATING_PAID",
-    "PAID_PAGES_READY",
-    "CONFIRMED",
-    "COMPILING_PDF",
-    "SHIPMENT_QUEUED",
-    "SHIPMENT_FAILED",
-    "COMPLETED",
-  ].includes(status);
+
+  // Three distinct phases the viewer renders differently:
+  //   awaiting payment — preview only, checkout resumes with the locked cover
+  //   paid             — whole book unlocked (generating, or ready to select)
+  //   sent to print    — paid AND committed: read-only, printed variants only
+  const isAwaitingPayment = status === "AWAITING_PAYMENT";
+  const isPaid = POST_PAYMENT_STATUSES.includes(status);
+  const isSentToPrint = SENT_TO_PRINT_STATUSES.includes(status);
 
   return {
     snapshot,
@@ -337,7 +366,9 @@ export function useSessionPreview(sessionId: string | null) {
     paidPages,
     paidPagesReady,
     totalPaidPages,
+    isAwaitingPayment,
     isPaid,
+    isSentToPrint,
     triggerGeneration: handleTriggerGeneration,
     regeneratePage: handleRegeneratePage,
   };

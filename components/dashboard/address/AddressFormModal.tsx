@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import {
+  addressFormSchema,
+  addressToForm,
+  emptyAddressForm,
+  toCreateAddressInput,
+  type AddressFormValues,
+} from "@/lib/addressSchema";
 import {
   Dialog,
   DialogContent,
@@ -29,21 +35,9 @@ import {
 import type { SavedAddress, CreateAddressInput, UpdateAddressInput } from "@/app/types/address";
 import { useCountryHydration } from "@/hooks/useCountryHydration";
 import { useCountryStore } from "@/stores/useCountryStore";
+import { usePincodeAutofill } from "@/hooks/usePincodeAutofill";
+import { PincodeNotFoundHint, PincodeSuggestions } from "@/components/shared/PincodeSuggestions";
 import { Loader2 } from "lucide-react";
-
-const addressSchema = z.object({
-  label: z.string().max(50, "Maximum 50 characters").optional().or(z.literal("")),
-  name: z.string().min(1, "Recipient name is required").max(100, "Maximum 100 characters"),
-  line1: z.string().min(1, "Address line 1 is required").max(200, "Maximum 200 characters"),
-  line2: z.string().max(200, "Maximum 200 characters").optional().or(z.literal("")),
-  city: z.string().min(1, "City is required").max(100, "Maximum 100 characters"),
-  state: z.string().min(1, "State is required").max(100, "Maximum 100 characters"),
-  zip: z.string().min(1, "ZIP/Postal code is required").max(20, "Maximum 20 characters"),
-  country: z.string().length(2, "Must be a valid 2-letter country code"),
-  phone: z.string().min(5, "Phone number too short").max(20, "Phone number too long"),
-});
-
-type AddressFormValues = z.infer<typeof addressSchema>;
 
 interface AddressFormModalProps {
   open: boolean;
@@ -65,66 +59,36 @@ export function AddressFormModal({
   const countries = useCountryStore((state) => state.countries);
 
   const form = useForm<AddressFormValues>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      label: "",
-      name: "",
-      line1: "",
-      line2: "",
-      city: "",
-      state: "",
-      zip: "",
-      country: "",
-      phone: "",
-    },
+    resolver: zodResolver(addressFormSchema),
+    defaultValues: emptyAddressForm(),
   });
+
+  const autofill = usePincodeAutofill(form);
+  const { resetAutofill } = autofill;
+  const country = useWatch({ control: form.control, name: "country" });
 
   useEffect(() => {
     if (open) {
-      if (mode === "edit" && initialData) {
-        form.reset({
-          label: initialData.label || "",
-          name: initialData.name,
-          line1: initialData.line1,
-          line2: initialData.line2 || "",
-          city: initialData.city,
-          state: initialData.state,
-          zip: initialData.zip,
-          country: initialData.country,
-          phone: initialData.phone,
-        });
-      } else {
-        form.reset({
-          label: "",
-          name: "",
-          line1: "",
-          line2: "",
-          city: "",
-          state: "",
-          zip: "",
-          country: "",
-          phone: "",
-        });
-      }
+      form.reset(mode === "edit" && initialData ? addressToForm(initialData) : emptyAddressForm());
+      resetAutofill();
     }
-  }, [open, mode, initialData, form]);
+  }, [open, mode, initialData, form, resetAutofill]);
 
   const onSubmit = async (values: AddressFormValues) => {
     setIsSubmitting(true);
     try {
       if (mode === "create") {
-        await onSave({
-          ...values,
-          label: values.label || null,
-          line2: values.line2 || null,
-        } as CreateAddressInput);
+        // Empty label is left out, not sent as null — the backend rejects null.
+        await onSave(toCreateAddressInput(values));
       } else {
         // Partial update logic
         const changedData: UpdateAddressInput = {};
+        // null clears a label that was removed.
         if (values.label !== (initialData?.label || "")) changedData.label = values.label || null;
         if (values.name !== initialData?.name) changedData.name = values.name;
         if (values.line1 !== initialData?.line1) changedData.line1 = values.line1;
-        if (values.line2 !== (initialData?.line2 || "")) changedData.line2 = values.line2 || null;
+        // Required by the form, so always a real value here.
+        if (values.line2 !== (initialData?.line2 || "")) changedData.line2 = values.line2;
         if (values.city !== initialData?.city) changedData.city = values.city;
         if (values.state !== initialData?.state) changedData.state = values.state;
         if (values.zip !== initialData?.zip) changedData.zip = values.zip;
@@ -207,9 +171,20 @@ export function AddressFormModal({
                   <FormItem>
                     <FormLabel className="text-gray-700 font-semibold text-sm">ZIP / Postal Code *</FormLabel>
                     <FormControl>
-                      <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
+                      <Input
+                        className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]"
+                        autoComplete="postal-code"
+                        inputMode={country === "IN" ? "numeric" : undefined}
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          autofill.handlePincodeChange(e.target.value);
+                        }}
+                        onFocus={autofill.handlePincodeFocus}
+                      />
                     </FormControl>
                     <FormMessage className="text-xs text-red-500" />
+                    <PincodeNotFoundHint show={autofill.status === "not-found"} />
                   </FormItem>
                 )}
               />
@@ -233,7 +208,7 @@ export function AddressFormModal({
                 name="line2"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-semibold text-sm">Address Line 2 (Optional)</FormLabel>
+                    <FormLabel className="text-gray-700 font-semibold text-sm">Address Line 2</FormLabel>
                     <FormControl>
                       <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                     </FormControl>
@@ -253,6 +228,10 @@ export function AddressFormModal({
                         <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs text-red-500" />
+                      <PincodeSuggestions
+                        options={autofill.suggestions.city}
+                        onSelect={(value) => autofill.applySuggestion("city", value)}
+                      />
                     </FormItem>
                   )}
                 />
@@ -267,6 +246,10 @@ export function AddressFormModal({
                         <Input className="h-11 rounded-xl bg-gray-50 border-gray-200 focus-visible:ring-[#914A8C]" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs text-red-500" />
+                      <PincodeSuggestions
+                        options={autofill.suggestions.state}
+                        onSelect={(value) => autofill.applySuggestion("state", value)}
+                      />
                     </FormItem>
                   )}
                 />
@@ -280,7 +263,10 @@ export function AddressFormModal({
                     <FormLabel className="text-gray-700 font-semibold text-sm">Country *</FormLabel>
                     <Select
                       disabled={isCountriesLoading}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        autofill.handleCountryChange(value ?? "");
+                      }}
                       defaultValue={field.value}
                       value={field.value}
                     >

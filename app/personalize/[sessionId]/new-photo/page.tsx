@@ -55,7 +55,7 @@ export default async function NewPhotoRoute({
 
   // An expired session can still be read over REST, but a new session started
   // from it is fine — only the OLD one is dead. Nothing to guard here; the new
-  // session gets its own 24h window.
+  // session gets its own 7-day window.
 
   return <NewPhotoPageShell previousSession={snapshot} />;
 }

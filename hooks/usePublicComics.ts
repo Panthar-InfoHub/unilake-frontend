@@ -28,7 +28,9 @@ export function useLatestPublicComics(excludeComicId?: string, count = 4) {
     queryFn: () => fetchPublicComics(),  // no filters → all published comics
   });
 
-  // Derive: exclude current comic, take latest `count`
+  // Derive: exclude current comic, take the first `count`. The API already
+  // orders bestsellers first, then newest — so despite the hook's name these
+  // are the top picks, not strictly the latest.
   const comics = query.data
     ?.filter((c) => c.id !== excludeComicId)
     .slice(0, count) ?? [];

@@ -214,6 +214,11 @@ export default function Footer() {
                       HOW IT WORKS
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/#faq" className="hover:text-white transition-colors duration-200">
+                      FAQ
+                    </Link>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -227,7 +232,7 @@ export default function Footer() {
                 <ul className={`${hankenGrotesk.className} flex flex-col gap-3 text-[15px] uppercase text-white/90`}>
                   <li>
                     <Link href="/privacy" className="hover:text-white transition-colors duration-200">
-                      PRIVACY PLOICY
+                      PRIVACY POLICY
                     </Link>
                   </li>
                   <li>
@@ -237,7 +242,7 @@ export default function Footer() {
                   </li>
                   <li>
                     <Link href="/refund" className="hover:text-white transition-colors duration-200">
-                      REFUND PLOICY
+                      REFUND POLICY
                     </Link>
                   </li>
                   <li>

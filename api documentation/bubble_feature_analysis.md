@@ -107,7 +107,7 @@ Single source of truth for the four substitution tokens the backend replaces at 
 | `DIALOGUE_TOKENS` | `["{name}", "{pronoun_subject}", "{pronoun_object}", "{pronoun_possessive}"]` |
 | `DIALOGUE_TOKEN_SET` | `Set` version for O(1) lookups |
 | `DIALOGUE_TOKEN_LABELS` | Human-friendly labels: `Name`, `Subject`, `Object`, `Possessive` |
-| `SAMPLE_NAMES` | `{ short: "Aarav", long: "Christopher" }` for preview |
+| `SAMPLE_NAMES` | `{ short: "Aarav", long: "Ramanujan" }` for preview |
 | `SAMPLE_PRONOUNS` | `{ "{pronoun_subject}": "he", ... }` for preview |
 | `findInvalidTokens(text)` | Regex `/\{[^}]*\}/g` — finds any `{...}` that isn't a valid token |
 | `substituteTokens(text, name, pronouns)` | Replaces tokens with sample values for live preview |

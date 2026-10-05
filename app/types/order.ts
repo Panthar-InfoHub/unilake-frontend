@@ -211,6 +211,17 @@ export interface OrderComicSummary {
   coverThumbnailUrls: string[];
 }
 
+/**
+ * The child's generated page 1 for their own order views. Same pick as the
+ * admin's GeneratedCover (printed variant, else newest), plus the page's real
+ * pixel size so it can be drawn at its true shape. width/height are null only
+ * when the page has no recorded dimensions.
+ */
+export interface UserGeneratedCover extends GeneratedCover {
+  width: number | null;
+  height: number | null;
+}
+
 export interface UserOrderRow {
   id: string;
   /**
@@ -219,6 +230,8 @@ export interface UserOrderRow {
    */
   sessionId: string;
   comic: OrderComicSummary;
+  /** Null until page 1 has generated — fall back to comic.coverThumbnailUrls. */
+  generatedCover: UserGeneratedCover | null;
   coverType: "HARDCOVER" | "SOFTCOVER";
   amount: string;
   currency: string;
@@ -230,6 +243,8 @@ export interface UserOrderDetail {
   id: string;
   sessionId: string;
   comic: OrderComicSummary;
+  /** Null until page 1 has generated — fall back to comic.coverThumbnailUrls. */
+  generatedCover: UserGeneratedCover | null;
   coverType: "HARDCOVER" | "SOFTCOVER";
   amount: string;
   currency: string;

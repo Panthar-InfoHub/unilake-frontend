@@ -18,58 +18,30 @@ import type { CoverFormat } from "@/hooks/useCheckoutFlow";
  * two always agree about what the customer picked.
  */
 /**
- * The close-up shown in each option's picture box.
+ * The close-up shown in each option's picture box: the book's corner, where
+ * the spine (hardcover) or the thin page edge (softcover) is visible — the
+ * detail that tells the two apart at a glance.
  *
- * There are no separate close-up photos: the box is a window onto the bottom-
- * left corner of the existing full-book image, where the spine (hardcover) or
- * the thin page edge (softcover) is visible — the detail that tells the two
- * apart at a glance.
+ * Both are purpose-shot close-ups at 2:1, the same shape as the picture box
+ * (`aspect-[2/1]` below), so each image is shown whole — nothing cropped and
+ * no empty bands.
  *
- * `crop` is the window in fractions of the source image: left edge, top edge,
- * and width. Its height follows from the box's 2.1:1 shape. It is turned into
- * CSS by cropStyle() below. Retune a crop by changing these three numbers only.
+ * ⚠️ new_softcover.png is actually a JPEG despite its extension. Browsers and
+ * the Next.js image optimizer detect the real format from the file, so it
+ * works as-is; just don't rely on the extension if processing it elsewhere.
  */
 const COVER_OPTIONS = {
   SOFTCOVER: {
     name: "Softcover",
     tagline: "Lightweight",
-    src: "/assets/home_page/softcover.png",
-    width: 654,
-    height: 523,
-    crop: { x: 0.06, y: 0.6, w: 0.46 },
+    src: "/assets/home_page/new_softcover.png", // 615x307
   },
   HARDCOVER: {
     name: "Hardcover",
     tagline: "Long Lasting",
-    src: "/assets/home_page/hardcover.png",
-    width: 632,
-    height: 562,
-    crop: { x: 0.08, y: 0.7, w: 0.46 },
+    src: "/assets/home_page/hardcover.jpeg", // 750x375
   },
 } as const;
-
-/** Width ÷ height of the picture box. Must match `aspect-[2.1/1]` below. */
-const PICTURE_BOX_RATIO = 2.1;
-
-/**
- * Positions the full image inside the picture box so only the crop window
- * shows. The image is scaled so the window's width fills the box, then shifted
- * up and left by the window's offset.
- *
- * Percentages rather than px, so the crop holds at any box size. `left` and
- * `width` are relative to the box width; `top` is relative to the box HEIGHT,
- * which is width ÷ PICTURE_BOX_RATIO — hence that factor in the top formula.
- */
-function cropStyle(option: (typeof COVER_OPTIONS)[CoverFormat]) {
-  const { x, y, w } = option.crop;
-  const heightOverWidth = option.height / option.width;
-
-  return {
-    width: `${100 / w}%`,
-    left: `${(-x / w) * 100}%`,
-    top: `${-y * (PICTURE_BOX_RATIO / w) * heightOverWidth * 100}%`,
-  };
-}
 
 /**
  * Every size in the section, in two sets: the full section below the last page,
@@ -225,17 +197,15 @@ export default function PricingSection({
         {/* Left: tagline over the close-up picture. */}
         <div className="flex flex-col items-center">
           <span className={`${s.tagline} leading-tight`}>{option.tagline}</span>
-          <div className={`${s.picture} relative aspect-[2.1/1] border border-black/70 overflow-hidden bg-white`}>
+          <div className={`${s.picture} relative aspect-[2/1] border border-black/70 overflow-hidden bg-white`}>
             <Image
               src={option.src}
               alt={`${option.name} book`}
-              width={option.width}
-              height={option.height}
-              sizes="230px"
-              // max-w-none: Tailwind's base styles cap images at 100% width,
-              // which would undo the zoom.
-              className="absolute max-w-none h-auto"
-              style={cropStyle(option)}
+              fill
+              // The box is 104px wide at most (full section), 44–84px in the
+              // floating bar; this lets the optimizer serve a sharp 2x copy.
+              sizes="104px"
+              className="object-cover"
             />
           </div>
         </div>

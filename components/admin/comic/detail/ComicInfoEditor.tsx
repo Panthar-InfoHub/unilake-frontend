@@ -8,19 +8,20 @@ import { toast } from "sonner";
 import { Edit2, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { ComicDetail, GenderTag, AgeGroup } from "@/app/types/comic";
+import { ComicDetail } from "@/app/types/comic";
 import { useUpdateComic } from "@/hooks/useComics";
 import { ComicDetailsFields } from "@/components/admin/comic/create/ComicDetailsFields";
+import { comicTagFields } from "@/components/admin/comic/create/comicCreateSchema";
+import { formatAgeGroup, formatGender } from "@/lib/comicTags";
 
-// Slightly different schema for update - freePreviewPages must be > 0 (not >= 0) due to API inconsistency
+// Slightly different schema for update - freePreviewPages must be > 0 (not >= 0) due to API inconsistency.
+// Gender / age group / theme use the create form's rules: at least one of each.
 const comicUpdateSchema = z.object({
   title: z.string().min(1, "Title is required").max(255, "Title is too long"),
-  genderTag: z.nativeEnum(GenderTag, { message: "Gender is required" }),
+  ...comicTagFields,
   pageCount: z.coerce.number().int().positive("Page count must be greater than 0"),
   freePreviewPages: z.coerce.number().int().positive("Preview pages must be > 0 on update"),
   description: z.string().optional().or(z.literal("")),
-  themeId: z.string().uuid("Invalid theme ID").optional().or(z.literal("")),
-  ageGroup: z.nativeEnum(AgeGroup).optional(),
   isBestseller: z.boolean().default(false),
 }).refine(data => data.freePreviewPages < data.pageCount, {
   message: "Preview pages must be strictly less than total pages",
@@ -41,12 +42,14 @@ export function ComicInfoEditor({ comic }: ComicInfoEditorProps) {
     resolver: zodResolver(comicUpdateSchema)as any,
     defaultValues: {
       title: comic.title,
-      genderTag: comic.genderTag,
+      // May be empty on comics saved before multi-select — saving then
+      // requires the admin to pick at least one.
+      genderTags: comic.genderTags,
       pageCount: comic.pageCount,
       freePreviewPages: comic.freePreviewPages,
       description: comic.description || "",
-      themeId: comic.themeId ?? undefined,
-      ageGroup: comic.ageGroup ?? undefined,
+      themeIds: comic.themes.map((t) => t.id),
+      ageGroups: comic.ageGroups,
       isBestseller: comic.isBestseller,
     },
   });
@@ -71,13 +74,13 @@ export function ComicInfoEditor({ comic }: ComicInfoEditorProps) {
         id: comic.id,
         data: {
           title: data.title,
-          genderTag: data.genderTag,
+          genderTags: data.genderTags,
           pageCount: data.pageCount,
           freePreviewPages: data.freePreviewPages,
           description: data.description?.trim() || undefined,
           isBestseller: data.isBestseller,
-          themeId: data.themeId,
-          ageGroup: data.ageGroup,
+          themeIds: data.themeIds,
+          ageGroups: data.ageGroups,
         },
       });
       toast.success("Comic details updated successfully");
@@ -117,12 +120,16 @@ export function ComicInfoEditor({ comic }: ComicInfoEditorProps) {
           </div>
           <div>
             <p className="text-xs font-semibold text-neutral-500 uppercase mb-1">Gender</p>
-            <p className="text-sm font-medium text-neutral-900">{comic.genderTag}</p>
+            <p className="text-sm font-medium text-neutral-900">
+              {comic.genderTags.length > 0 ? comic.genderTags.map(formatGender).join(", ") : "None"}
+            </p>
           </div>
           <div>
             <p className="text-xs font-semibold text-neutral-500 uppercase mb-1">Age Group</p>
             <p className="text-sm font-medium text-neutral-900">
-              {comic.ageGroup ? comic.ageGroup.replace("AGE_", "").replace("_", "-") + " yrs" : "None"}
+              {comic.ageGroups.length > 0
+                ? comic.ageGroups.map(formatAgeGroup).join(", ") + " yrs"
+                : "None"}
             </p>
           </div>
           <div>
@@ -135,7 +142,9 @@ export function ComicInfoEditor({ comic }: ComicInfoEditorProps) {
           </div>
           <div>
             <p className="text-xs font-semibold text-neutral-500 uppercase mb-1">Theme</p>
-            <p className="text-sm font-medium text-neutral-900">{comic.theme?.name || "None"}</p>
+            <p className="text-sm font-medium text-neutral-900">
+              {comic.themes.length > 0 ? comic.themes.map((t) => t.name).join(", ") : "None"}
+            </p>
           </div>
           <div className="sm:col-span-2 md:col-span-3">
             <p className="text-xs font-semibold text-neutral-500 uppercase mb-1">Description</p>

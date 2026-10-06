@@ -12,7 +12,7 @@ import { useCreateComic } from "@/hooks/useComics";
 import { useCountries } from "@/hooks/useCountries";
 import { getThumbnailUploadUrls } from "@/app/actions/comic";
 import { uploadToR2 } from "@/app/lib/r2-upload";
-import { CoverType, GenderTag, AgeGroup } from "@/app/types/comic";
+import { CoverType } from "@/app/types/comic";
 
 import { comicCreateSchema, ComicCreateFormValues } from "./comicCreateSchema";
 import { ComicDetailsFields } from "./ComicDetailsFields";
@@ -37,6 +37,10 @@ export function CreateComicForm() {
     resolver: zodResolver(comicCreateSchema) as any,
     defaultValues: {
       title: "",
+      // Start empty — the admin must pick at least one of each.
+      genderTags: [],
+      ageGroups: [],
+      themeIds: [],
       pageCount: 24,
       freePreviewPages: 3,
       description: "",
@@ -120,13 +124,13 @@ export function CreateComicForm() {
       
       const payload = {
         title: data.title,
-        genderTag: data.genderTag,
+        genderTags: data.genderTags,
         pageCount: data.pageCount,
         freePreviewPages: data.freePreviewPages,
         description: data.description?.trim() || undefined,
         isBestseller: data.isBestseller,
-        themeId: data.themeId,
-        ageGroup: data.ageGroup,
+        themeIds: data.themeIds,
+        ageGroups: data.ageGroups,
         thumbnailKeys,
         pricing: pricing.map(p => ({
           countryId: p.countryId,

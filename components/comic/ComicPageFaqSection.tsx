@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { hankenGrotesk, boogaloo } from "@/app/fonts";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 import { Faq } from "@/app/types/faq";
 
 interface ComicPageFaqSectionProps {
@@ -28,10 +29,12 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
           this margin is the space she overhangs INTO. Without it she sits on
           top of whatever section precedes this one — on this page, the comic's
           info cards.
-          ⚠️ This block is a near-copy of components/home/HomeFaq.tsx. The two
-          drifted once — this margin was missing here and the girl was sized
-          ~30% larger — and the result was her covering the content above. Keep
-          the margin and the widths below in step with that file. */}
+          ⚠️ This banner started as a copy of components/home/HomeFaq.tsx but
+          now deliberately differs: on the comic page the heading reads just
+          "FAQ'S" and is sized like the homepage's "Choose Your Story", and the
+          girl matches that banner's dragon in height. If the girl grows,
+          re-check the overhang against this margin — the numbers are in the
+          comment on her below. */}
       <div className="relative w-full overflow-visible mt-20 lg:mt-32">
         {/* Flared wave SVG */}
         <svg
@@ -45,40 +48,42 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
           />
         </svg>
 
-        {/* Text overlay — centered vertically over the SVG */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full px-8 relative flex items-center justify-start">
-            <div
-              className="
-                z-30
-                relative
-                pl-[120px]
-                sm:pl-[180px]
-                md:pl-[240px]
-                lg:pl-[300px]
-                xl:pl-[360px]
-              "
-            >
-              <h2
-                className={`
-                  ${boogaloo.className}
-                  text-white
-                  uppercase
-                  text-2xl
-                  sm:text-3xl
-                  md:text-4xl
-                  lg:text-5xl
-                  z-30
-                  relative
-                `}
-              >
-                FAQ&apos;S &amp; FEEDBACK
-              </h2>
-            </div>
-          </div>
+        {/* Heading — centred in the band. Sized with the shared
+            BANNER_HEADING_SIZE scale to match "Choose Your Story" on the
+            homepage; the font stays Boogaloo, which the FAQ bands use on
+            purpose. The row spans only the band's flat strip (viewBox y
+            46→240 of 311 → 14.8% top / 22.8% bottom) so it centres on the
+            purple, not on the flared SVG box. */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] flex items-center justify-center px-4 pointer-events-none">
+          <h2
+            className={`
+              ${boogaloo.className}
+              whitespace-nowrap
+              text-white
+              uppercase
+              ${BANNER_HEADING_SIZE}
+              z-30
+              relative
+            `}
+          >
+            FAQ&apos;S
+          </h2>
         </div>
 
-        {/* FAQ Girl Image — Top-Left, overlapping the banner */}
+        {/* FAQ girl — pinned to the band's far left, independent of the
+            centred heading. Her left inset grows with the screen; the short
+            heading sits well clear of her at every width.
+
+            Height matches the homepage dragon at every breakpoint.
+            DragonImg.png is 669x374, so the dragon stands 78 / 162 / 212 / 257
+            / 291px tall at its 140 / 290 / 380 / 460 / 520px widths;
+            faq-girl.png is 741x867, so the same heights need widths of 67 /
+            139 / 181 / 220 / 249px.
+
+            She stands 10 / 15 / 20 / 22px above the band's lower edge.
+            Overhang above the band's top = offset + height − band height:
+            8 / 57 / 72 / 79 / 113px — inside the wrapper's mt-20 (80px) and
+            lg:mt-32 (128px) at every breakpoint. */}
         <div
           className="
             absolute
@@ -91,7 +96,7 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
             sm:bottom-[15px]
             md:bottom-[20px]
             lg:bottom-[22px]
-            z-30
+            z-20
             pointer-events-none
             select-none
           "
@@ -99,23 +104,15 @@ export default function ComicPageFaqSection({ faqs }: ComicPageFaqSectionProps) 
           <Image
             src="/assets/home_page/faq-girl.png"
             alt="FAQ girl"
-            width={280}
-            height={280}
+            width={741}
+            height={867}
             priority
-            // Widths mirrored from HomeFaq.tsx. They were ~30% larger here,
-            // which is what put her over the content above: faq-girl.png is
-            // 741x867, so at 330px wide she rendered 386px tall against a
-            // 200px banner and overhung its top by 208px — more than the
-            // margin above could ever absorb. At 250px she renders 290px,
-            // overhanging by 112px, which fits inside lg:mt-32 (128px).
-            // The homepage image has a near-identical aspect ratio (1.162 vs
-            // 1.170), so these widths carry over directly.
             className="
-              w-[90px]
-              sm:w-[150px]
-              md:w-[160px]
-              lg:w-[200px]
-              xl:w-[250px]
+              w-[67px]
+              sm:w-[139px]
+              md:w-[181px]
+              lg:w-[220px]
+              xl:w-[249px]
               h-auto
               object-contain
             "

@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ComicStatus } from "@/app/types/comic";
 import { useUpdateComicStatus } from "@/hooks/useComics";
 import { toast } from "sonner";
@@ -19,8 +20,18 @@ interface ComicRowActionsProps {
   onDeleteClick: () => void;
 }
 
+/**
+ * Why Delete is disabled. Deliberately broad: the block applies to ANY customer
+ * session on the comic — an abandoned or expired preview counts just as much as
+ * a delivered order, because each session (and any order from it) points back
+ * at the comic and the database refuses to delete a comic still referenced.
+ */
+const DELETE_BLOCKED_REASON =
+  "This comic can't be deleted because customers have already personalised it (previews or orders). Unpublish it or revert it to Draft to hide it instead.";
+
 export function ComicRowActions({ comicId, status, orderSessionsCount, onDeleteClick }: ComicRowActionsProps) {
   const router = useRouter();
+  const deleteBlocked = orderSessionsCount > 0;
   const { mutateAsync: updateStatus } = useUpdateComicStatus();
 
   const handleStatusChange = async (newStatus: ComicStatus) => {
@@ -81,14 +92,41 @@ export function ComicRowActions({ comicId, status, orderSessionsCount, onDeleteC
         {status !== ComicStatus.PUBLISHED && (
           <>
             <DropdownMenuSeparator className="bg-neutral-100 my-1" />
-            <DropdownMenuItem 
-              onClick={onDeleteClick}
-              disabled={orderSessionsCount > 0}
-              className="rounded-lg cursor-pointer font-medium p-2.5 text-red-600 focus:bg-red-50 focus:text-red-700 disabled:opacity-50"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Permanently
-            </DropdownMenuItem>
+            {deleteBlocked ? (
+              <>
+                {/* A disabled menu item ignores the pointer (pointer-events:
+                    none), so it can't trigger a tooltip itself — the hover
+                    lands on this wrapper instead. Opens to the left so it
+                    doesn't cover the menu. */}
+                <Tooltip>
+                  <TooltipTrigger render={<div className="cursor-not-allowed" />}>
+                    <DropdownMenuItem
+                      disabled
+                      className="rounded-lg font-medium p-2.5 text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Permanently
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-[260px] leading-snug">
+                    {DELETE_BLOCKED_REASON}
+                  </TooltipContent>
+                </Tooltip>
+                {/* The same reason in short, always visible — touch screens
+                    have no hover, so the tooltip alone would never show. */}
+                <p className="px-2.5 pb-2 -mt-1 text-[11px] leading-snug text-neutral-500">
+                  Can&apos;t delete — customers have already personalised this comic.
+                </p>
+              </>
+            ) : (
+              <DropdownMenuItem
+                onClick={onDeleteClick}
+                className="rounded-lg cursor-pointer font-medium p-2.5 text-red-600 focus:bg-red-50 focus:text-red-700"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Permanently
+              </DropdownMenuItem>
+            )}
           </>
         )}
       </DropdownMenuContent>

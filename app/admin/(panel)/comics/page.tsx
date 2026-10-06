@@ -12,11 +12,12 @@ import { ComicListFilters } from "@/components/admin/comic/ComicListFilters";
 import { ComicListTable } from "@/components/admin/comic/ComicListTable";
 import { ComicPagination } from "@/components/admin/comic/ComicPagination";
 import { ComicDeleteDialog } from "@/components/admin/comic/ComicDeleteDialog";
+import type { ComicTagFilters } from "@/lib/comicTags";
 
 const PAGE_SIZE = 10;
 
 export default function ComicsPage() {
-  const [filters, setFilters] = useState<{ gender?: string; ageGroup?: string; themeId?: string; search?: string }>({});
+  const [filters, setFilters] = useState<ComicTagFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<ComicListItem | null>(null);
 

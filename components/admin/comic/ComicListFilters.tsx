@@ -3,44 +3,50 @@
 import { useState, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { GenderTag, AgeGroup } from "@/app/types/comic";
 import { useThemes } from "@/hooks/useThemes";
+import { AGE_GROUP_OPTIONS, GENDER_OPTIONS, type ComicTagFilters } from "@/lib/comicTags";
+import { MultiSelectFilter } from "./MultiSelectFilter";
 
 interface ComicListFiltersProps {
-  onFiltersChange: (filters: { search?: string; gender?: string; ageGroup?: string; themeId?: string }) => void;
+  onFiltersChange: (filters: ComicTagFilters) => void;
 }
 
+/**
+ * Search + multi-select Gender / Age / Theme filters for the admin comic list.
+ * Within one filter a comic matches if it has ANY picked value; across filters
+ * it must match ALL of them. An empty list means that filter is off.
+ */
 export function ComicListFilters({ onFiltersChange }: ComicListFiltersProps) {
   const { data: themes } = useThemes();
-  
+
   const [search, setSearch] = useState("");
-  const [gender, setGender] = useState<string>("ALL");
-  const [ageGroup, setAgeGroup] = useState<string>("ALL");
-  const [themeId, setThemeId] = useState<string>("ALL");
+  const [genders, setGenders] = useState<string[]>([]);
+  const [ageGroups, setAgeGroups] = useState<string[]>([]);
+  const [themeIds, setThemeIds] = useState<string[]>([]);
 
   // Debounce search
   useEffect(() => {
     const handler = setTimeout(() => {
       onFiltersChange({
         search: search || undefined,
-        gender: gender === "ALL" ? undefined : gender,
-        ageGroup: ageGroup === "ALL" ? undefined : ageGroup,
-        themeId: themeId === "ALL" ? undefined : themeId,
+        gender: genders.length ? genders : undefined,
+        ageGroup: ageGroups.length ? ageGroups : undefined,
+        themeId: themeIds.length ? themeIds : undefined,
       });
     }, 300);
     return () => clearTimeout(handler);
-  }, [search, gender, ageGroup, themeId, onFiltersChange]);
+  }, [search, genders, ageGroups, themeIds, onFiltersChange]);
 
   const clearFilters = () => {
     setSearch("");
-    setGender("ALL");
-    setAgeGroup("ALL");
-    setThemeId("ALL");
+    setGenders([]);
+    setAgeGroups([]);
+    setThemeIds([]);
   };
 
-  const hasActiveFilters = search || gender !== "ALL" || ageGroup !== "ALL" || themeId !== "ALL";
+  const hasActiveFilters =
+    search || genders.length > 0 || ageGroups.length > 0 || themeIds.length > 0;
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 items-center bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-[#914A8C]/15 shadow-sm">
@@ -62,44 +68,29 @@ export function ComicListFilters({ onFiltersChange }: ComicListFiltersProps) {
         )}
       </div>
 
-      <Select value={gender} onValueChange={(val) => setGender(val || "ALL")}>
-        <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl bg-white border-neutral-200">
-          <SelectValue placeholder="Gender" />
-        </SelectTrigger>
-        <SelectContent className="rounded-xl">
-          <SelectItem value="ALL">All Genders</SelectItem>
-          <SelectItem value={GenderTag.BOY}>Boy</SelectItem>
-          <SelectItem value={GenderTag.GIRL}>Girl</SelectItem>
-          <SelectItem value={GenderTag.UNISEX}>Unisex</SelectItem>
-        </SelectContent>
-      </Select>
+      <MultiSelectFilter
+        label="Gender"
+        options={GENDER_OPTIONS}
+        value={genders}
+        onChange={setGenders}
+        className="w-full sm:w-[130px]"
+      />
 
-      <Select value={ageGroup} onValueChange={(val) => setAgeGroup(val || "ALL")}>
-        <SelectTrigger className="w-full sm:w-[140px] h-10 rounded-xl bg-white border-neutral-200">
-          <SelectValue placeholder="Age Group" />
-        </SelectTrigger>
-        <SelectContent className="rounded-xl">
-          <SelectItem value="ALL">All Ages</SelectItem>
-          <SelectItem value={AgeGroup.AGE_0_2}>0-2 Years</SelectItem>
-          <SelectItem value={AgeGroup.AGE_3_5}>3-5 Years</SelectItem>
-          <SelectItem value={AgeGroup.AGE_6_8}>6-8 Years</SelectItem>
-          <SelectItem value={AgeGroup.AGE_9_12}>9-12 Years</SelectItem>
-        </SelectContent>
-      </Select>
+      <MultiSelectFilter
+        label="Age Group"
+        options={AGE_GROUP_OPTIONS}
+        value={ageGroups}
+        onChange={setAgeGroups}
+        className="w-full sm:w-[140px]"
+      />
 
-      <Select value={themeId} onValueChange={(val) => setThemeId(val || "ALL")}>
-        <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-xl bg-white border-neutral-200">
-          <SelectValue placeholder="Theme" />
-        </SelectTrigger>
-        <SelectContent className="rounded-xl">
-          <SelectItem value="ALL">All Themes</SelectItem>
-          {themes?.map((t) => (
-            <SelectItem key={t.id} value={t.id}>
-              {t.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <MultiSelectFilter
+        label="Theme"
+        options={(themes ?? []).map((t) => ({ value: t.id, label: t.name }))}
+        value={themeIds}
+        onChange={setThemeIds}
+        className="w-full sm:w-[160px]"
+      />
 
       {hasActiveFilters && (
         <Button

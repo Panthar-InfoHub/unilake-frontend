@@ -11,14 +11,10 @@ import type {
   PublicComicListItem,
   PublicComicDetail
 } from "@/app/types/comic";
+import { buildComicFilterParams, type ComicTagFilters } from "@/lib/comicTags";
 
-export async function fetchComics(filters?: { gender?: string, ageGroup?: string, themeId?: string, search?: string }): Promise<ComicListItem[]> {
-  const params = new URLSearchParams();
-
-  if (filters?.gender) params.append("gender", filters.gender);
-  if (filters?.ageGroup) params.append("ageGroup", filters.ageGroup);
-  if (filters?.themeId) params.append("themeId", filters.themeId);
-  if (filters?.search) params.append("search", filters.search);
+export async function fetchComics(filters?: ComicTagFilters): Promise<ComicListItem[]> {
+  const params = buildComicFilterParams(filters);
 
   const { data } = await api.get<ComicListItem[]>(`/api/admin/comics?${params.toString()}`);
   return data;
@@ -34,12 +30,17 @@ export async function createComic(payload: CreateComicPayload): Promise<Comic> {
   return data;
 }
 
-// `thumbnailKeys` and `videoKey` are REQUEST-only fields — neither exists on the
-// Comic response (the backend returns `coverThumbnailUrls` and
-// `previewVideoUrl`), so Partial<Comic> alone will not admit them.
+// `thumbnailKeys`, `videoKey` and `themeIds` are REQUEST-only fields — none
+// exists on the Comic response (the backend returns `coverThumbnailUrls`,
+// `previewVideoUrl` and `themes`), so Partial<Comic> alone will not admit them.
+// `themeIds`, when sent, replaces the comic's whole theme set.
 export async function updateComic(
   id: string,
-  payload: Partial<Comic> & { thumbnailKeys?: string[]; videoKey?: string | null }
+  payload: Partial<Comic> & {
+    thumbnailKeys?: string[];
+    videoKey?: string | null;
+    themeIds?: string[];
+  }
 ): Promise<Comic> {
   const { data } = await api.patch<Comic>(`/api/admin/comics/${id}`, payload);
   return data;
@@ -104,20 +105,10 @@ export async function updatePricing(id: string, pricing: { countryId: string; co
   return data;
 }
 
-export async function fetchPublicComics(filters?: {
-  gender?: string;
-  ageGroup?: string;
-  themeId?: string;
-  search?: string;
-}): Promise<PublicComicListItem[]> {
-  const params = new URLSearchParams();
-
-  if (filters?.gender) params.append("gender", filters.gender);
-  if (filters?.ageGroup) params.append("ageGroup", filters.ageGroup);
-  if (filters?.themeId) params.append("themeId", filters.themeId);
-  if (filters?.search) params.append("search", filters.search);
-
-  const query = params.toString();
+export async function fetchPublicComics(
+  filters?: ComicTagFilters
+): Promise<PublicComicListItem[]> {
+  const query = buildComicFilterParams(filters).toString();
   const { data } = await api.get<PublicComicListItem[]>(
     `/api/public/comics${query ? `?${query}` : ""}`
   );

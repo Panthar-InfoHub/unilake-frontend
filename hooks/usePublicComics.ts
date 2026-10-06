@@ -1,15 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchPublicComics, fetchPublicComic } from "@/app/actions/comic";
 import { fetchThemes } from "@/app/actions/theme";
+import { normalizeComicFilters, type ComicTagFilters } from "@/lib/comicTags";
 
-export function usePublicComics(filters?: {
-  gender?: string;
-  ageGroup?: string;
-  themeId?: string;
-  search?: string;
-}) {
+export function usePublicComics(filters?: ComicTagFilters) {
   return useQuery({
-    queryKey: ["public-comics", filters],
+    queryKey: ["public-comics", normalizeComicFilters(filters)],
     queryFn: () => fetchPublicComics(filters),
   });
 }

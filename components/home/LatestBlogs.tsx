@@ -1,95 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
+import { chauPhilomeneOne } from "@/app/fonts";
 import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
+import BlogCard from "@/components/blog/BlogCard";
 import { BlogListItem } from "@/app/types/blog";
 import { MoveRight } from "lucide-react";
 
 interface LatestBlogsProps {
   blogs: BlogListItem[];
-}
-
-function BlogCard({ blog }: { blog: BlogListItem }) {
-  return (
-    <Link
-      href={`/blog/${blog.slug}`}
-      className="relative group block w-full"
-    >
-      {/* SVG background shape — default state */}
-      <Image
-        src="/assets/home_page/blog.svg"
-        alt=""
-        width={387}
-        height={497}
-        aria-hidden="true"
-        className="w-full h-auto block transition-opacity duration-900 ease-in-out group-hover:opacity-0"
-        draggable={false}
-      />
-      {/* SVG background shape — hover state */}
-      <Image
-        src="/assets/home_page/blog_on_hover.svg"
-        alt=""
-        width={387}
-        height={497}
-        aria-hidden="true"
-        className="w-full h-auto absolute inset-0 opacity-0 transition-opacity duration-900 ease-in-out group-hover:opacity-100"
-        draggable={false}
-      />
-
-      {/* Card content overlay */}
-      <div className="absolute inset-0 flex flex-col px-[10%] pt-[8%] pb-[8%]">
-        {/* Top section: Title (left) — arrow is part of the SVG */}
-        <div className="pr-[35%]">
-          <h3
-            className={`${chauPhilomeneOne.className} text-white text-xl sm:text-[22px] leading-[1.15] uppercase line-clamp-3`}
-          >
-            {blog.title}
-          </h3>
-        </div>
-
-        {/* Excerpt */}
-        {blog.excerpt && (
-          <p
-            className={`${hankenGrotesk.className} text-white/90 text-xs sm:text-sm leading-relaxed mt-2 line-clamp-3 pr-[10%]`}
-          >
-            {blog.excerpt}
-          </p>
-        )}
-
-        {/* Cover image — inset in the lower portion */}
-        {/* Fixed box keeps the row of cards aligned; object-contain inside it
-            means an odd-shaped cover letterboxes instead of being cropped.
-            Kept deliberately identical to the /blog list card. */}
-        <div className="mt-auto relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#F3E8FF]">
-          {blog.coverImageUrl ? (
-            <Image
-              src={blog.coverImageUrl}
-              alt={blog.title}
-              fill
-              className="object-contain transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-[#F3E8FF] text-[#8E4A92]/40">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-12 h-12"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-            </div>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
 }
 
 export default function LatestBlogs({ blogs }: LatestBlogsProps) {

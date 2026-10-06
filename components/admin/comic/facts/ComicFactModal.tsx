@@ -101,7 +101,7 @@ export function ComicFactModal({
           </DialogTitle>
           <DialogDescription className="text-sm text-neutral-500">
             Shown on {PLACEMENT_COPY[placement]}. Keep it to one short sentence —
-            it is on screen for about three seconds.
+            it is on screen for about five seconds.
           </DialogDescription>
         </DialogHeader>
 

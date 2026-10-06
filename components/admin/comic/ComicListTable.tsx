@@ -5,6 +5,7 @@ import { ComicRowActions } from "./ComicRowActions";
 import { AlertCircle, FileImage, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { formatAgeGroup } from "@/lib/comicTags";
 
 interface ComicListTableProps {
   comics: ComicListItem[];
@@ -83,13 +84,18 @@ export function ComicListTable({ comics, onDeleteClick }: ComicListTableProps) {
                   <ComicStatusBadge status={comic.status} />
                 </td>
                 <td className="px-6 py-3 hidden md:table-cell">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-100">
-                      {comic.genderTag}
-                    </span>
-                    {comic.ageGroup && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {comic.genderTags.map((gender) => (
+                      <span
+                        key={gender}
+                        className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-100"
+                      >
+                        {gender}
+                      </span>
+                    ))}
+                    {comic.ageGroups.length > 0 && (
                       <span className="text-xs text-neutral-500 whitespace-nowrap">
-                        {comic.ageGroup.replace("AGE_", "").replace("_", "-")} yrs
+                        {comic.ageGroups.map(formatAgeGroup).join(", ")} yrs
                       </span>
                     )}
                   </div>
@@ -105,10 +111,17 @@ export function ComicListTable({ comics, onDeleteClick }: ComicListTableProps) {
                   </div>
                 </td>
                 <td className="px-6 py-3 hidden lg:table-cell">
-                  {comic.theme ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-purple-50 text-purple-700 border border-purple-100">
-                      {comic.theme.name}
-                    </span>
+                  {comic.themes.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {comic.themes.map((theme) => (
+                        <span
+                          key={theme.id}
+                          className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-purple-50 text-purple-700 border border-purple-100"
+                        >
+                          {theme.name}
+                        </span>
+                      ))}
+                    </div>
                   ) : (
                     <span className="text-neutral-400">—</span>
                   )}

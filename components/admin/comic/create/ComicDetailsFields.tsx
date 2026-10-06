@@ -1,12 +1,12 @@
 import { UseFormReturn } from "react-hook-form";
 import { ComicCreateFormValues } from "./comicCreateSchema";
-import { GenderTag, AgeGroup } from "@/app/types/comic";
+import { TagChipsField } from "./TagChipsField";
 import { useThemes } from "@/hooks/useThemes";
+import { AGE_GROUP_OPTIONS, GENDER_OPTIONS } from "@/lib/comicTags";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ComicDetailsFieldsProps {
@@ -18,11 +18,9 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Every FormItem holding a Select carries min-w-0, and every SelectTrigger
-          carries w-full. Both are needed: SelectTrigger's base class is w-fit, so
-          it sizes to its longest value, and a grid item defaults to
-          min-width:auto, so the column will not shrink to contain it. Without
-          the pair, a long theme name spills over the field beside it. */}
+      {/* Gender, age group and theme are multi-select chip rows. Each spans
+          both columns so its chips have room to sit on one line, and carries
+          min-w-0 so a long theme name wraps instead of widening the grid. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={form.control}
@@ -40,29 +38,19 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
 
         <FormField
           control={form.control}
-          name="genderTag"
+          name="genderTags"
           render={({ field }: { field: any }) => (
-            <FormItem className="min-w-0">
+            <FormItem className="md:col-span-2 min-w-0">
               <FormLabel className="text-neutral-900 font-semibold">Gender *</FormLabel>
-              {/* `?? ""` keeps this controlled from the very first render. This
-                  field has no entry in the form's defaultValues, so field.value
-                  starts as undefined — and Base UI decides controlled vs
-                  uncontrolled once, on mount, by testing for exactly that. Left
-                  bare, picking a value flips it to controlled and logs a switch
-                  error. An empty string reads as "nothing selected", so the
-                  placeholder still shows and Zod still fails it on submit. */}
-              <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                <FormControl>
-                  <SelectTrigger className="w-full h-11 rounded-xl bg-white border-neutral-200">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value={GenderTag.BOY}>Boy</SelectItem>
-                  <SelectItem value={GenderTag.GIRL}>Girl</SelectItem>
-                  <SelectItem value={GenderTag.UNISEX}>Unisex</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <TagChipsField
+                  ariaLabel="Gender"
+                  options={GENDER_OPTIONS}
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">Pick every gender this comic is for.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -70,25 +58,19 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
 
         <FormField
           control={form.control}
-          name="ageGroup"
+          name="ageGroups"
           render={({ field }: { field: any }) => (
-            <FormItem className="min-w-0">
+            <FormItem className="md:col-span-2 min-w-0">
               <FormLabel className="text-neutral-900 font-semibold">Age Group *</FormLabel>
-              {/* Was `|| undefined`, which kept it uncontrolled on mount and so
-                  hit the same switch error as Gender — see the note above. */}
-              <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                <FormControl>
-                  <SelectTrigger className="w-full h-11 rounded-xl bg-white border-neutral-200">
-                    <SelectValue placeholder="Select age group" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value={AgeGroup.AGE_0_2}>0-2 Years</SelectItem>
-                  <SelectItem value={AgeGroup.AGE_3_5}>3-5 Years</SelectItem>
-                  <SelectItem value={AgeGroup.AGE_6_8}>6-8 Years</SelectItem>
-                  <SelectItem value={AgeGroup.AGE_9_12}>9-12 Years</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <TagChipsField
+                  ariaLabel="Age group"
+                  options={AGE_GROUP_OPTIONS}
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">Pick every age group this comic suits.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -126,29 +108,25 @@ export function ComicDetailsFields({ form }: ComicDetailsFieldsProps) {
 
         <FormField
           control={form.control}
-          name="themeId"
+          name="themeIds"
           render={({ field }: { field: any }) => (
             <FormItem className="md:col-span-2 min-w-0">
               <FormLabel className="text-neutral-900 font-semibold">Theme *</FormLabel>
               {isLoadingThemes ? (
-                <Skeleton className="h-11 w-full rounded-xl bg-neutral-100" />
+                <Skeleton className="h-9 w-full rounded-xl bg-neutral-100" />
+              ) : themes && themes.length > 0 ? (
+                <FormControl>
+                  <TagChipsField
+                    ariaLabel="Theme"
+                    options={themes.map((t) => ({ value: t.id, label: t.name }))}
+                    value={field.value ?? []}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
               ) : (
-                <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                  <FormControl>
-                    <SelectTrigger className="w-full h-11 rounded-xl bg-white border-neutral-200">
-                      <SelectValue placeholder="Select a theme">
-                        {field.value ? themes?.find((t) => t.id === field.value)?.name : undefined}
-                      </SelectValue>
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="rounded-xl max-h-[300px]">
-                    {themes?.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p className="text-sm text-neutral-500">
+                  No themes yet — create one on the Themes page first.
+                </p>
               )}
               <FormMessage />
             </FormItem>

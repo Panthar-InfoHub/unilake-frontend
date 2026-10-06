@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { chauPhilomeneOne } from "@/app/fonts";
+import { BANNER_HEADING_SIZE } from "@/components/home/bannerHeading";
 import { useLatestPublicComics } from "@/hooks/usePublicComics";
 import StoryCard from "@/components/home/StoryCard";
 
@@ -38,64 +39,72 @@ export default function ExploreMoreBooks({ comicId }: ExploreMoreBooksProps) {
           />
         </svg>
 
-        {/* Text overlay — centered vertically over the SVG */}
-        <div className="absolute inset-0 flex items-center pointer-events-none">
-          <div className="max-w-7xl mx-auto w-full px-8 pl-12 sm:pl-28 md:pl-40 lg:pl-52 xl:pl-[280px]">
-            <h2
-              className={`
-                ${chauPhilomeneOne.className}
-                text-white
-                uppercase
-                text-2xl
-                sm:text-3xl
-                md:text-4xl
-                lg:text-5xl
-                z-30
-                relative
-              `}
-            >
-              Explore More Books
-            </h2>
+        {/* Heading + explorer form ONE row, centred as a group — the same
+            structure as "Choose Your Story" + dragon on the homepage, so the
+            two can never overlap however large the heading gets.
+
+            Sizes match that banner exactly:
+              - heading: the shared BANNER_HEADING_SIZE scale;
+              - explorer: the dragon's rendered HEIGHT at every breakpoint.
+                DragonImg.png is 669x374, so the dragon stands 78 / 162 / 212 /
+                257 / 291px tall at its 140 / 290 / 380 / 460 / 520px widths.
+                Explore-boy.png is 1080x540 (2:1), so the same heights need
+                widths of 156 / 324 / 424 / 514 / 582px.
+
+            Like that banner, the row spans only the band's flat strip (viewBox
+            y 46→240 of 311 → 14.8% top / 22.8% bottom) so the heading centres
+            on the purple, not on the flared SVG box. */}
+        <div className="absolute inset-x-0 top-[14.8%] bottom-[22.8%] max-w-7xl mx-auto w-full px-4 sm:px-8 flex justify-center gap-2 sm:gap-4 xl:gap-8 pointer-events-none">
+          <h2
+            className={`
+              ${chauPhilomeneOne.className}
+              self-center
+              shrink-0
+              whitespace-nowrap
+              text-white
+              uppercase
+              ${BANNER_HEADING_SIZE}
+              z-30
+              relative
+            `}
+          >
+            Explore More Books
+          </h2>
+
+          {/* Explorer slot — the image's width, the row's full height. It may
+              shrink (min-w-0) on a very narrow phone rather than push the page
+              sideways; the heading never does.
+
+              Vertically CENTRED on the band's flat strip (top-1/2 +
+              -translate-y-1/2), so she sits level with the heading. Taller
+              than the strip, she overhangs it equally above and below:
+                above the band's top:    2 / 26 / 32 / 37 / 53px
+                below the band's bottom: 0 / 16 / 20 / 20 / 37px
+              Both fit inside the neighbouring sections' padding (≥ 64px above
+              — the FAQ section's pb-20, or the info section's lg:py-16 when a
+              comic has no FAQs — and the cards' pt-10 / md:pt-16 below), so no
+              extra margin is needed. */}
+          <div className="relative min-w-0 w-[156px] sm:w-[324px] md:w-[424px] lg:w-[514px] xl:w-[582px]">
+            <Image
+              src="/assets/home_page/Explore-boy.png"
+              alt="Explorer Boy"
+              width={1080}
+              height={540}
+              priority
+              className="
+                absolute
+                left-0
+                top-1/2
+                -translate-y-1/2
+                w-full
+                h-auto
+                pointer-events-none
+                select-none
+                z-20
+              "
+            />
           </div>
         </div>
-
-        {/* Explorer Boy Image — Top-Right, overlapping the banner.
-            `bottom-0` rests her on the banner's lower edge. The negative
-            offsets this replaced (-10px to -30px) pushed her below that edge
-            and out into the cream section underneath, which read as the image
-            sliding off the banner. Explore-boy.png is 1080x540, so at
-            xl:w-[480px] she renders 240px tall against a 200px banner — the
-            remaining 40px overhangs the TOP, which is the intended look, and
-            fits inside the 80px of padding the FAQ section above leaves. */}
-        <Image
-          src="/assets/home_page/Explore-boy.png"
-          alt="Explorer Boy"
-          width={680}
-          height={425}
-          priority
-          className="
-            absolute
-            right-4
-            sm:right-8
-            md:right-16
-            lg:right-32
-            xl:right-48
-
-            bottom-0
-
-            w-[180px]
-            sm:w-[260px]
-            md:w-[340px]
-            lg:w-[420px]
-            xl:w-[480px]
-
-            h-auto
-            object-contain
-            pointer-events-none
-            select-none
-            z-20
-          "
-        />
       </div>
 
       {/* ===== Cards Grid ===== */}

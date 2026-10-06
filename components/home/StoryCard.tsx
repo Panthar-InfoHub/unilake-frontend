@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useLayoutEffect, useRef } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { PublicComicListItem } from "@/app/types/comic";
 import { CoverType } from "@/app/types/comic";
 import { useCountryStore } from "@/stores/useCountryStore";
 import { hankenGrotesk, poppins, protestStrike } from "@/app/fonts";
 import { resolveMrp } from "@/lib/utils";
+import { formatAgeRange } from "@/lib/comicTags";
+import ComicQuickViewModal from "@/components/home/ComicQuickViewModal";
 
 interface StoryCardProps {
   comic: PublicComicListItem;
 }
 
 export default function StoryCard({ comic }: StoryCardProps) {
-  const router = useRouter();
-  const [isHovered, setIsHovered] = useState(false);
+  // Personalise opens a quick-view popup; the popup's own button is what
+  // navigates to /comic/[id].
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const selectedCountry = useCountryStore((state) => state.selectedCountry);
@@ -25,16 +27,6 @@ export default function StoryCard({ comic }: StoryCardProps) {
   const images = comic.coverThumbnailUrls.length > 0 
     ? comic.coverThumbnailUrls 
     : ["/assets/home_page/bookCover1.png"]; // Default fallback image
-
-  // The instant swap on hover-in and the reset on hover-out happen in the
-  // event handlers; the effect only drives the ongoing 1500ms cycle.
-  useEffect(() => {
-    if (!isHovered || images.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [isHovered, images.length]);
 
   // How many lines the title actually wrapped to (1 or 2). The title and
   // description share one fixed-height block, so a one-line title frees room
@@ -65,21 +57,25 @@ export default function StoryCard({ comic }: StoryCardProps) {
     return () => observer.disconnect();
   }, []);
 
+  // Hover shows the second cover and holds it — no cycling through the rest.
+  // A comic with a single cover simply keeps showing it.
   const handleMouseEnter = () => {
-    setIsHovered(true);
     if (images.length > 1) setCurrentImageIndex(1);
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
     setCurrentImageIndex(0);
   };
 
-  // Safely extract age value to display in format "AGE: X-Y"
-  let ageLabel = comic.ageGroup?.replace("AGE_", "").replace("_", "-") || "ALL AGES";
-  if (!ageLabel.includes("-")) ageLabel = ageLabel.toUpperCase(); // fallback formatting
+  // One range across all the comic's age groups — [3-5, 6-8] shows "AGE: 3-8".
+  const ageLabel = formatAgeRange(comic.ageGroups) ?? "ALL AGES";
 
-  const category = comic.theme?.name || "General";
+  // First theme (alphabetical, as the API sends them) plus a "+N" count for
+  // the rest; the quick-view popup lists them all. The tooltip names every one.
+  const firstTheme = comic.themes[0]?.name ?? "General";
+  const extraThemeCount = Math.max(comic.themes.length - 1, 0);
+  const allThemeNames =
+    comic.themes.length > 0 ? comic.themes.map((t) => t.name).join(", ") : firstTheme;
   const pages = comic.pageCount || 24;
 
   // Extract pricing info
@@ -242,12 +238,17 @@ export default function StoryCard({ comic }: StoryCardProps) {
             AGE: {ageLabel}
           </span>
 
-          {/* Category Pill — the only one allowed to shrink. */}
+          {/* Category Pill — the only one allowed to shrink. Only the theme
+              NAME truncates: the "+N" sits outside the truncating span so it
+              stays visible however long the first theme's name is. */}
           <span
-            title={category}
-            className="min-w-0 truncate text-[clamp(7px,2.1cqw,8px)] leading-[1.5] font-extrabold text-[#1F8A60] bg-[#E3F8EE] border border-[#CCEFE2]/50 rounded-full px-[2.1cqw] py-[0.53cqw] uppercase tracking-wide"
+            title={allThemeNames}
+            className="min-w-0 flex items-center gap-[0.8cqw] text-[clamp(7px,2.1cqw,8px)] leading-[1.5] font-extrabold text-[#1F8A60] bg-[#E3F8EE] border border-[#CCEFE2]/50 rounded-full px-[2.1cqw] py-[0.53cqw] uppercase tracking-wide"
           >
-            {category}
+            <span className="min-w-0 truncate">{firstTheme}</span>
+            {extraThemeCount > 0 && (
+              <span className="shrink-0">+{extraThemeCount}</span>
+            )}
           </span>
 
           {/* Pages Pill */}
@@ -326,7 +327,7 @@ export default function StoryCard({ comic }: StoryCardProps) {
             Text is 18px at 380 wide; see the sizing note at the top. */}
         <div className="flex justify-center w-full">
           <button
-            onClick={() => router.push(`/comic/${comic.id}`)}
+            onClick={() => setIsQuickViewOpen(true)}
             disabled={!pricing}
             className={`
               w-[80%]
@@ -351,6 +352,22 @@ export default function StoryCard({ comic }: StoryCardProps) {
           </button>
         </div>
       </div>
+
+      {/* Portalled to <body>, so the card's container sizing and hover
+          transform do not reach it. */}
+      <ComicQuickViewModal
+        comic={comic}
+        open={isQuickViewOpen}
+        onOpenChange={setIsQuickViewOpen}
+        coverImage={images[0]}
+        pages={pages}
+        pricing={
+          pricing
+            ? { price: basePrice, mrp, showMrp, currencySymbol }
+            : null
+        }
+        countryName={selectedCountry?.name}
+      />
     </div>
   );
 }

@@ -10,10 +10,11 @@ import {
   setComicVideo,
 } from "@/app/actions/comic";
 import type { ComicStatus, CreateComicPayload } from "@/app/types/comic";
+import { normalizeComicFilters, type ComicTagFilters } from "@/lib/comicTags";
 
-export function useComics(filters?: { gender?: string, ageGroup?: string, themeId?: string, search?: string }) {
+export function useComics(filters?: ComicTagFilters) {
   return useQuery({
-    queryKey: ["comics", filters],
+    queryKey: ["comics", normalizeComicFilters(filters)],
     queryFn: () => fetchComics(filters),
   });
 }

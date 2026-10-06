@@ -191,18 +191,22 @@ export default function ComicThumbnailCarousel({
 
   return (
     <div className="flex flex-col items-center w-full max-w-[480px]">
-      {/* Carousel Container */}
-      <div className="relative w-full aspect-[427/310] flex items-center justify-center mb-6 px-4">
+      {/* Carousel Container — its height follows the cover box below, so the
+          arrows (top-1/2) stay vertically centred on whatever shape it has. */}
+      <div className="relative w-full flex items-center justify-center mb-6 px-4">
 
-        {/* Book Cover Container with slight tilt */}
-        <div className="relative w-full h-full max-w-[380px] -rotate-2 hover:rotate-0 transition-transform duration-500 origin-center">
+        {/* Book Cover Container with slight tilt. A 1:1 square on every
+            slide, video included, so the box never changes size. */}
+        <div className="relative w-full max-w-[380px] aspect-square -rotate-2 hover:rotate-0 transition-transform duration-500 origin-center">
           <div className="relative w-full h-full rounded-xl overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.15)] bg-slate-100">
+            {/* object-contain: the whole cover is always visible; a non-square
+                image gets light bands from the box background. */}
             {activeSlide?.kind === "image" && (
               <Image
                 src={activeSlide.url}
                 alt={`Cover ${safeIndex + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(max-width: 768px) 100vw, 400px"
                 priority
               />
@@ -226,8 +230,9 @@ export default function ComicThumbnailCarousel({
                 <video
                   ref={videoRef}
                   src={videoUrl}
-                  // object-contain: letterbox rather than crop, so a 16:9 video
-                  // keeps its whole frame inside the 427:310 cover box.
+                  // object-contain: letterbox rather than crop, so a non-square
+                  // video keeps its whole frame inside the 1:1 cover box (black
+                  // bands from the wrapper's bg-black fill the rest).
                   className="w-full h-full object-contain"
                   playsInline
                   loop

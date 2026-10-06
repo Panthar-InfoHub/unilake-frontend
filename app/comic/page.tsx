@@ -11,11 +11,11 @@ import StoryCard from "@/components/home/StoryCard";
 import { usePublicComics } from "@/hooks/usePublicComics";
 
 export default function ComicIndexPage() {
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
 
-  // "" means no filter — that's what each dropdown's "All …" option sends.
-  const handleFilterChange = (filterId: string, value: string) => {
-    setSelectedFilters((prev) => ({ ...prev, [filterId]: value }));
+  // An empty list means no filter — that's what each dropdown's "All …" sends.
+  const handleFilterChange = (filterId: string, values: string[]) => {
+    setSelectedFilters((prev) => ({ ...prev, [filterId]: values }));
   };
 
   const { data: comics, isLoading, error } = usePublicComics({
@@ -50,7 +50,7 @@ export default function ComicIndexPage() {
         {/* Filter Pills */}
         <StoryFilters
           selected={selectedFilters}
-          onSelect={handleFilterChange}
+          onChange={handleFilterChange}
         />
 
         {/* Cards Grid */}

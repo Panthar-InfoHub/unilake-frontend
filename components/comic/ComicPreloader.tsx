@@ -27,7 +27,7 @@ interface ComicPreloaderProps {
 }
 
 export default function ComicPreloader({ childName, onComplete, facts = [] }: ComicPreloaderProps) {
-  // One fact every 3 seconds, shuffled per visit. See the hook for why the
+  // One fact every 5 seconds (FACT_ROTATION_MS), shuffled per visit. See the hook for why the
   // shuffle deliberately happens after mount rather than during render.
   const currentFact = useRotatingFact(facts);
 

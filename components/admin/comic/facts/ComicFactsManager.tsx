@@ -42,7 +42,7 @@ const LISTS: {
     value: "PRELOADER",
     label: "Loading screen",
     blurb:
-      "Shown on the full-screen loader right after a customer submits their photo. It runs for about 55 seconds, so roughly 8–12 facts keeps it from repeating.",
+      "Shown on the full-screen loader right after a customer submits their photo. It runs for about 55 seconds and shows each fact for 5, so about 11 facts keeps it from repeating.",
   },
   {
     value: "GENERATING",

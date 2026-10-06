@@ -22,6 +22,7 @@ import {
   ScrollText,
   Settings,
   MessageSquareQuote,
+  Contact,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 
@@ -40,6 +41,7 @@ import {
 const NAV_ITEMS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin/overview" },
   { label: "Orders", icon: ShoppingCart, href: "/admin/orders" },
+  { label: "Customers", icon: Contact, href: "/admin/customers" },
   { label: "Comics", icon: BookOpen, href: "/admin/comics" },
   { label: "Countries", icon: Globe, href: "/admin/countries" },
   { label: "Themes", icon: Palette, href: "/admin/themes" },

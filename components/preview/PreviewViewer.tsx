@@ -14,12 +14,15 @@ import PreviewPageCard from "./PreviewPageCard";
 import PricingSection from "./PricingSection";
 import CheckoutBar from "./CheckoutBar";
 import SendToPrintSection from "./SendToPrintSection";
+import SendToPrintBar from "./SendToPrintBar";
+import SendToPrintConfirmModal from "./SendToPrintConfirmModal";
 import UploadAnotherPhotoBanner from "./UploadAnotherPhotoBanner";
 import Image from "next/image";
 import { ChevronDown, ImageIcon, ArrowLeftRight } from "lucide-react";
 import { chauPhilomeneOne, hankenGrotesk } from "@/app/fonts";
 import LoginModal from "../checkout/LoginModal";
 import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
+import { useSendToPrintFlow } from "@/hooks/useSendToPrintFlow";
 
 /** Highest variantIndex that has actually finished, or null if none have. */
 function newestReadyIndex(page: SessionPage): number | null {
@@ -171,7 +174,31 @@ export default function PreviewViewer({
   const pageCountMismatch =
     comicDetail !== undefined && snapshot.pages.length !== comicDetail.pageCount;
 
-  // ── Floating checkout bar visibility ──────────────────────────────────────
+  // Send to Print is offered from the moment payment lands, not only once every
+  // page is done: while pages are still being made (the first paid run, or a
+  // regeneration) the button stays visible and a click explains the wait.
+  const showSendToPrint = isGeneratingPaid || status === "PAID_PAGES_READY";
+
+  // Called ONCE, like useCheckoutFlow: the full section and the floating bar
+  // read the same state, and one confirm + one login dialog serve both.
+  const sendToPrint = useSendToPrintFlow({
+    sessionId: snapshot.id,
+    comicId: snapshot.comicId,
+    selections,
+    blockedPages,
+    isGenerating: isGeneratingPaid || hasInFlight,
+    pageCountMismatch,
+  });
+
+  // Which full-size section sits below the last page — and so which floating
+  // bar mirrors it. Null once the book has been sent to print: nothing to do.
+  const bottomSection: "checkout" | "print" | null = !isPaid
+    ? "checkout"
+    : showSendToPrint
+      ? "print"
+      : null;
+
+  // ── Floating bar visibility (checkout before payment, print after) ────────
   //
   // The bar floats at the bottom of the screen only while BOTH hold:
   //   1. the first comic page has come into view (or been scrolled past), so
@@ -187,16 +214,20 @@ export default function PreviewViewer({
   //
   // IntersectionObserver rather than a scroll listener: the browser reports
   // only the crossings, with no per-frame work on our side.
+  //
+  // The same rule drives both bars. `bottomSectionRef` is attached to whichever
+  // full section is rendered, and the observer is rebuilt when that changes
+  // (e.g. payment lands while the page is open and checkout becomes print).
   const firstPageRef = useRef<HTMLDivElement>(null);
-  const fullCheckoutRef = useRef<HTMLDivElement>(null);
+  const bottomSectionRef = useRef<HTMLDivElement>(null);
   const [firstPageReached, setFirstPageReached] = useState(false);
   const [fullCheckoutBelow, setFullCheckoutBelow] = useState(true);
 
   useEffect(() => {
-    if (isPaid) return;
+    if (bottomSection === null) return;
 
     const firstPage = firstPageRef.current;
-    const fullCheckout = fullCheckoutRef.current;
+    const fullCheckout = bottomSectionRef.current;
     if (!firstPage || !fullCheckout) return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -216,9 +247,11 @@ export default function PreviewViewer({
     observer.observe(firstPage);
     observer.observe(fullCheckout);
     return () => observer.disconnect();
-  }, [isPaid]);
+  }, [bottomSection]);
 
-  const showCheckoutBar = !isPaid && firstPageReached && fullCheckoutBelow;
+  const barWanted = firstPageReached && fullCheckoutBelow;
+  const showCheckoutBar = bottomSection === "checkout" && barWanted;
+  const showPrintBar = bottomSection === "print" && barWanted;
 
   return (
     // Same #F9E3C8 as the preloader and the page wrapper. Left at #F1E0CA this
@@ -394,29 +427,58 @@ export default function PreviewViewer({
       {/* The full checkout section, once, below the last page. The wrapper is
           what the observer watches: when it scrolls into view the floating
           bar slides away and this takes its place. */}
-      {!isPaid ? (
-        <div ref={fullCheckoutRef} className="w-full">
+      {bottomSection === "checkout" ? (
+        <div ref={bottomSectionRef} className="w-full">
           <PricingSection {...pricingProps} />
         </div>
-      ) : status === "PAID_PAGES_READY" ? (
-        <SendToPrintSection
-          sessionId={snapshot.id}
-          comicId={snapshot.comicId}
-          selections={selections}
-          blockedPages={blockedPages}
-          hasInFlight={hasInFlight}
-          pageCountMismatch={pageCountMismatch}
-        />
+      ) : bottomSection === "print" ? (
+        <div ref={bottomSectionRef} className="w-full">
+          <SendToPrintSection
+            blockReason={sendToPrint.blockReason}
+            busy={sendToPrint.busy}
+            onClick={sendToPrint.handleClick}
+          />
+        </div>
       ) : null}
 
-      {/* Floats over the pages until the full section above scrolls into view. */}
-      {!isPaid && <CheckoutBar {...pricingProps} visible={showCheckoutBar} />}
+      {/* Float over the pages until the full section above scrolls into view. */}
+      {bottomSection === "checkout" && (
+        <CheckoutBar {...pricingProps} visible={showCheckoutBar} />
+      )}
+      {bottomSection === "print" && (
+        <SendToPrintBar
+          visible={showPrintBar}
+          blockReason={sendToPrint.blockReason}
+          busy={sendToPrint.busy}
+          onClick={sendToPrint.handleClick}
+        />
+      )}
 
-      {/* Exactly one, shared by the bar and the full section. */}
+      {/* Exactly one, shared by the checkout bar and the full section. */}
       <LoginModal
         isOpen={checkout.showLoginModal}
         onOpenChange={checkout.setShowLoginModal}
       />
+
+      {/* Exactly one of each, shared by the print bar and the full section. */}
+      {bottomSection === "print" && (
+        <>
+          <SendToPrintConfirmModal
+            open={sendToPrint.confirmOpen}
+            onOpenChange={sendToPrint.setConfirmOpen}
+            onConfirm={sendToPrint.handleConfirm}
+            isPending={sendToPrint.busy}
+            pageCount={sendToPrint.pageCount}
+            errorMessage={sendToPrint.errorMessage}
+          />
+          <LoginModal
+            isOpen={sendToPrint.loginOpen}
+            onOpenChange={sendToPrint.setLoginOpen}
+            title="Log in to continue"
+            description="Your session expired. Please sign in again to send your book to print."
+          />
+        </>
+      )}
     </div>
   );
 }

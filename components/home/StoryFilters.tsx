@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { usePublicThemes } from "@/hooks/usePublicComics";
-import { AgeGroup, GenderTag } from "@/app/types/comic";
+import { AGE_GROUP_OPTIONS, GENDER_OPTIONS } from "@/lib/comicTags";
 
 interface FilterOption {
   label: string;
@@ -19,11 +19,20 @@ interface Filter {
 }
 
 interface StoryFiltersProps {
-  selected: Record<string, string>;
-  onSelect: (filterId: string, value: string) => void;
+  /** Picked values per filter id. Missing or empty = that filter is off. */
+  selected: Record<string, string[]>;
+  /** Receives the filter's complete new list (empty clears it). */
+  onChange: (filterId: string, values: string[]) => void;
 }
 
-export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) {
+/**
+ * Multi-select Age / Gender / Theme pills. Within one filter a comic matches if
+ * it has ANY picked value; across filters it must match ALL of them.
+ *
+ * Picking an option toggles it and keeps the dropdown open, so several can be
+ * chosen in one go. "All …" clears that filter and closes it.
+ */
+export default function StoryFilters({ selected, onChange }: StoryFiltersProps) {
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { data: themes, isLoading: themesLoading } = usePublicThemes();
@@ -34,22 +43,13 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
         id: "ageGroup",
         label: "Age",
         allLabel: "All Ages",
-        options: [
-          { label: "0-2 Years", value: AgeGroup.AGE_0_2 },
-          { label: "3-5 Years", value: AgeGroup.AGE_3_5 },
-          { label: "6-8 Years", value: AgeGroup.AGE_6_8 },
-          { label: "9-12 Years", value: AgeGroup.AGE_9_12 },
-        ],
+        options: AGE_GROUP_OPTIONS,
       },
       {
         id: "gender",
         label: "Gender",
         allLabel: "All Genders",
-        options: [
-          { label: "Boy", value: GenderTag.BOY },
-          { label: "Girl", value: GenderTag.GIRL },
-          { label: "Unisex", value: GenderTag.UNISEX },
-        ],
+        options: GENDER_OPTIONS,
       },
       {
         id: "themeId",
@@ -78,8 +78,19 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
     setOpenFilter((prev) => (prev === id ? null : id));
   };
 
-  const selectOption = (filterId: string, value: string) => {
-    onSelect(filterId, value);
+  const toggleOption = (filter: Filter, value: string) => {
+    const current = new Set(selected[filter.id] ?? []);
+    if (current.has(value)) current.delete(value);
+    else current.add(value);
+    // Option order, not click order — keeps the pill label stable.
+    onChange(
+      filter.id,
+      filter.options.map((o) => o.value).filter((v) => current.has(v))
+    );
+  };
+
+  const clearFilter = (filterId: string) => {
+    onChange(filterId, []);
     setOpenFilter(null);
   };
 
@@ -89,20 +100,26 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
       className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-6 py-8"
     >
       {filters.map((filter) => {
-        const activeValue = selected[filter.id] || "";
-        // Theme names arrive async; until they do, an active theme filter
-        // falls back to the plain "Theme" label rather than showing its id.
-        const activeLabel = activeValue
-          ? filter.options.find((o) => o.value === activeValue)?.label
-          : undefined;
-        const isActive = Boolean(activeValue);
-        // "All" is value "" — the parent already treats "" as "no filter".
-        const options = [{ label: filter.allLabel, value: "" }, ...filter.options];
+        const activeValues = selected[filter.id] ?? [];
+        const isActive = activeValues.length > 0;
+
+        // Pill text: "Age" with nothing picked, "Age: 3-5 Years" for one value,
+        // "Age (2)" for several. Theme names arrive async; until they do, a
+        // single active theme falls back to the count form rather than its id.
+        const singleLabel =
+          activeValues.length === 1
+            ? filter.options.find((o) => o.value === activeValues[0])?.label
+            : undefined;
+        const pillText = !isActive
+          ? filter.label
+          : singleLabel
+            ? `${filter.label}: ${singleLabel}`
+            : `${filter.label} (${activeValues.length})`;
 
         return (
         <div key={filter.id} className="relative">
-          {/* Pill Button — filled once a value is chosen, and shows that value
-              so the user can see what's applied without opening it. */}
+          {/* Pill Button — filled once a value is chosen, and shows what is
+              applied so the user can see it without opening the dropdown. */}
           <button
             onClick={() => toggleFilter(filter.id)}
             aria-expanded={openFilter === filter.id}
@@ -122,7 +139,7 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
                 isActive ? "text-white" : "text-[#7C5DFA]"
               }`}
             >
-              {activeLabel ? `${filter.label}: ${activeLabel}` : filter.label}
+              {pillText}
             </span>
             <ChevronDown
               className={`
@@ -137,13 +154,29 @@ export default function StoryFilters({ selected, onSelect }: StoryFiltersProps) 
           {/* Dropdown Menu */}
           {openFilter === filter.id && (
             <div className="absolute top-full mt-2 w-48 rounded-2xl bg-white shadow-xl border border-[#D6CFFF] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="py-1">
-                {options.map((option) => {
-                  const isSelected = activeValue === option.value;
+              <div className="py-1 max-h-72 overflow-y-auto">
+                {/* "All" — ticked when nothing is picked; clears the filter. */}
+                <button
+                  onClick={() => clearFilter(filter.id)}
+                  className={`
+                    w-full flex items-center justify-between gap-2 text-left px-4 py-2.5
+                    text-sm font-medium transition-colors duration-150
+                    hover:bg-[#F9F8FF] hover:text-[#7C5DFA]
+                    ${!isActive ? "bg-[#F9F8FF] text-[#7C5DFA] font-bold" : "text-gray-600"}
+                  `}
+                >
+                  {filter.allLabel}
+                  {!isActive && <Check className="w-4 h-4 shrink-0" strokeWidth={3} />}
+                </button>
+
+                {filter.options.map((option) => {
+                  const isSelected = activeValues.includes(option.value);
                   return (
                   <button
-                    key={option.value || "all"}
-                    onClick={() => selectOption(filter.id, option.value)}
+                    key={option.value}
+                    role="menuitemcheckbox"
+                    aria-checked={isSelected}
+                    onClick={() => toggleOption(filter, option.value)}
                     className={`
                       w-full flex items-center justify-between gap-2 text-left px-4 py-2.5
                       text-sm font-medium

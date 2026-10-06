@@ -48,10 +48,17 @@ export enum PageFileExtension {
   WEBP = "webp",
 }
 
+/** A theme as embedded in comic responses (alphabetical by name). */
+export interface ComicTheme {
+  id: string;
+  name: string;
+}
+
 export interface Comic {
   id: string;
   title: string;
-  genderTag: GenderTag;
+  /** One or more, in the fixed order BOY, GIRL, UNISEX. */
+  genderTags: GenderTag[];
   pageCount: number;
   freePreviewPages: number;
   coverThumbnailUrls: string[];
@@ -75,19 +82,24 @@ export interface Comic {
   publishError: string | null;
   isBestseller: boolean;
   description: string | null;
-  themeId: string | null;
-  ageGroup: AgeGroup | null;
+  /**
+   * Youngest first. Required on save, but may be empty on comics created
+   * before multi-select existed and never re-saved.
+   */
+  ageGroups: AgeGroup[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ComicListItem extends Comic {
-  theme: { id: string; name: string } | null;
+  /** May be empty on older comics — see `ageGroups`. */
+  themes: ComicTheme[];
   _count: { pages: number; orderSessions: number; pricingRules: number };
 }
 
 export interface ComicDetail extends Comic {
-  theme: { id: string; name: string } | null;
+  /** May be empty on older comics — see `ageGroups`. */
+  themes: ComicTheme[];
   pages: PageWithBubbles[];
   fonts: Font[];
   pricingRules: PricingRuleWithCountry[];
@@ -253,7 +265,7 @@ export interface ThumbnailUploadResponse {
 // Create comic payload
 export interface CreateComicPayload {
   title: string;
-  genderTag: GenderTag;
+  genderTags: GenderTag[];
   pageCount: number;
   freePreviewPages: number;
   thumbnailKeys: string[];
@@ -264,8 +276,8 @@ export interface CreateComicPayload {
     price: number;
   }[];
   description?: string;
-  themeId?: string;
-  ageGroup?: AgeGroup;
+  themeIds: string[];
+  ageGroups: AgeGroup[];
   isBestseller?: boolean;
 }
 
@@ -285,12 +297,12 @@ export interface PublicComicListItem {
   id: string;
   title: string;
   description: string | null;
-  genderTag: GenderTag;
-  ageGroup: AgeGroup | null;
+  genderTags: GenderTag[];
+  ageGroups: AgeGroup[];
   isBestseller: boolean;
   pageCount: number;
   coverThumbnailUrls: string[];
-  theme: { id: string; name: string } | null;
+  themes: ComicTheme[];
   pricingRules: PublicPricingRule[];
 }
 
@@ -331,8 +343,8 @@ export interface PublicComicDetail {
   id: string;
   title: string;
   description: string | null;
-  genderTag: GenderTag;
-  ageGroup: AgeGroup | null;
+  genderTags: GenderTag[];
+  ageGroups: AgeGroup[];
   isBestseller: boolean;
   pageCount: number;
   freePreviewPages: number;
@@ -351,7 +363,7 @@ export interface PublicComicDetail {
    * default line when there is nothing here.
    */
   facts: ComicFact[];
-  theme: { id: string; name: string } | null;
+  themes: ComicTheme[];
   pricingRules: PublicPricingRule[];
   pages: PublicComicDetailPage[];
 }

@@ -3,6 +3,7 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ComicStatusBadge } from "@/components/admin/comic/ComicStatusBadge";
 import { ComicDetail } from "@/app/types/comic";
+import { formatAgeGroup } from "@/lib/comicTags";
 
 interface ComicSummaryCardProps {
   comic: ComicDetail;
@@ -56,11 +57,20 @@ export function ComicSummaryCard({ comic }: ComicSummaryCardProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-neutral-600 mb-6">
-            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-100">
-              {comic.genderTag}
-            </span>
-            {comic.ageGroup && <span>• {comic.ageGroup.replace("AGE_", "").replace("_", "-")} yrs</span>}
-            {comic.theme && <span>• {comic.theme.name}</span>}
+            {comic.genderTags.map((gender) => (
+              <span
+                key={gender}
+                className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-100"
+              >
+                {gender}
+              </span>
+            ))}
+            {comic.ageGroups.length > 0 && (
+              <span>• {comic.ageGroups.map(formatAgeGroup).join(", ")} yrs</span>
+            )}
+            {comic.themes.length > 0 && (
+              <span>• {comic.themes.map((t) => t.name).join(", ")}</span>
+            )}
           </div>
 
           <div className="mt-auto grid grid-cols-2 md:grid-cols-4 gap-4 bg-white/50 p-4 rounded-2xl border border-neutral-100">
